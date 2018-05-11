@@ -1,0 +1,255 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7">
+
+  <!-- Import Rviz colors -->
+  <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
+  <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
+  <xacro:include filename="$(find schunk_gripper_egl90)/urdf/egl90_macro.xacro"/>
+  <xacro:include filename="$(find rc_visard_description)/urdf/rc_visard_160.xacro"/>
+
+
+  <!--  Arguments for the iiwa7 macro  -->
+  <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
+  <xacro:arg name="robot_name" default="iiwa"/>
+
+  <material name="steel">
+    <color rgba="0.8784 0.8745 0.8588 1.0"/>
+  </material>
+  <material name="transparent">
+    <color rgba="0.8784 0.8745 0.8588 0.3"/>
+  </material>
+
+  <!--  Define the origin of your 3D space
+       Here we define a box lying at 0,0,0 with some dimensions. In reality, our robot is placed on top of a table.
+       This will include the table top in the scene and avoid the robot to hit it when using MoveIt!
+  -->
+
+  <link name="world">
+    <visual>
+      <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.2 1.6 0.2"/>
+      </geometry>
+      <material name="steel" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+      <geometry>
+        <!-- for disallowing eef positions below joint 1 -->
+        <!-- <box size="1.2 1.6 0.49"/> -->
+        <!-- for grasping objects on table -->
+        <box size="1.2 1.6 0.203"/>
+      </geometry>
+      <material name="steel" />
+    </collision>
+  </link>
+
+  <!-- virtual walls -->
+
+  <joint name="wall_joint1" type="fixed">
+    <parent link="world" />
+    <child link="wall_front" />
+    <origin xyz="0.605 0 0.7" rpy="0 0 0"/>
+  </joint>
+  <joint name="wall_joint2" type="fixed">
+    <parent link="world" />
+    <child link="wall_back" />
+    <origin xyz="-0.605 0 0.7" rpy="0 0 0"/>
+  </joint>
+  <joint name="wall_joint3" type="fixed">
+    <parent link="world" />
+    <child link="wall_left" />
+    <origin xyz="0 -0.805 0.7" rpy="0 0 0"/>
+  </joint>
+  <joint name="wall_joint4" type="fixed">
+    <parent link="world" />
+    <child link="wall_right" />
+    <origin xyz="0 0.805 0.7" rpy="0 0 0"/>
+  </joint>
+
+  <link name="wall_front">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.8 0.55" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 1.6 1.1" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </collision>
+  </link>
+  <link name="wall_back">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.8 0.55" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 1.6 1.1" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </collision>
+  </link>
+  <link name="wall_left">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.6 0.01 0.55" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.2 0.01 1.1" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </collision>
+  </link>
+  <link name="wall_right">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.6 0.01 0.55" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="1.2 0.01 1.1" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </collision>
+  </link>
+
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
+  <gazebo reference="wall_front">
+    <static>true</static>
+  </gazebo>
+  <gazebo reference="wall_back">
+    <static>true</static>
+  </gazebo>
+  <gazebo reference="wall_left">
+    <static>true</static>
+  </gazebo>
+  <gazebo reference="wall_right">
+    <static>true</static>
+  </gazebo>
+
+  <joint name="base_adapter_joint" type="fixed">
+    <parent link="world" />
+    <child link="$(arg robot_name)_base_adapter" />
+    <origin xyz="-0.2 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="$(arg robot_name)_base_adapter">
+    <visual>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.02" radius="0.16"/>
+      </geometry>
+      <material name="steel" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.02" radius="0.16"/>
+      </geometry>
+    </collision>
+  </link>
+
+  <!-- Here we insert an iiwa7 robot in the scene, it's origin is on top of the adapter. -->
+  <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="$(arg robot_name)_base_adapter">
+    <origin xyz="0 0 0.02" rpy="0 0 0"/>
+  </xacro:iiwa7>
+
+  <!-- Here we insert a schunk gripper in the scene -->
+  <joint name="gripper_adapter_joint" type="fixed">
+    <parent link="$(arg robot_name)_link_ee" />
+    <child link="$(arg robot_name)_gripper_adapter" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="$(arg robot_name)_gripper_adapter">
+    <visual>
+      <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
+      <geometry>
+        <mesh filename="package://rll_description/meshes/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Grey"/>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
+      <geometry>
+        <mesh filename="package://rll_description/meshes/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
+      </geometry>
+      <material name="Grey"/>
+    </collision>
+  </link>
+  <xacro:egl90 parent="$(arg robot_name)_gripper_adapter" prefix="$(arg robot_name)_">
+    <origin xyz="0 0 0.024" rpy="0 0 ${-90 * PI / 180}"/>
+  </xacro:egl90>
+  <xacro:egl90-jaws prefix="$(arg robot_name)_" x="0.0" min="-0.015" max="0.026">
+    <mesh filename="package://rll_description/meshes/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
+  </xacro:egl90-jaws>
+
+  <!-- TCP link -->
+  <joint name="gripper_ee_joint" type="fixed">
+    <parent link="$(arg robot_name)_link_ee" />
+    <child link="$(arg robot_name)_gripper_link_ee" />
+    <origin xyz="0 0 0.248" rpy="0 0 0"/>
+  </joint>
+  <link name="$(arg robot_name)_gripper_link_ee"/>
+
+  <joint name="roboception_base_joint" type="fixed">
+    <parent link="world" />
+    <child link="roboception_base" />
+    <origin xyz="0.52 0.72 0.74" rpy="0 0 ${135 * PI / 180}"/>
+  </joint>
+  <link name="roboception_base">
+    <visual>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.08" radius="0.03"/>
+      </geometry>
+      <material name="steel" />
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <geometry>
+        <cylinder length="0.08" radius="0.03"/>
+      </geometry>
+    </collision>
+  </link>
+  <xacro:rc_160 parent="roboception_base" prefix="$(arg robot_name)_">
+    <origin xyz="-0.08 0.03 0.1" rpy="${-135 * PI / 180} 0 0"/>
+  </xacro:rc_160>
+
+  <joint name="roboception_collision_joint" type="fixed">
+    <parent link="world" />
+    <child link="roboception_collision" />
+    <origin xyz="0.52 0.72 0.74" rpy="0 0 ${135 * PI / 180}"/>
+  </joint>
+  <link name="roboception_collision">
+    <collision>
+      <origin xyz="-0.0 0.03 0.1" rpy="${-135 * PI / 180} 0 0"/>
+      <geometry>
+        <box size="0.30 0.13 0.10" rpy="0 0 0"/>
+      </geometry>
+      <material name="transparent" />
+    </collision>
+  </link>
+
+
+</robot>
