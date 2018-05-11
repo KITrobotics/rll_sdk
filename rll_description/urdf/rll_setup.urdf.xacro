@@ -2,11 +2,10 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7">
 
-  <!-- Import Rviz colors -->
-  <xacro:include filename="$(find iiwa_description)/urdf/materials.xacro" />
-  <xacro:include filename="$(find iiwa_description)/urdf/iiwa7.xacro"/>
-  <xacro:include filename="$(find schunk_gripper_egl90)/urdf/egl90_macro.xacro"/>
-  <xacro:include filename="$(find rc_visard_description)/urdf/rc_visard_160.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/iiwa7/materials.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
 
 
   <!--  Arguments for the iiwa7 macro  -->
@@ -185,14 +184,14 @@
     <visual>
       <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
       <geometry>
-        <mesh filename="package://rll_description/meshes/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="Grey"/>
     </visual>
     <collision>
       <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
       <geometry>
-        <mesh filename="package://rll_description/meshes/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
+        <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
       <material name="Grey"/>
     </collision>
@@ -201,7 +200,7 @@
     <origin xyz="0 0 0.024" rpy="0 0 ${-90 * PI / 180}"/>
   </xacro:egl90>
   <xacro:egl90-jaws prefix="$(arg robot_name)_" x="0.0" min="-0.015" max="0.026">
-    <mesh filename="package://rll_description/meshes/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
+    <mesh filename="package://rll_description/meshes/egl90/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
   </xacro:egl90-jaws>
 
   <!-- TCP link -->

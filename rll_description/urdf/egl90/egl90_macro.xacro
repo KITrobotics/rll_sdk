@@ -1,0 +1,107 @@
+<?xml version="1.0"?>
+<robot name="egl90" xmlns:xacro="http://www.ros.org/wiki/xacro">
+  <material name="egl90-metal">
+    <color rgba="0.5 0.45 0.4 1"/>
+  </material>
+  <xacro:property name="base_x" value="0.112"/>
+  <xacro:property name="base_y" value="0.090"/>
+  <xacro:property name="base_z" value="0.08725"/>
+  <xacro:property name="jaw_base_y" value="0.0228"/>
+  <xacro:property name="jaw_base_z" value="0.0191"/>
+  
+  <xacro:macro name="egl90-jaws" params="prefix x min max *mesh">
+    <joint name="egl_position" type="fixed">
+      <parent link="${prefix}jaw_base"/>
+      <child link="${prefix}finger_right"/>
+      <origin rpy="0.0 0.0 ${pi}" xyz="${x - 0.1} -0.013 0.005"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
+    </joint>
+    <link name="${prefix}finger_right">
+      <visual>
+        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <geometry>
+          <xacro:insert_block name="mesh"/>
+        </geometry>
+        <material name="black ">
+          <color rgba="1.0 1.0 1.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <geometry>
+          <xacro:insert_block name="mesh"/>
+        </geometry>
+      </collision>
+    </link>
+    <joint name="egl_position_mimic" type="fixed">
+      <parent link="${prefix}jaw_base"/>
+      <child link="${prefix}finger_left"/>
+      <origin rpy="0.0 0.0 0.0" xyz="${x + 0.1} 0.013 0.005"/>
+      <axis xyz="1 0 0"/>
+      <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
+      <mimic joint="egl_position" multiplier="1"/>
+    </joint>
+    <link name="${prefix}finger_left">
+      <visual>
+        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <geometry>
+          <xacro:insert_block name="mesh"/>
+        </geometry>
+        <material name="black ">
+          <color rgba="1.0 1.0 1.0 1.0"/>
+        </material>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <geometry>
+          <xacro:insert_block name="mesh"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+  <!-- Added to figure out orientation -->
+  <xacro:macro name="egl90-connector" params="y z">
+    <visual>
+      <origin rpy="0 1.5708 0" xyz="${-base_x/2 - 0.005} ${y} ${base_z/2 + z}"/>
+      <geometry>
+        <cylinder length="0.01" radius="0.005"/>
+      </geometry>
+      <material name="egl90-metal"/>
+    </visual>
+  </xacro:macro>
+  <xacro:macro name="egl90" params="parent prefix *origin">
+    <joint name="${prefix}mount" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}base"/>
+    </joint>
+    <link name="${prefix}base">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 ${base_z/2}"/>
+        <geometry>
+          <box size="${base_x} ${base_y} ${base_z}"/>
+        </geometry>
+        <material name="egl90-metal"/>
+      </visual>
+      <xacro:egl90-connector y="-0.02" z="0.02"/>
+      <xacro:egl90-connector y="-0.02" z="-0.02"/>
+      <xacro:egl90-connector y="0.02" z="-0.02"/>
+    </link>
+    <joint name="${prefix}jaw_mount" type="fixed">
+      <origin rpy="0 0 0" xyz="0 0 ${base_z + jaw_base_z}"/>
+      <parent link="${prefix}base"/>
+      <child link="${prefix}jaw_base"/>
+    </joint>
+    <link name="${prefix}jaw_base">
+      <visual>
+        <origin rpy="0 0 0" xyz="0 0 ${-jaw_base_z/2}"/>
+        <geometry>
+          <box size="${base_x} ${jaw_base_y} ${jaw_base_z}"/>
+        </geometry>
+        <material name="egl90-metal"/>
+      </visual>
+    </link>
+  </xacro:macro>
+</robot>
