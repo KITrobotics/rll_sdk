@@ -1,7 +1,16 @@
 <?xml version="1.0"?>
 <launch>
+  
+  <arg name="hardware_interface" default="PositionJointInterface"/>
+  <arg name="robot_name" default="iiwa"/>
+  <arg name="model" default="iiwa7"/>
 
-  <include file="$(find rll_moveit_config)/launch/planning_context.launch" />
+  <include file="$(find rll_moveit_config)/launch/planning_context.launch">
+    <arg name="load_robot_description" value="true"/>
+    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+    <arg name="robot_name" value="$(arg robot_name)"/>
+    <arg name="model" value="$(arg model)"/>
+  </include>
 
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
@@ -31,6 +40,7 @@
     <arg name="moveit_manage_controllers" value="true" />
     <arg name="moveit_controller_manager" value="iiwa7" unless="$(arg fake_execution)"/>
     <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
+    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
   </include>
 
   <!-- Sensors Functionality -->

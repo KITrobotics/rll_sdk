@@ -1,28 +1,28 @@
 <?xml version="1.0"?>
 <launch>
-    
+
     <!-- ===================================================================================== -->
-    <!-- |    Lauch file to start Gazebo with an IIWA using various controllers.	         | -->
-    
+    <!-- |    Lauch file to start Gazebo with an IIWA using various controllers.                 | -->
+
     <!-- |    It allows to customize the name of the robot, for each robot                   | -->
-    <!-- |	  its topics will be under a nameespace with the same name as the robot's.       | -->
-    
-    <!-- |	  One can choose to have a joint trajectory controller or                        | -->
+    <!-- |        its topics will be under a nameespace with the same name as the robot's.       | -->
+
+    <!-- |        One can choose to have a joint trajectory controller or                        | -->
     <!-- |    controllers for the single joints, using the "trajectory" argument.            | -->
     <!-- ===================================================================================== -->
 
     <arg name="hardware_interface" default="PositionJointInterface" />
     <arg name="robot_name" default="iiwa" />
-    <arg name="model" default="iiwa14"/>
+    <arg name="model" default="iiwa7"/>
     <arg name="trajectory" default="true"/>
-    
+
     <!-- Loads the Gazebo world. -->
     <include file="$(find rll_gazebo)/launch/rll_world.launch">
         <arg name="hardware_interface" value="$(arg hardware_interface)" />
         <arg name="robot_name" value="$(arg robot_name)" />
         <arg name="model" value="$(arg model)" />
     </include>
-    
+
     <!-- Spawn controllers - it uses a JointTrajectoryController -->
     <group  ns="$(arg robot_name)" if="$(arg trajectory)">
         
@@ -51,8 +51,8 @@
             <arg name="robot_name" value="$(arg robot_name)" />
             <arg name="model" value="$(arg model)" />
         </include>
-        
+
     </group>
-    
-    
+
+
 </launch>
