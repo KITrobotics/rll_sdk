@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<launch>
+    <!-- The planning and execution components of MoveIt! configured to run -->
+    <!-- using the ROS-Industrial interface. -->
+
+    <!-- |              PARAMETERS              | -->
+    <!-- hardware_interface to use : PositionJointInterface, EffortJointInterface, VelocityJointInterface. -->
+    <arg name="hardware_interface" default="PositionJointInterface"/>
+    <!-- The is gonna have its nodes/topics under a namespace with the same name. -->
+    <arg name="robot_name" default="iiwa"/>
+    <!-- Model of the iiwa to use : iiwa7, iiwa14 -->
+    <arg name="model" default="iiwa7"/>
+    <arg name="rviz" default="true" />
+
+    <!-- Run the robot within a Gazebo simulation. -->
+    <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
+      <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+      <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="model" value="$(arg model)"/>
+    </include>
+
+    <!-- Load move_group -->
+    <include file="$(find rll_moveit_config)/launch/move_group.launch">
+            <arg name="publish_monitored_planning_scene" value="true" />
+    </include>
+
+    <include if="$(arg rviz)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
+      <arg name="config" value="true"/>
+    </include>
+
+</launch>
