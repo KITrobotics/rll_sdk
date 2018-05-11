@@ -1,0 +1,1 @@
+rosrun moveit_kinematics create_ikfast_moveit_plugin.py iiwa7 manipulator iiwa7_ikfast_manipulator_plugin /home/hartmann/workspace/ros_ws_kinetic/src/iiwa_stack/iiwa7_ikfast_manipulator_plugin/src/iiwa7_manipulator_ikfast_solver.cpp
