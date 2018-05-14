@@ -11,12 +11,14 @@
     <!-- Model of the iiwa to use : iiwa7, iiwa14 -->
     <arg name="model" default="iiwa7"/>
     <arg name="rviz" default="true" />
-    
-    <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" 
+
+    <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
            to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
-    <remap from="robot_description" to="/$(arg robot_name)/robot_description" /> 
-    <remap from="/get_planning_scene" to="/$(arg robot_name)/get_planning_scene" /> 
-    
+    <remap from="/PositionJointInterface_gripper_controller/follow_joint_trajectory"
+           to="/$(arg robot_name)/PositionJointInterface_gripper_controller/follow_joint_trajectory" />
+    <remap from="robot_description" to="/$(arg robot_name)/robot_description" />
+    <remap from="/get_planning_scene" to="/$(arg robot_name)/get_planning_scene" />
+
     <!-- Run the robot within a Gazebo simulation. -->
     <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
@@ -32,10 +34,10 @@
             <arg name="robot_name" value="$(arg robot_name)"/>
             <arg name="model" value="$(arg model)" />
         </include>
-        
+
         <include if="$(arg rviz)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
             <arg name="config" value="true"/>
         </include>
     </group>
-    
+
 </launch>

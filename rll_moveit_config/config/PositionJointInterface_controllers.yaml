@@ -3,7 +3,7 @@ controller_list:
     action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     default: true
-    joints: 
+    joints:
       - iiwa_joint_1
       - iiwa_joint_2
       - iiwa_joint_3
@@ -11,5 +11,11 @@ controller_list:
       - iiwa_joint_5
       - iiwa_joint_6
       - iiwa_joint_7
-      
-      
+
+  - name: PositionJointInterface_gripper_controller
+    action_ns: follow_joint_trajectory
+    type: FollowJointTrajectory
+    default: true
+    joints:
+      - egl_position
+      - egl_position_mimic

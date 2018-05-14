@@ -201,4 +201,19 @@
     action_monitor_rate: 30            # Override default
     stop_trajectory_duration: 0.5        # Override default
 
+      # Gripper controller ---------------------------------------------
+  PositionJointInterface_gripper_controller:
+    type: effort_controllers/JointTrajectoryController
+    joints:
+      - egl_position
+      - egl_position_mimic
+    gains:
+      egl_position: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      egl_position_mimic: {p: 500,  d: 10, i: 2, i_clamp: 10}
+    constraints:
+      goal_time: 0.5
+      egl_position:
+        goal: 0.02
+      egl_position_mimic:
+        goal: 0.02
 
