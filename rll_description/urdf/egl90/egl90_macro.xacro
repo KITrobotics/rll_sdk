@@ -30,9 +30,6 @@
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
-        <material name="black ">
-          <color rgba="1.0 1.0 1.0 1.0"/>
-        </material>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
@@ -60,9 +57,6 @@
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
-        <material name="black ">
-          <color rgba="1.0 1.0 1.0 1.0"/>
-        </material>
       </visual>
       <collision>
         <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>

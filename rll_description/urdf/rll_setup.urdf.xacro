@@ -119,22 +119,6 @@
     </collision>
   </link>
 
-  <gazebo reference="world">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="wall_front">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="wall_back">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="wall_left">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="wall_right">
-    <static>true</static>
-  </gazebo>
-
   <joint name="base_adapter_joint" type="fixed">
     <parent link="world" />
     <child link="$(arg robot_name)_base_adapter" />
@@ -258,6 +242,11 @@
       </geometry>
     </collision>
   </link>
+
+  <gazebo reference="$(arg robot_name)_base_adapter">
+    <material>Gazebo/Grey</material>
+    <static>true</static>
+  </gazebo>
 
   <material name="steel">
     <color rgba="0.8784 0.8745 0.8588 1.0"/>
