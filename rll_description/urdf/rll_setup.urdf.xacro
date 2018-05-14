@@ -247,6 +247,10 @@
     <material>Gazebo/Grey</material>
     <static>true</static>
   </gazebo>
+  <gazebo reference="$(arg robot_name)_gripper_adapter">
+    <material>Gazebo/Grey</material>
+    <static>true</static>
+  </gazebo>
 
   <material name="steel">
     <color rgba="0.8784 0.8745 0.8588 1.0"/>
