@@ -3,7 +3,6 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7">
 
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/iiwa7/materials.xacro" />
   <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
 
@@ -11,13 +10,6 @@
   <!--  Arguments for the iiwa7 macro  -->
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
-
-  <material name="steel">
-    <color rgba="0.8784 0.8745 0.8588 1.0"/>
-  </material>
-  <material name="transparent">
-    <color rgba="0.8784 0.8745 0.8588 0.3"/>
-  </material>
 
   <!--  Define the origin of your 3D space
        Here we define a box lying at 0,0,0 with some dimensions. In reality, our robot is placed on top of a table.
@@ -40,7 +32,6 @@
         <!-- for grasping objects on table -->
         <box size="1.2 1.6 0.203"/>
       </geometry>
-      <material name="steel" />
     </collision>
   </link>
 
@@ -80,7 +71,6 @@
       <geometry>
         <box size="0.01 1.6 1.1" rpy="0 0 0"/>
       </geometry>
-      <material name="transparent" />
     </collision>
   </link>
   <link name="wall_back">
@@ -96,7 +86,6 @@
       <geometry>
         <box size="0.01 1.6 1.1" rpy="0 0 0"/>
       </geometry>
-      <material name="transparent" />
     </collision>
   </link>
   <link name="wall_left">
@@ -112,7 +101,6 @@
       <geometry>
         <box size="1.2 0.01 1.1" rpy="0 0 0"/>
       </geometry>
-      <material name="transparent" />
     </collision>
   </link>
   <link name="wall_right">
@@ -128,7 +116,6 @@
       <geometry>
         <box size="1.2 0.01 1.1" rpy="0 0 0"/>
       </geometry>
-      <material name="transparent" />
     </collision>
   </link>
 
@@ -186,14 +173,12 @@
       <geometry>
         <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="Grey"/>
     </visual>
     <collision>
       <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
       <geometry>
         <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="Grey"/>
     </collision>
   </link>
   <xacro:egl90 parent="$(arg robot_name)_gripper_adapter" prefix="$(arg robot_name)_">
@@ -271,9 +256,14 @@
       <geometry>
         <box size="0.30 0.13 0.10" rpy="0 0 0"/>
       </geometry>
-      <material name="transparent" />
     </collision>
   </link>
 
+  <material name="steel">
+    <color rgba="0.8784 0.8745 0.8588 1.0"/>
+  </material>
+  <material name="transparent">
+    <color rgba="0.8784 0.8745 0.8588 0.3"/>
+  </material>
 
 </robot>
