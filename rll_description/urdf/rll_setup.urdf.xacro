@@ -68,7 +68,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.01 1.6 1.1" rpy="0 0 0"/>
+        <box size="0.01 1.6 1.4" rpy="0 0 0"/>
       </geometry>
     </collision>
   </link>
@@ -83,7 +83,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.01 1.6 1.1" rpy="0 0 0"/>
+        <box size="0.01 1.6 1.4" rpy="0 0 0"/>
       </geometry>
     </collision>
   </link>
@@ -98,7 +98,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="1.2 0.01 1.1" rpy="0 0 0"/>
+        <box size="1.2 0.01 1.4" rpy="0 0 0"/>
       </geometry>
     </collision>
   </link>
@@ -113,7 +113,7 @@
     <collision>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="1.2 0.01 1.1" rpy="0 0 0"/>
+        <box size="1.2 0.01 1.4" rpy="0 0 0"/>
       </geometry>
     </collision>
   </link>
@@ -202,44 +202,63 @@
   </transmission>
 
 
-  <!-- Roboception camera -->
-  <joint name="roboception_base_joint" type="fixed">
+  <joint name="profile_cams_joint" type="fixed">
     <parent link="world" />
-    <child link="roboception_base" />
-    <origin xyz="0.52 0.72 0.74" rpy="0 0 ${135 * PI / 180}"/>
+    <child link="profile_cams" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
-  <link name="roboception_base">
+  <link name="profile_cams">
     <visual>
-      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 ${90 * PI / 180}"/>
       <geometry>
-        <cylinder length="0.08" radius="0.03"/>
+        <mesh filename="package://rll_description/meshes/rll/visual/profile_cams.dae"/>
       </geometry>
-      <material name="steel" />
     </visual>
     <collision>
-      <origin xyz="0 0 0.04" rpy="0 0 0"/>
+      <origin xyz="0.58 0.82 0.17" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.08" radius="0.03"/>
+        <box size="0.05 0.05 2.0"/>
       </geometry>
     </collision>
   </link>
-  <xacro:rc_160 parent="roboception_base" prefix="$(arg robot_name)_">
-    <origin xyz="-0.08 0.03 0.1" rpy="${-135 * PI / 180} 0 0"/>
-  </xacro:rc_160>
 
-  <joint name="roboception_collision_joint" type="fixed">
-    <parent link="world" />
-    <child link="roboception_collision" />
-    <origin xyz="0.52 0.72 0.74" rpy="0 0 ${135 * PI / 180}"/>
+  <joint name="roboception_gusset_joint" type="fixed">
+    <parent link="profile_cams" />
+    <child link="roboception_gusset" />
+    <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * PI / 180} 0"/>
   </joint>
-  <link name="roboception_collision">
-    <collision>
-      <origin xyz="-0.0 0.03 0.1" rpy="${-135 * PI / 180} 0 0"/>
+  <link name="roboception_gusset">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <box size="0.30 0.13 0.10" rpy="0 0 0"/>
+        <mesh filename="package://rll_description/meshes/rll/visual/roboception_gusset.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 -0.05 0.05" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.05 0.1 0.1"/>
       </geometry>
     </collision>
   </link>
+
+  <!-- Roboception camera -->
+  <joint name="roboception_adapter_joint" type="fixed">
+    <parent link="roboception_gusset" />
+    <child link="roboception_adapter" />
+    <origin xyz="0.03 -0.075 0" rpy="${-90 * PI / 180} 0 ${135 * PI / 180}"/>
+  </joint>
+  <link name="roboception_adapter">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rll_description/meshes/rll/visual/roboception_adapter.dae"/>
+      </geometry>
+    </visual>
+  </link>
+  <xacro:rc_160 parent="roboception_adapter" prefix="$(arg robot_name)_">
+    <origin xyz="-0.03 0.03 -0.08" rpy="${45 * PI / 180} ${-90 * PI / 180} 0"/>
+  </xacro:rc_160>
 
   <gazebo reference="world">
     <static>true</static>
@@ -251,9 +270,6 @@
     <static>true</static>
   </gazebo>
 
-  <material name="steel">
-    <color rgba="0.8784 0.8745 0.8588 1.0"/>
-  </material>
   <material name="transparent">
     <color rgba="0.8784 0.8745 0.8588 0.3"/>
   </material>

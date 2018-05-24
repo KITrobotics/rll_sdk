@@ -17,8 +17,9 @@
           </geometry>
       </visual>
       <collision>
+          <origin xyz="0.08 0.03 -0.05" rpy="0 0 0"/>
           <geometry>
-              <mesh filename="package://rll_description/meshes/visard160/collision/rc_visard_160.stl"/>
+              <box size="0.27 0.2 0.27"/>
           </geometry>
       </collision>
     </link>
