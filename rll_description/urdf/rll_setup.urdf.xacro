@@ -18,11 +18,10 @@
 
   <link name="world">
     <visual>
-      <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 ${90 * PI / 180}"/>
       <geometry>
-        <box size="1.2 1.6 0.2"/>
+        <mesh filename="package://rll_description/meshes/rll/visual/table.dae"/>
       </geometry>
-      <material name="steel" />
     </visual>
     <collision>
       <origin xyz="0 0 -0.1" rpy="0 0 0"/>
@@ -126,11 +125,10 @@
   </joint>
   <link name="$(arg robot_name)_base_adapter">
     <visual>
-      <origin xyz="0 0 0.01" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-        <cylinder length="0.02" radius="0.16"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/base_adapter.dae"/>
       </geometry>
-      <material name="steel" />
     </visual>
     <collision>
       <origin xyz="0 0 0.01" rpy="0 0 0"/>
@@ -243,12 +241,13 @@
     </collision>
   </link>
 
+  <gazebo reference="world">
+    <static>true</static>
+  </gazebo>
   <gazebo reference="$(arg robot_name)_base_adapter">
-    <material>Gazebo/Grey</material>
     <static>true</static>
   </gazebo>
   <gazebo reference="$(arg robot_name)_gripper_adapter">
-    <material>Gazebo/Grey</material>
     <static>true</static>
   </gazebo>
 
