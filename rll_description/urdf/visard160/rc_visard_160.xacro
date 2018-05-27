@@ -1,36 +1,68 @@
 <?xml version="1.0"?>
 
-
 <robot name="rc_visard_160" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="rc_160" params="prefix parent *origin">
 
-    <joint name="${prefix}roboception_camera" type="fixed">
-      <parent link="${parent}"/>
-      <child link="${prefix}roboception_camera"/>
+    <joint name="roboception_gusset_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${prefix}roboception_gusset" />
       <xacro:insert_block name="origin"/>
     </joint>
-
-    <link name="${prefix}roboception_camera">
+    <link name="${prefix}roboception_gusset">
       <visual>
-          <geometry>
-              <mesh filename="package://rll_description/meshes/visard160/visual/rc_visard_160.dae"/>
-          </geometry>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rll_description/meshes/rll/visual/roboception_gusset.dae"/>
+        </geometry>
       </visual>
       <collision>
-          <origin xyz="0.08 0.03 -0.05" rpy="0 0 0"/>
-          <geometry>
-              <box size="0.27 0.2 0.27"/>
-          </geometry>
+        <origin xyz="0 -0.05 0.05" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.05 0.1 0.1"/>
+        </geometry>
       </collision>
     </link>
 
-  <link name="${prefix}roboception_mounting"/>
+    <joint name="${prefix}roboception_adapter_joint" type="fixed">
+      <parent link="${prefix}roboception_gusset" />
+      <child link="${prefix}roboception_adapter" />
+      <origin xyz="0.03 -0.075 0" rpy="${-90 * PI / 180} 0 ${135 * PI / 180}"/>
+    </joint>
+    <link name="${prefix}roboception_adapter">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <mesh filename="package://rll_description/meshes/rll/visual/roboception_adapter.dae"/>
+        </geometry>
+      </visual>
+    </link>
 
-  <joint name="${prefix}mounting_to_camera" type="fixed">
-    <parent link="${prefix}roboception_camera"/>
-    <child link="${prefix}roboception_mounting"/>
-    <origin xyz="0.080 0.0375 -0.031" />
-  </joint>
+    <joint name="${prefix}roboception_camera" type="fixed">
+      <parent link="${prefix}roboception_adapter"/>
+      <child link="${prefix}roboception_camera"/>
+      <origin xyz="-0.03 0.03 -0.08" rpy="${45 * PI / 180} ${-90 * PI / 180} 0"/>
+    </joint>
+    <link name="${prefix}roboception_camera">
+      <visual>
+        <geometry>
+          <mesh filename="package://rll_description/meshes/visard160/visual/rc_visard_160.dae"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0.08 0.03 -0.05" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.27 0.2 0.27"/>
+        </geometry>
+      </collision>
+    </link>
+
+    <link name="${prefix}roboception_mounting"/>
+
+    <joint name="${prefix}mounting_to_camera" type="fixed">
+      <parent link="${prefix}roboception_camera"/>
+      <child link="${prefix}roboception_mounting"/>
+      <origin xyz="0.080 0.0375 -0.031" />
+    </joint>
 
   </xacro:macro>
-  </robot>
+</robot>

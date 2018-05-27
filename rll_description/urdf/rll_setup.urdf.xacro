@@ -11,11 +11,6 @@
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
 
-  <!--  Define the origin of your 3D space
-       Here we define a box lying at 0,0,0 with some dimensions. In reality, our robot is placed on top of a table.
-       This will include the table top in the scene and avoid the robot to hit it when using MoveIt!
-  -->
-
   <link name="world">
     <visual>
       <origin xyz="0 0 0" rpy="0 0 ${90 * PI / 180}"/>
@@ -143,28 +138,9 @@
     <origin xyz="0 0 0.02" rpy="0 0 0"/>
   </xacro:iiwa7>
 
-  <!-- Here we insert a schunk gripper in the scene -->
-  <joint name="gripper_adapter_joint" type="fixed">
-    <parent link="$(arg robot_name)_link_ee" />
-    <child link="$(arg robot_name)_gripper_adapter" />
+  <!-- Here we insert a Schunk gripper in the scene -->
+  <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_">
     <origin xyz="0 0 0.024" rpy="0 0 0"/>
-  </joint>
-  <link name="$(arg robot_name)_gripper_adapter">
-    <visual>
-      <origin xyz="0 0 0" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
-      <geometry>
-        <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
-      <geometry>
-        <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
-      </geometry>
-    </collision>
-  </link>
-  <xacro:egl90 parent="$(arg robot_name)_gripper_adapter" prefix="$(arg robot_name)_">
-    <origin xyz="0 0.055 0" rpy="${90 * PI / 180} 0 ${180 * PI / 180}"/>
   </xacro:egl90>
   <xacro:egl90-jaws prefix="$(arg robot_name)_" min="-0.015" max="0.026">
     <mesh filename="package://rll_description/meshes/egl90/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
@@ -222,42 +198,9 @@
     </collision>
   </link>
 
-  <joint name="roboception_gusset_joint" type="fixed">
-    <parent link="profile_cams" />
-    <child link="roboception_gusset" />
-    <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * PI / 180} 0"/>
-  </joint>
-  <link name="roboception_gusset">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="package://rll_description/meshes/rll/visual/roboception_gusset.dae"/>
-      </geometry>
-    </visual>
-    <collision>
-      <origin xyz="0 -0.05 0.05" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.05 0.1 0.1"/>
-      </geometry>
-    </collision>
-  </link>
-
   <!-- Roboception camera -->
-  <joint name="roboception_adapter_joint" type="fixed">
-    <parent link="roboception_gusset" />
-    <child link="roboception_adapter" />
-    <origin xyz="0.03 -0.075 0" rpy="${-90 * PI / 180} 0 ${135 * PI / 180}"/>
-  </joint>
-  <link name="roboception_adapter">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <mesh filename="package://rll_description/meshes/rll/visual/roboception_adapter.dae"/>
-      </geometry>
-    </visual>
-  </link>
-  <xacro:rc_160 parent="roboception_adapter" prefix="$(arg robot_name)_">
-    <origin xyz="-0.03 0.03 -0.08" rpy="${45 * PI / 180} ${-90 * PI / 180} 0"/>
+  <xacro:rc_160 parent="profile_cams" prefix="$(arg robot_name)_">
+    <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * PI / 180} 0"/>
   </xacro:rc_160>
 
   <gazebo reference="world">
