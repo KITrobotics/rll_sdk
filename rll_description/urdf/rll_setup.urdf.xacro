@@ -147,26 +147,26 @@
   <joint name="gripper_adapter_joint" type="fixed">
     <parent link="$(arg robot_name)_link_ee" />
     <child link="$(arg robot_name)_gripper_adapter" />
-    <origin xyz="0 0 0" rpy="0 0 0"/>
+    <origin xyz="0 0 0.024" rpy="0 0 0"/>
   </joint>
   <link name="$(arg robot_name)_gripper_adapter">
     <visual>
-      <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
+      <origin xyz="0 0 0" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
       <geometry>
         <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>
     <collision>
-      <origin xyz="0 0 0.024" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
+      <origin xyz="0 0 0" rpy="${180 * PI / 180} 0 ${-90 * PI / 180}"/>
       <geometry>
         <mesh filename="package://rll_description/meshes/egl90/visual/gripper_adapter.dae" scale="0.001 0.001 0.001"/>
       </geometry>
     </collision>
   </link>
   <xacro:egl90 parent="$(arg robot_name)_gripper_adapter" prefix="$(arg robot_name)_">
-    <origin xyz="0 0 0.024" rpy="0 0 ${-90 * PI / 180}"/>
+    <origin xyz="0 0.055 0" rpy="${90 * PI / 180} 0 ${180 * PI / 180}"/>
   </xacro:egl90>
-  <xacro:egl90-jaws prefix="$(arg robot_name)_" x="0.0" min="-0.015" max="0.026">
+  <xacro:egl90-jaws prefix="$(arg robot_name)_" min="-0.015" max="0.026">
     <mesh filename="package://rll_description/meshes/egl90/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
   </xacro:egl90-jaws>
 
@@ -264,9 +264,6 @@
     <static>true</static>
   </gazebo>
   <gazebo reference="$(arg robot_name)_base_adapter">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="$(arg robot_name)_gripper_adapter">
     <static>true</static>
   </gazebo>
 

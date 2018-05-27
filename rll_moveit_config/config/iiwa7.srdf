@@ -16,7 +16,7 @@
         <link name="iiwa_gripper_link_ee" />
     </group>
     <group name="gripper">
-       <link name="iiwa_jaw_base" />
+       <link name="iiwa_gripper_base" />
        <link name="iiwa_finger_left" />
        <link name="iiwa_finger_right" />
     </group>

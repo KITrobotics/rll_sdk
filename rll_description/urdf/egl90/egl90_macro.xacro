@@ -1,38 +1,58 @@
 <?xml version="1.0"?>
 <robot name="egl90" xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <material name="egl90-metal">
-    <color rgba="0.5 0.45 0.4 1"/>
-  </material>
-  <xacro:property name="base_x" value="0.112"/>
-  <xacro:property name="base_y" value="0.090"/>
-  <xacro:property name="base_z" value="0.08725"/>
-  <xacro:property name="jaw_base_y" value="0.0228"/>
-  <xacro:property name="jaw_base_z" value="0.0191"/>
   <xacro:property name="finger_mass" value="0.1" />
-  <xacro:property name="gripper_mass" value="0.3" />
 
-  <xacro:macro name="egl90-jaws" params="prefix x min max *mesh">
+  <xacro:macro name="egl90" params="parent prefix *origin">
+    <joint name="${prefix}mount" type="fixed">
+      <xacro:insert_block name="origin"/>
+      <parent link="${parent}"/>
+      <child link="${prefix}gripper_base"/>
+    </joint>
+    <link name="${prefix}gripper_base">
+      <inertial>
+        <origin xyz="0.055 0 0" rpy="${pi/2} 0 ${pi/2}"/>
+        <mass value="0.3"/>
+        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="package://rll_description/meshes/egl90/visual/gripper_base.stl" scale="0.001 0.001 0.001"/>
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0.059 -0.025" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.09 0.108 0.18"/>
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+
+  <xacro:macro name="egl90-jaws" params="prefix min max *mesh">
+
     <joint name="egl_position" type="prismatic">
-      <parent link="${prefix}jaw_base"/>
-      <child link="${prefix}finger_right"/>
-      <origin rpy="0.0 0.0 ${pi}" xyz="${x - 0.1} -0.013 0.005"/>
+      <parent link="${prefix}gripper_base"/>
+      <child link="${prefix}gripper_finger_right"/>
+      <origin xyz="-0.013 0.1063 -0.1" rpy="0 ${pi} 0"/>
       <axis xyz="1 0 0"/>
       <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
     </joint>
-    <link name="${prefix}finger_right">
+    <link name="${prefix}gripper_finger_right">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="${finger_mass}"/>
         <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
@@ -40,79 +60,32 @@
     </link>
 
     <joint name="egl_position_mimic" type="prismatic">
-      <parent link="${prefix}jaw_base"/>
-      <child link="${prefix}finger_left"/>
-      <origin rpy="0.0 0.0 0.0" xyz="${x + 0.1} 0.013 0.005"/>
+      <parent link="${prefix}gripper_base"/>
+      <child link="${prefix}gripper_finger_left"/>
+      <origin xyz="0.013 0.1063 -0.02" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
       <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
     </joint>
-    <link name="${prefix}finger_left">
+    <link name="${prefix}gripper_finger_left">
       <inertial>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <mass value="${finger_mass}"/>
         <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002"/>
       </inertial>
       <visual>
-        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0" rpy="${90 * PI / 180} 0 ${90 * PI / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
           <xacro:insert_block name="mesh"/>
         </geometry>
       </collision>
     </link>
+
   </xacro:macro>
 
-  <!-- Added to figure out orientation -->
-  <xacro:macro name="egl90-connector" params="y z">
-    <visual>
-      <origin rpy="0 1.5708 0" xyz="${-base_x/2 - 0.005} ${y} ${base_z/2 + z}"/>
-      <geometry>
-        <cylinder length="0.01" radius="0.005"/>
-      </geometry>
-      <material name="egl90-metal"/>
-    </visual>
-  </xacro:macro>
-  <xacro:macro name="egl90" params="parent prefix *origin">
-    <joint name="${prefix}mount" type="fixed">
-      <xacro:insert_block name="origin"/>
-      <parent link="${parent}"/>
-      <child link="${prefix}base"/>
-    </joint>
-    <link name="${prefix}base">
-      <visual>
-        <origin rpy="0 0 0" xyz="0 0 ${base_z/2}"/>
-        <geometry>
-          <box size="${base_x} ${base_y} ${base_z}"/>
-        </geometry>
-        <material name="egl90-metal"/>
-      </visual>
-      <xacro:egl90-connector y="-0.02" z="0.02"/>
-      <xacro:egl90-connector y="-0.02" z="-0.02"/>
-      <xacro:egl90-connector y="0.02" z="-0.02"/>
-    </link>
-    <joint name="${prefix}jaw_mount" type="fixed">
-      <origin rpy="0 0 0" xyz="0 0 ${base_z + jaw_base_z}"/>
-      <parent link="${prefix}base"/>
-      <child link="${prefix}jaw_base"/>
-    </joint>
-    <link name="${prefix}jaw_base">
-      <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="${gripper_mass}"/>
-        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
-      </inertial>
-      <visual>
-        <origin rpy="0 0 0" xyz="0 0 ${-jaw_base_z/2}"/>
-        <geometry>
-          <box size="${base_x} ${jaw_base_y} ${jaw_base_z}"/>
-        </geometry>
-        <material name="egl90-metal"/>
-      </visual>
-    </link>
-  </xacro:macro>
 </robot>

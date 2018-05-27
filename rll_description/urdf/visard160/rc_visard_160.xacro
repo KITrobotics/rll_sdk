@@ -4,13 +4,13 @@
 <robot name="rc_visard_160" xmlns:xacro="http://www.ros.org/wiki/xacro">
   <xacro:macro name="rc_160" params="prefix parent *origin">
 
-    <joint name="${prefix}camera" type="fixed">
+    <joint name="${prefix}roboception_camera" type="fixed">
       <parent link="${parent}"/>
-      <child link="${prefix}camera"/>
+      <child link="${prefix}roboception_camera"/>
       <xacro:insert_block name="origin"/>
     </joint>
 
-    <link name="${prefix}camera">
+    <link name="${prefix}roboception_camera">
       <visual>
           <geometry>
               <mesh filename="package://rll_description/meshes/visard160/visual/rc_visard_160.dae"/>
@@ -24,11 +24,11 @@
       </collision>
     </link>
 
-  <link name="${prefix}mounting"/>
+  <link name="${prefix}roboception_mounting"/>
 
   <joint name="${prefix}mounting_to_camera" type="fixed">
-    <parent link="${prefix}camera"/>
-    <child link="${prefix}mounting"/>
+    <parent link="${prefix}roboception_camera"/>
+    <child link="${prefix}roboception_mounting"/>
     <origin xyz="0.080 0.0375 -0.031" />
   </joint>
 
