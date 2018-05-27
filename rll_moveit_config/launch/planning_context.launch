@@ -19,7 +19,7 @@
   </group>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" textfile="$(find rll_moveit_config)/config/iiwa7.srdf" />
+  <param name="$(arg robot_description)_semantic" textfile="$(find rll_moveit_config)/config/rll_cell.srdf" />
   
   <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">

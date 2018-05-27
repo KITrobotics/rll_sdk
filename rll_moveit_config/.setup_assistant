@@ -1,10 +1,10 @@
 moveit_setup_assistant_config:
   URDF:
     package: rll_description
-    relative_path: urdf/rll_setup.urdf.xacro
+    relative_path: urdf/rll_main.urdf.xacro
     xacro_args: "--inorder "
   SRDF:
-    relative_path: config/iiwa7.srdf
+    relative_path: config/rll_cell.srdf
   CONFIG:
     author_name: Wolfgang Wiedmeyer
     author_email: wolfgang.wiedmeyer@kit.edu

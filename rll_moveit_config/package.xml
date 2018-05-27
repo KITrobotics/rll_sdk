@@ -3,7 +3,7 @@
   <name>rll_moveit_config</name>
   <version>0.3.0</version>
   <description>
-     An automatically generated package with all the configuration and launch files for using the iiwa7 with the MoveIt! Motion Planning Framework
+     A package with all the configuration and launch files for using the Robot Learning Lab setup with the MoveIt! Motion Planning Framework
   </description>
   <author email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</author>
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>

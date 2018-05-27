@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="iiwa7">
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cell">
 
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
