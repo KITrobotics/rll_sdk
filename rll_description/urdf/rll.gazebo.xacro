@@ -4,30 +4,20 @@
 
   <xacro:macro name="rll_gazebo" params="robot_name">
 
-  <gazebo reference="world">
-    <static>true</static>
-  </gazebo>
   <!-- Link Table -->    
   <gazebo reference="table">
     <static>true</static>
   </gazebo>
-  <!-- Link iiwa_base_adapter -->    
-  <gazebo reference="$(arg robot_name)_base_adapter">
+  <gazebo reference="$(arg robot_name)_link_0">
     <static>true</static>
   </gazebo>
-  <!-- Link roboception_adapter -->    
-  <gazebo reference="roboception_adapter">
-    <static>true</static>
-  </gazebo>
-  <!-- Link roboception_gusset -->    
-  <gazebo reference="roboception_gusset">
-    <static>true</static>
-  </gazebo>
+
   <!-- Link profile_cams -->    
   <gazebo reference="profile_cams">
     <static>true</static>
   </gazebo>
 
   </xacro:macro>
+
 </robot>
 

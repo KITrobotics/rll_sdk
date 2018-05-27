@@ -1,0 +1,97 @@
+<?xml version="1.0"?>
+
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="rll_virtual">
+
+    <!-- virtual walls -->
+
+    <joint name="wall_joint1" type="fixed">
+      <parent link="world" />
+      <child link="wall_front" />
+      <origin xyz="0.605 0 0.7" rpy="0 0 0"/>
+    </joint>
+    <joint name="wall_joint2" type="fixed">
+      <parent link="world" />
+      <child link="wall_back" />
+      <origin xyz="-0.605 0 0.7" rpy="0 0 0"/>
+    </joint>
+    <joint name="wall_joint3" type="fixed">
+      <parent link="world" />
+      <child link="wall_left" />
+      <origin xyz="0 -0.805 0.7" rpy="0 0 0"/>
+    </joint>
+    <joint name="wall_joint4" type="fixed">
+      <parent link="world" />
+      <child link="wall_right" />
+      <origin xyz="0 0.805 0.7" rpy="0 0 0"/>
+    </joint>
+
+    <link name="wall_front">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.01 0.8 0.55" rpy="0 0 0"/>
+        </geometry>
+        <material name="transparent" />
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.01 1.6 1.4" rpy="0 0 0"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="wall_back">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.01 0.8 0.55" rpy="0 0 0"/>
+        </geometry>
+        <material name="transparent" />
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.01 1.6 1.4" rpy="0 0 0"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="wall_left">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.6 0.01 0.55" rpy="0 0 0"/>
+        </geometry>
+        <material name="transparent" />
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="1.2 0.01 1.4" rpy="0 0 0"/>
+        </geometry>
+      </collision>
+    </link>
+    <link name="wall_right">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="0.6 0.01 0.55" rpy="0 0 0"/>
+        </geometry>
+        <material name="transparent" />
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <geometry>
+          <box size="1.2 0.01 1.4" rpy="0 0 0"/>
+        </geometry>
+      </collision>
+    </link>
+
+      <material name="transparent">
+        <color rgba="0.8784 0.8745 0.8588 0.3"/>
+      </material>
+
+  </xacro:macro>
+
+</robot>

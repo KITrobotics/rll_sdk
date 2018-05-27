@@ -5,6 +5,7 @@
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/rll_virtual.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/rll.gazebo.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/rll.transmission.xacro"/>
 
@@ -42,89 +43,6 @@
     </collision>
   </link>
 
-  <!-- virtual walls -->
-
-  <joint name="wall_joint1" type="fixed">
-    <parent link="world" />
-    <child link="wall_front" />
-    <origin xyz="0.605 0 0.7" rpy="0 0 0"/>
-  </joint>
-  <joint name="wall_joint2" type="fixed">
-    <parent link="world" />
-    <child link="wall_back" />
-    <origin xyz="-0.605 0 0.7" rpy="0 0 0"/>
-  </joint>
-  <joint name="wall_joint3" type="fixed">
-    <parent link="world" />
-    <child link="wall_left" />
-    <origin xyz="0 -0.805 0.7" rpy="0 0 0"/>
-  </joint>
-  <joint name="wall_joint4" type="fixed">
-    <parent link="world" />
-    <child link="wall_right" />
-    <origin xyz="0 0.805 0.7" rpy="0 0 0"/>
-  </joint>
-
-  <link name="wall_front">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 0.8 0.55" rpy="0 0 0"/>
-      </geometry>
-      <material name="transparent" />
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 1.6 1.4" rpy="0 0 0"/>
-      </geometry>
-    </collision>
-  </link>
-  <link name="wall_back">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 0.8 0.55" rpy="0 0 0"/>
-      </geometry>
-      <material name="transparent" />
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.01 1.6 1.4" rpy="0 0 0"/>
-      </geometry>
-    </collision>
-  </link>
-  <link name="wall_left">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.6 0.01 0.55" rpy="0 0 0"/>
-      </geometry>
-      <material name="transparent" />
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="1.2 0.01 1.4" rpy="0 0 0"/>
-      </geometry>
-    </collision>
-  </link>
-  <link name="wall_right">
-    <visual>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="0.6 0.01 0.55" rpy="0 0 0"/>
-      </geometry>
-      <material name="transparent" />
-    </visual>
-    <collision>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <geometry>
-        <box size="1.2 0.01 1.4" rpy="0 0 0"/>
-      </geometry>
-    </collision>
-  </link>
 
   <joint name="base_adapter_joint" type="fixed">
     <parent link="world" />
@@ -167,13 +85,18 @@
   </joint>
   <link name="$(arg robot_name)_gripper_link_ee"/>
 
-  
+
   <joint name="profile_cams_joint" type="fixed">
     <parent link="world" />
     <child link="profile_cams" />
     <origin xyz="0 0 0" rpy="0 0 0"/>
   </joint>
   <link name="profile_cams">
+    <inertial>
+       <origin xyz="0 0 0" rpy="0 0 0"/>
+       <mass value="0.1"/>
+       <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
+    </inertial>
     <visual>
       <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
       <geometry>
@@ -193,11 +116,48 @@
     <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * pi / 180} 0"/>
   </xacro:rc_160>
 
-  <material name="transparent">
-    <color rgba="0.8784 0.8745 0.8588 0.3"/>
-  </material>
+  <!-- Axis camera -->
+  <joint name="axis_cam_base_joint" type="fixed">
+    <parent link="profile_cams" />
+    <child link="axis_cam_base" />
+    <origin xyz="0.577 0.8 1.13" rpy="${90 * pi / 180} 0 0"/>
+  </joint>
+  <link name="axis_cam_base">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_bottom.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0 0.035" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.01 0.01 0.07"/>
+      </geometry>
+    </collision>
+  </link>
+  <joint name="axis_cam_top_joint" type="fixed">
+    <parent link="axis_cam_base" />
+    <child link="axis_cam_top" />
+    <origin xyz="0 0 0.068" rpy="${30 * pi / 180} ${30 * pi / 180} ${-65 * pi / 180}"/>
+  </joint>
+  <link name="axis_cam_top">
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_top.dae"/>
+      </geometry>
+    </visual>
+    <collision>
+      <origin xyz="0 0.01 0.03" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.06 0.11 0.06"/>
+      </geometry>
+    </collision>
+  </link>
 
   <!--Extensions -->
+  <xacro:rll_virtual />
   <xacro:rll_gazebo robot_name="$(arg robot_name)" />
   <xacro:rll_transmission hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)"/>
 
