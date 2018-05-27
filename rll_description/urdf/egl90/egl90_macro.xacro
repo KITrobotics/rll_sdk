@@ -40,6 +40,9 @@
         <geometry>
           <mesh filename="package://rll_description/meshes/egl90/visual/gripper_base.stl" scale="0.001 0.001 0.001"/>
         </geometry>
+        <material name="black ">
+          <color rgba="1.0 1.0 1.0 1.0"/>
+        </material>
       </visual>
       <collision>
         <origin xyz="0 0.055 -0.025" rpy="0 0 0"/>
@@ -58,7 +61,7 @@
       <parent link="${prefix}gripper_base"/>
       <child link="${prefix}gripper_finger_right"/>
       <origin xyz="-0.013 0.1063 -0.1" rpy="0 ${180 * pi / 180} 0"/>
-      <axis xyz="1 0 0"/>
+      <axis xyz="0 0 1"/>
       <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
     </joint>
     <link name="${prefix}gripper_finger_right">
@@ -85,7 +88,7 @@
       <parent link="${prefix}gripper_base"/>
       <child link="${prefix}gripper_finger_left"/>
       <origin xyz="0.013 0.1063 -0.02" rpy="0 0 0"/>
-      <axis xyz="1 0 0"/>
+      <axis xyz="0 0 1"/>
       <limit effort="100.0" lower="${min}" upper="${max}" velocity="100.0"/>
     </joint>
     <link name="${prefix}gripper_finger_left">
