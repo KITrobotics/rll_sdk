@@ -5,15 +5,28 @@
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/rll.gazebo.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/rll.transmission.xacro"/>
 
 
   <!--  Arguments for the iiwa7 macro  -->
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
   <xacro:arg name="robot_name" default="iiwa"/>
 
-  <link name="world">
+  <link name="world"/>
+  <joint name="table_joint" type="fixed">
+    <parent link="world" />
+    <child link="table" />
+    <origin xyz="0 0 0" rpy="0 0 0"/>
+  </joint>
+  <link name="table">
+    <inertial>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="0.1"/>
+      <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
+    </inertial>
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 ${90 * PI / 180}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
       <geometry>
         <mesh filename="package://rll_description/meshes/rll/visual/table.dae"/>
       </geometry>
@@ -122,7 +135,7 @@
     <visual>
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/base_adapter.dae"/>
+        <mesh filename="package://rll_description/meshes/rll/visual/base_adapter.dae"/>
       </geometry>
     </visual>
     <collision>
@@ -154,30 +167,7 @@
   </joint>
   <link name="$(arg robot_name)_gripper_link_ee"/>
 
-  <!-- gripper transmissions -->
-  <transmission name="$(arg robot_name)_tran_8">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="egl_position">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="$(arg robot_name)_motor_8">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-
-  <transmission name="$(arg robot_name)_tran_9">
-    <type>transmission_interface/SimpleTransmission</type>
-    <joint name="egl_position_mimic">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-    </joint>
-    <actuator name="$(arg robot_name)_motor_9">
-      <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
-  </transmission>
-
-
+  
   <joint name="profile_cams_joint" type="fixed">
     <parent link="world" />
     <child link="profile_cams" />
@@ -185,7 +175,7 @@
   </joint>
   <link name="profile_cams">
     <visual>
-      <origin xyz="0 0 0" rpy="0 0 ${90 * PI / 180}"/>
+      <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
       <geometry>
         <mesh filename="package://rll_description/meshes/rll/visual/profile_cams.dae"/>
       </geometry>
@@ -200,18 +190,15 @@
 
   <!-- Roboception camera -->
   <xacro:rc_160 parent="profile_cams" prefix="$(arg robot_name)_">
-    <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * PI / 180} 0"/>
+    <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * pi / 180} 0"/>
   </xacro:rc_160>
-
-  <gazebo reference="world">
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="$(arg robot_name)_base_adapter">
-    <static>true</static>
-  </gazebo>
 
   <material name="transparent">
     <color rgba="0.8784 0.8745 0.8588 0.3"/>
   </material>
+
+  <!--Extensions -->
+  <xacro:rll_gazebo robot_name="$(arg robot_name)" />
+  <xacro:rll_transmission hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)"/>
 
 </robot>
