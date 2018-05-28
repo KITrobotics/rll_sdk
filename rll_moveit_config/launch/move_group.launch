@@ -3,13 +3,11 @@
   
   <arg name="hardware_interface" default="PositionJointInterface"/>
   <arg name="robot_name" default="iiwa"/>
-  <arg name="model" default="iiwa7"/>
 
   <include file="$(find rll_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
     <arg name="hardware_interface" value="$(arg hardware_interface)"/>
     <arg name="robot_name" value="$(arg robot_name)"/>
-    <arg name="model" value="$(arg model)"/>
   </include>
 
   <!-- GDB Debug Option -->

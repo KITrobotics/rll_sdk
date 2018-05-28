@@ -8,8 +8,6 @@
     <arg name="hardware_interface" default="PositionJointInterface"/>
     <!-- The is gonna have its nodes/topics under a namespace with the same name. -->
     <arg name="robot_name" default="iiwa"/>
-    <!-- Model of the iiwa to use : iiwa7, iiwa14 -->
-    <arg name="model" default="iiwa7"/>
     <arg name="rviz" default="true" />
 
     <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
@@ -23,7 +21,6 @@
     <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)" />
-      <arg name="model" value="$(arg model)"/>
     </include>
 
     <!-- Load move_group -->
@@ -32,7 +29,6 @@
             <arg name="publish_monitored_planning_scene" value="true" />
             <arg name="hardware_interface" value="$(arg hardware_interface)"/>
             <arg name="robot_name" value="$(arg robot_name)"/>
-            <arg name="model" value="$(arg model)" />
         </include>
 
         <include if="$(arg rviz)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
