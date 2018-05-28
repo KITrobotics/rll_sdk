@@ -57,7 +57,7 @@
 
   <xacro:macro name="egl90-jaws" params="prefix min max *mesh">
 
-    <joint name="egl_position" type="prismatic">
+    <joint name="${prefix}egl_position" type="prismatic">
       <parent link="${prefix}gripper_base"/>
       <child link="${prefix}gripper_finger_right"/>
       <origin xyz="-0.013 0.1063 -0.1" rpy="0 ${180 * pi / 180} 0"/>
@@ -84,7 +84,7 @@
       </collision>
     </link>
 
-    <joint name="egl_position_mimic" type="prismatic">
+    <joint name="${prefix}egl_position_mimic" type="prismatic">
       <parent link="${prefix}gripper_base"/>
       <child link="${prefix}gripper_finger_left"/>
       <origin xyz="0.013 0.1063 -0.02" rpy="0 0 0"/>

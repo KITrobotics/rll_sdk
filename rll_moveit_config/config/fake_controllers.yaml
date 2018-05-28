@@ -10,5 +10,5 @@ controller_list:
       - iiwa_joint_7
   - name: fake_gripper_controller
     joints:
-      - egl_position
-      - egl_position_mimic
+      - iiwa_egl_position
+      - iiwa_egl_position_mimic

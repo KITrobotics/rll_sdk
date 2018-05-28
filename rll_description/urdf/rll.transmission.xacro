@@ -5,7 +5,7 @@
    <!-- gripper right transmissions -->
   <transmission name="$(arg robot_name)_tran_8">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="egl_position">
+    <joint name="$(arg robot_name)_egl_position">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="$(arg robot_name)_motor_8">
@@ -16,7 +16,7 @@
    <!-- gripper left transmissions -->
   <transmission name="$(arg robot_name)_tran_9">
     <type>transmission_interface/SimpleTransmission</type>
-    <joint name="egl_position_mimic">
+    <joint name="$(arg robot_name)_egl_position_mimic">
       <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
     </joint>
     <actuator name="$(arg robot_name)_motor_9">
