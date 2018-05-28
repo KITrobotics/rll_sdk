@@ -12,7 +12,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/roboception_gusset.dae"/>
+          <mesh filename="package://rll_description/meshes/visard160/visual/roboception_gusset.dae"/>
         </geometry>
       </visual>
       <collision>
@@ -32,7 +32,7 @@
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/roboception_adapter.dae"/>
+          <mesh filename="package://rll_description/meshes/visard160/visual/roboception_adapter.dae"/>
         </geometry>
       </visual>
     </link>

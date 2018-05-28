@@ -120,7 +120,7 @@
   <joint name="axis_cam_base_joint" type="fixed">
     <parent link="profile_cams" />
     <child link="axis_cam_base" />
-    <origin xyz="0.577 0.8 1.13" rpy="${90 * pi / 180} 0 0"/>
+    <origin xyz="0.577 0.8 1.137" rpy="${90 * pi / 180} 0 0"/>
   </joint>
   <link name="axis_cam_base">
     <visual>
