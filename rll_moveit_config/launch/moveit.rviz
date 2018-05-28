@@ -66,7 +66,12 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          iiwa_base:
+          axis_cam_base:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          axis_cam_top:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -76,22 +81,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          iiwa_camera:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          iiwa_finger_left:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          iiwa_finger_right:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           iiwa_gripper_adapter:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_base:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_finger_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_finger_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -100,11 +105,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          iiwa_jaw_base:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           iiwa_link_0:
             Alpha: 1
             Show Axes: false
@@ -149,16 +149,31 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          iiwa_mounting:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          roboception_base:
+          iiwa_roboception_adapter:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          roboception_collision:
+          iiwa_roboception_camera:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_roboception_gusset:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_roboception_mounting:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          profile_cams:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          table:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -187,7 +202,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
         Loop Animation: true
         Robot Alpha: 0.5
         Robot Color: 150; 50; 150
@@ -233,7 +247,12 @@ Visualization Manager:
           Expand Link Details: false
           Expand Tree: false
           Link Tree Style: Links in Alphabetic Order
-          iiwa_base:
+          axis_cam_base:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          axis_cam_top:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -243,22 +262,22 @@ Visualization Manager:
             Show Axes: false
             Show Trail: false
             Value: true
-          iiwa_camera:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          iiwa_finger_left:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
-          iiwa_finger_right:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           iiwa_gripper_adapter:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_base:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_finger_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_finger_right:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -267,11 +286,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          iiwa_jaw_base:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-            Value: true
           iiwa_link_0:
             Alpha: 1
             Show Axes: false
@@ -316,16 +330,31 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-          iiwa_mounting:
-            Alpha: 1
-            Show Axes: false
-            Show Trail: false
-          roboception_base:
+          iiwa_roboception_adapter:
             Alpha: 1
             Show Axes: false
             Show Trail: false
             Value: true
-          roboception_collision:
+          iiwa_roboception_camera:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_roboception_gusset:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_roboception_mounting:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+          profile_cams:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          table:
             Alpha: 1
             Show Axes: false
             Show Trail: false
@@ -354,7 +383,6 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
-            Value: true
         Robot Alpha: 1
         Show Robot Collision: false
         Show Robot Visual: true
