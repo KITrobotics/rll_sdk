@@ -70,12 +70,7 @@
   </xacro:iiwa7>
 
   <!-- Here we insert a Schunk gripper in the scene -->
-  <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_">
-    <origin xyz="0 0 0.024" rpy="0 0 0"/>
-  </xacro:egl90>
-  <xacro:egl90-jaws prefix="$(arg robot_name)_" min="0" max="0.06">
-    <mesh filename="package://rll_description/meshes/egl90/visual/gripper_finger.dae" scale="0.001 0.001 0.001"/>
-  </xacro:egl90-jaws>
+  <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_" />
 
   <!-- TCP link -->
   <joint name="gripper_ee_joint" type="fixed">
@@ -132,7 +127,7 @@
     <collision>
       <origin xyz="0 0 0.035" rpy="0 0 0"/>
       <geometry>
-        <box size="0.01 0.01 0.07"/>
+        <box size="0.07 0.07 0.07"/>
       </geometry>
     </collision>
   </link>

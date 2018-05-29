@@ -17,5 +17,5 @@ controller_list:
     type: FollowJointTrajectory
     default: true
     joints:
-      - iiwa_egl_position
-      - iiwa_egl_position_mimic
+      - iiwa_egl_position_left
+      - iiwa_egl_position_right
