@@ -4,22 +4,48 @@
 
   <xacro:macro name="rll_gazebo" params="robot_name">
 
-  <!-- Link Table -->    
-  <gazebo reference="table">
-    <mu1>1.0</mu1>
-    <mu2>1.0</mu2>
-    <static>true</static>
-  </gazebo>
-  <gazebo reference="$(arg robot_name)_link_0">
-    <static>true</static>
-  </gazebo>
+    <!-- Link Table -->
+    <gazebo reference="table">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <static>true</static>
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_link_0">
+      <static>true</static>
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_gripper_waggon_right">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_gripper_waggon_left">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+    </gazebo>
 
-  <!-- Link profile_cams -->    
-  <gazebo reference="profile_cams">
-    <static>true</static>
-  </gazebo>
+    <!-- Link profile_cams -->
+    <gazebo reference="profile_cams">
+      <static>true</static>
+    </gazebo>
+
+    <!-- grasp plugin -->
+    <gazebo>
+      <plugin name="gazebo_grasp_fix" filename="libgazebo_grasp_fix.so">
+        <arm>
+          <arm_name>$(arg robot_name)</arm_name>
+          <palm_link>$(arg robot_name)_link_7</palm_link>
+          <gripper_link>$(arg robot_name)_gripper_waggon_right</gripper_link>
+          <gripper_link>$(arg robot_name)_gripper_waggon_left</gripper_link>
+        </arm>
+        <forces_angle_tolerance>100</forces_angle_tolerance>
+        <update_rate>30</update_rate>
+        <grip_count_threshold>4</grip_count_threshold>
+        <max_grip_count>8</max_grip_count>
+        <release_tolerance>0.0005</release_tolerance>
+        <disable_collisions_on_attach>false</disable_collisions_on_attach>
+        <contact_topic>__default_topic__</contact_topic>
+      </plugin>
+    </gazebo>
 
   </xacro:macro>
 
 </robot>
-
