@@ -6,6 +6,8 @@
 
   <!-- Link Table -->    
   <gazebo reference="table">
+    <mu1>1.0</mu1>
+    <mu2>1.0</mu2>
     <static>true</static>
   </gazebo>
   <gazebo reference="$(arg robot_name)_link_0">

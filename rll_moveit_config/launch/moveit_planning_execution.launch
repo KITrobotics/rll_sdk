@@ -9,6 +9,7 @@
     <!-- The is gonna have its nodes/topics under a namespace with the same name. -->
     <arg name="robot_name" default="iiwa"/>
     <arg name="rviz" default="true" />
+    <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
     <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
            to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
@@ -21,6 +22,7 @@
     <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="description_file" value="$(arg description_file)" />
     </include>
 
     <!-- Load move_group -->
@@ -29,6 +31,7 @@
             <arg name="publish_monitored_planning_scene" value="true" />
             <arg name="hardware_interface" value="$(arg hardware_interface)"/>
             <arg name="robot_name" value="$(arg robot_name)"/>
+            <arg name="description_file" value="$(arg description_file)" />            
         </include>
 
         <include if="$(arg rviz)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">

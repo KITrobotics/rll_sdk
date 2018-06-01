@@ -3,11 +3,13 @@
 
     <arg name="hardware_interface" default="PositionJointInterface" />
     <arg name="robot_name" default="iiwa" />
+    <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
     <!-- Loads the Gazebo world. -->
     <include file="$(find rll_gazebo)/launch/rll_world.launch">
         <arg name="hardware_interface" value="$(arg hardware_interface)" />
         <arg name="robot_name" value="$(arg robot_name)" />
+        <arg name="description_file" value="$(arg description_file)" />
     </include>
 
     <!-- Spawn controllers - it uses a JointTrajectoryController -->

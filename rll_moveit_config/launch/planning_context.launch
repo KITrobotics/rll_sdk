@@ -2,18 +2,18 @@
 <launch>
   <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
   <arg name="load_robot_description" default="false"/>
-  
   <arg name="hardware_interface" default="PositionJointInterface"/>
   <arg name="robot_name" default="iiwa"/>
-
   <!-- The name of the parameter under which the URDF is loaded -->
   <arg name="robot_description" default="robot_description"/>
+  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
   <!-- Loads the URDF with the given hardware interface and robot name into the ROS Parameter Server -->
   <group if="$(arg load_robot_description)">
     <include file="$(find rll_description)/launch/rll_description_upload.launch">
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="description_file" value="$(arg description_file)" />
     </include>
   </group>
 
