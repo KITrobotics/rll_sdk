@@ -58,7 +58,7 @@
       <child link="${prefix}gripper_waggon_left"/>
       <origin xyz="0.02985 0.0255 0.1063" rpy="0 0 ${180 * pi / 180}"/>
       <axis xyz="1 0 0"/>
-      <limit effort="100.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="100.0"/>
+      <limit effort="1000.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="100.0"/>
     </joint>
     <link name="${prefix}gripper_waggon_left">
       <visual>
@@ -105,7 +105,7 @@
       <child link="${prefix}gripper_waggon_right"/>
       <origin xyz="-0.02985 -0.0255 0.1063" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
-      <limit effort="100.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="100.0"/>
+      <limit effort="1000.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="100.0"/>
     </joint>
     <link name="${prefix}gripper_waggon_right">
       <visual>

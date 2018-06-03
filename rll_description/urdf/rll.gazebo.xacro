@@ -6,9 +6,13 @@
 
     <!-- Link Table -->
     <gazebo reference="table">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <static>true</static>
+      <mu1>100.0</mu1>
+      <mu2>100.0</mu2>
+      <!-- <kp>1000000.0</kp> -->
+      <!-- <kd>1.0</kd> -->
+      <!-- <fdir1>0 0 1</fdir1> -->
+      <!-- <minDepth>0.001</minDepth> -->
+      <!-- <static>true</static> -->
     </gazebo>
     <gazebo reference="$(arg robot_name)_link_0">
       <static>true</static>
@@ -16,10 +20,42 @@
     <gazebo reference="$(arg robot_name)_gripper_waggon_right">
       <mu1>1.0</mu1>
       <mu2>1.0</mu2>
+      <!-- <kp>1000000.0</kp> -->
+      <!-- <kd>1.0</kd> -->
+      <!-- <fdir1>1 0 0</fdir1> -->
+      <!-- <minDepth>0.002</minDepth> -->
+      <!-- <maxContacts>2</maxContacts> -->
+      <!-- <maxVel>0</maxVel> -->
     </gazebo>
     <gazebo reference="$(arg robot_name)_gripper_waggon_left">
       <mu1>1.0</mu1>
       <mu2>1.0</mu2>
+      <!-- <kp>1000000.0</kp> -->
+      <!-- <kd>1.0</kd> -->
+      <!-- <fdir1>1 0 0</fdir1> -->
+      <!-- <minDepth>0.002</minDepth> -->
+      <!-- <maxContacts>2</maxContacts> -->
+      <!-- <maxVel>0</maxVel> -->
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_gripper_finger_right">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <!-- <kp>1000000.0</kp> -->
+      <!-- <kd>1.0</kd> -->
+      <!-- <fdir1>1 0 0</fdir1> -->
+      <!-- <minDepth>0.002</minDepth> -->
+      <!-- <maxContacts>2</maxContacts> -->
+      <!-- <maxVel>0</maxVel> -->
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_gripper_finger_left">
+      <mu1>1.0</mu1>
+      <mu2>1.0</mu2>
+      <!-- <kp>1000000.0</kp> -->
+      <!-- <kd>1.0</kd> -->
+      <!-- <fdir1>1 0 0</fdir1> -->
+      <!-- <minDepth>0.002</minDepth> -->
+      <!-- <maxContacts>2</maxContacts> -->
+      <!-- <maxVel>0</maxVel> -->
     </gazebo>
 
     <!-- Link profile_cams -->
@@ -37,7 +73,7 @@
           <gripper_link>$(arg robot_name)_gripper_waggon_left</gripper_link>
         </arm>
         <forces_angle_tolerance>100</forces_angle_tolerance>
-        <update_rate>30</update_rate>
+        <update_rate>100</update_rate>
         <grip_count_threshold>4</grip_count_threshold>
         <max_grip_count>8</max_grip_count>
         <release_tolerance>0.0005</release_tolerance>
