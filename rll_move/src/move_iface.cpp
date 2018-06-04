@@ -17,9 +17,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <move_iface.h>
+#include <rll_move/move_iface.h>
 
-RLLMoveIface::RLLMoveIface(ros::NodeHandle nh)
+RLLMoveIface::RLLMoveIface()
 	: manip_move_group(MANIP_PLANNING_GROUP),
 	  gripper_move_group(GRIPPER_PLANNING_GROUP)
 {
@@ -270,27 +270,6 @@ void RLLMoveIface::reset_to_home(bool info)
 }
 
 RLLMoveIface::~RLLMoveIface() {}
-
-int main(int argc, char **argv)
-{
-	ros::init(argc, argv, "move_iface");
-	ros::NodeHandle nh;
-
-	ros::AsyncSpinner spinner(0);
-	spinner.start();
-
-	RLLMoveIface move_iface(nh);
-
-	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place, &move_iface);
-	ros::ServiceServer move_lin = nh.advertiseService("move_lin", &RLLMoveIface::move_lin, &move_iface);
-	ros::ServiceServer move_joints = nh.advertiseService("move_joints", &RLLMoveIface::move_joints, &move_iface);
-
-	ROS_INFO("RLL Move Interface started");
-
-	ros::waitForShutdown();
-
-	return 0;
-}
 
 /*
  * Local Variables:

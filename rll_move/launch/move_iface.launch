@@ -2,6 +2,6 @@
 <launch>
 
 
-  <node ns="iiwa" name="move_iface" pkg="rll_move" type="move_iface" respawn="false" output="screen" />
+  <node ns="iiwa" name="move_iface" pkg="rll_move" type="move_iface_full" respawn="false" output="screen" />
 
 </launch>

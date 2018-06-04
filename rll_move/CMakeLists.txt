@@ -12,10 +12,20 @@ find_package(catkin REQUIRED COMPONENTS
 )
 
 catkin_package(
+   INCLUDE_DIRS include
+   LIBRARIES rll_move
    CATKIN_DEPENDS message_runtime rll_msgs
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
 
-add_executable(move_iface src/move_iface.cpp)
-target_link_libraries(move_iface ${catkin_LIBRARIES})
+add_library(${PROJECT_NAME}
+  src/move_iface.cpp
+)
+add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+target_link_libraries(${PROJECT_NAME}
+  ${catkin_LIBRARIES}
+)
+
+add_executable(move_iface_full src/move_iface_full_node.cpp)
+target_link_libraries(move_iface_full rll_move ${catkin_LIBRARIES})
