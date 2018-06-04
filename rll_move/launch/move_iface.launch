@@ -1,0 +1,7 @@
+<?xml version="1.0"?>
+<launch>
+
+
+  <node ns="iiwa" name="move_iface" pkg="rll_move" type="move_iface" respawn="false" output="screen" />
+
+</launch>
