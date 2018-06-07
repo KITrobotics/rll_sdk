@@ -6,6 +6,7 @@ Panels:
       Expanded:
         - /MotionPlanning1
         - /MotionPlanning1/Scene Robot1
+        - /MotionPlanning1/Planning Request1
       Splitter Ratio: 0.742560029
     Tree Height: 621
   - Class: rviz/Help
@@ -105,6 +106,16 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          iiwa_gripper_waggon_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_waggon_right:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           iiwa_link_0:
             Alpha: 1
             Show Axes: false
@@ -225,7 +236,7 @@ Visualization Manager:
         Interactive Marker Size: 0
         Joint Violation Color: 255; 0; 255
         Planning Group: manipulator
-        Query Goal State: true
+        Query Goal State: false
         Query Start State: false
         Show Workspace: false
         Start State Alpha: 1
@@ -286,6 +297,16 @@ Visualization Manager:
             Alpha: 1
             Show Axes: false
             Show Trail: false
+          iiwa_gripper_waggon_left:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
+          iiwa_gripper_waggon_right:
+            Alpha: 1
+            Show Axes: false
+            Show Trail: false
+            Value: true
           iiwa_link_0:
             Alpha: 1
             Show Axes: false
@@ -439,5 +460,5 @@ Window Geometry:
   Views:
     collapsed: false
   Width: 1716
-  X: 1720
+  X: 0
   Y: 38
