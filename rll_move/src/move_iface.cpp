@@ -18,6 +18,7 @@
  */
 
 #include <rll_move/move_iface.h>
+#include "moveit/planning_scene_interface/planning_scene_interface.h"
 
 RLLMoveIface::RLLMoveIface()
 	: manip_move_group(MANIP_PLANNING_GROUP),
@@ -29,15 +30,21 @@ RLLMoveIface::RLLMoveIface()
 	gripper_move_group.setPlannerId("RRTConnectkConfigDefault");
 	gripper_move_group.setPlanningTime(2.0);
 
-	std::string ee_link =  "iiwa_gripper_link_ee";
+	std::string ee_link = "iiwa_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
 
+	manip_model = manip_move_group.getRobotModel();
+	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor = planning_scene_monitor::PlanningSceneMonitorPtr(
+		new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
+
 	reset_to_home();
-	open_gripper();
+	bool success = open_gripper();
+	if (!success)
+		ROS_ERROR("init: failed to open gripper!");
 }
 
 bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
-				   rll_msgs::PickPlace::Response &resp)
+			      rll_msgs::PickPlace::Response &resp)
 {
 	bool success;
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -52,7 +59,7 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 	manip_move_group.setStartStateToCurrentState();
 	waypoints_to.push_back(req.pose_above);
 	double achieved = manip_move_group.computeCartesianPath(waypoints_to,
-							  eef_step, jump_threshold, trajectory);
+								eef_step, jump_threshold, trajectory);
 	if (achieved < 1 && achieved > 0) {
 		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
 		resp.success = false;
@@ -76,7 +83,7 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 	manip_move_group.setStartStateToCurrentState();
 	waypoints_grip.push_back(req.pose_grip);
 	achieved = manip_move_group.computeCartesianPath(waypoints_grip,
-						   eef_step, jump_threshold, trajectory);
+							 eef_step, jump_threshold, trajectory);
 	if (achieved < 1 && achieved > 0) {
 		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
 		resp.success = false;
@@ -96,10 +103,17 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 		return true;
 	}
 
-	if (req.gripper_close)
-		close_gripper();
-	else
-		open_gripper();
+	if (req.gripper_close) {
+		attach_grasp_object(req.grasp_object);
+		success = close_gripper();
+	} else {
+		success = open_gripper();
+	}
+
+	if (!success) {
+		resp.success = false;
+		return true;
+	}
 
 	ROS_INFO("Moving above grip position");
 	manip_move_group.setStartStateToCurrentState();
@@ -129,7 +143,7 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 }
 
 bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
-				 rll_msgs::MoveLin::Response &resp)
+			    rll_msgs::MoveLin::Response &resp)
 {
 	bool success;
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
@@ -142,7 +156,7 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 	manip_move_group.setStartStateToCurrentState();
 	waypoints.push_back(req.pose);
 	double achieved = manip_move_group.computeCartesianPath(waypoints,
-							  eef_step, jump_threshold, trajectory);
+								eef_step, jump_threshold, trajectory);
 	if (achieved < 1 && achieved > 0) {
 		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
 		resp.success = false;
@@ -167,7 +181,7 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 }
 
 bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
-				    rll_msgs::MoveJoints::Response &resp)
+			       rll_msgs::MoveJoints::Response &resp)
 {
 	bool success;
 	std::vector<double> joints;
@@ -213,18 +227,20 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 bool RLLMoveIface::run_trajectory(moveit::planning_interface::MoveGroupInterface &move_group, bool info)
 {
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-	bool success_plan;
+	bool success;
 
-	success_plan = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 	if (info)
 		ROS_INFO("Planning result: %s",
-			 success_plan ? "SUCCEEDED" : "FAILED");
+			 success ? "SUCCEEDED" : "FAILED");
 
-	if (success_plan) {
-		success_plan = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	if (success) {
+		success = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 		if (info)
 			ROS_INFO("Plan execution result: %s",
-				 success_plan ? "SUCCEEDED" : "FAILED");
+				 success ? "SUCCEEDED" : "FAILED");
+		if (!success)
+			return false;
 	} else {
 		ROS_WARN("Not executing because planning failed");
 		return false;
@@ -241,7 +257,9 @@ bool RLLMoveIface::close_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_close");
-	run_trajectory(gripper_move_group, info);
+	bool success = run_trajectory(gripper_move_group, info);
+	if (!success)
+		return false;
 
 	return true;
 }
@@ -254,19 +272,62 @@ bool RLLMoveIface::open_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_open");
-	run_trajectory(gripper_move_group, info);
+	bool success = run_trajectory(gripper_move_group, info);
+	if (!success)
+		return false;
 
 	return true;
 }
 
-void RLLMoveIface::reset_to_home(bool info)
+bool RLLMoveIface::reset_to_home(bool info)
 {
 	if (info)
 		ROS_INFO("Moving to home");
 
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
-	run_trajectory(manip_move_group, info);
+	bool success = run_trajectory(manip_move_group, info);
+	if (!success)
+		return false;
+
+	return true;
+}
+
+bool RLLMoveIface::attach_grasp_object(std::string object_id)
+{
+	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+	moveit_msgs::CollisionObject remove_object;
+
+	if (object_id.empty())
+		return true;
+
+	ROS_INFO("attaching grasp object '%s'", object_id.c_str());
+
+	std::map<std::string,moveit_msgs::CollisionObject> objects = planning_scene_interface.getObjects(std::vector<std::string>{ object_id });
+
+	if (!objects.empty())
+		remove_object = objects[object_id];
+	else {
+		ROS_ERROR("object not found");
+		return false;
+	}
+
+	if (remove_object.id != object_id) {
+		ROS_ERROR("The found grasp object is not the right one");
+		return false;
+	}
+
+	remove_object.operation = remove_object.REMOVE;
+
+	planning_scene_interface.applyCollisionObject(remove_object);
+
+	moveit_msgs::AttachedCollisionObject attached_object;
+	attached_object.link_name = manip_move_group.getEndEffectorLink();
+	attached_object.object = remove_object;
+	attached_object.object.operation = attached_object.object.ADD;
+	// TODO: account for different robot names (if it's not "iiwa")
+	attached_object.touch_links = std::vector<std::string>{ "iiwa_gripper_finger_left", "iiwa_gripper_finger_right", "table" };
+	planning_scene_interface.applyAttachedCollisionObject(attached_object);
 }
 
 RLLMoveIface::~RLLMoveIface() {}

@@ -57,6 +57,6 @@
     constraints:
       goal_time: 0.5
       iiwa_egl_position_left:
-        goal: 0.03
+        goal: 0.04
       iiwa_egl_position_right:
-        goal: 0.03
+        goal: 0.04

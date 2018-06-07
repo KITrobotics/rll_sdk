@@ -1,5 +1,6 @@
 geometry_msgs/Pose pose_above
 geometry_msgs/Pose pose_grip
 bool gripper_close
+string grasp_object
 ---
 bool success
