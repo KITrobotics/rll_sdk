@@ -18,7 +18,6 @@
  */
 
 #include <rll_move/move_iface.h>
-#include "moveit/planning_scene_interface/planning_scene_interface.h"
 
 RLLMoveIface::RLLMoveIface()
 	: manip_move_group(MANIP_PLANNING_GROUP),
@@ -34,8 +33,6 @@ RLLMoveIface::RLLMoveIface()
 	manip_move_group.setEndEffectorLink(ee_link);
 
 	manip_model = manip_move_group.getRobotModel();
-	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor = planning_scene_monitor::PlanningSceneMonitorPtr(
-		new planning_scene_monitor::PlanningSceneMonitor("robot_description"));
 
 	reset_to_home();
 	bool success = open_gripper();
@@ -108,6 +105,7 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 		success = close_gripper();
 	} else {
 		success = open_gripper();
+		detach_grasp_object(req.grasp_object);
 	}
 
 	if (!success) {
@@ -295,7 +293,6 @@ bool RLLMoveIface::reset_to_home(bool info)
 
 bool RLLMoveIface::attach_grasp_object(std::string object_id)
 {
-	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	moveit_msgs::CollisionObject remove_object;
 
 	if (object_id.empty())
@@ -328,6 +325,39 @@ bool RLLMoveIface::attach_grasp_object(std::string object_id)
 	// TODO: account for different robot names (if it's not "iiwa")
 	attached_object.touch_links = std::vector<std::string>{ "iiwa_gripper_finger_left", "iiwa_gripper_finger_right", "table" };
 	planning_scene_interface.applyAttachedCollisionObject(attached_object);
+}
+
+bool RLLMoveIface::detach_grasp_object(std::string object_id)
+{
+	moveit_msgs::AttachedCollisionObject remove_object;
+
+	if (object_id.empty())
+		return true;
+
+	ROS_INFO("detaching grasp object '%s'", object_id.c_str());
+
+	std::map<std::string,moveit_msgs::AttachedCollisionObject> objects = planning_scene_interface.getAttachedObjects(std::vector<std::string>{ object_id });
+
+	if (!objects.empty())
+		remove_object = objects[object_id];
+	else {
+		ROS_ERROR("object not found");
+		return false;
+	}
+
+	if (remove_object.object.id != object_id) {
+		ROS_ERROR("The found grasp object is not the right one");
+		return false;
+	}
+
+	remove_object.object.operation = remove_object.object.REMOVE;
+
+	planning_scene_interface.applyAttachedCollisionObject(remove_object);
+
+	moveit_msgs::CollisionObject detached_object;
+	detached_object = remove_object.object;
+	detached_object.operation = detached_object.ADD;
+	planning_scene_interface.applyCollisionObject(detached_object);
 }
 
 RLLMoveIface::~RLLMoveIface() {}

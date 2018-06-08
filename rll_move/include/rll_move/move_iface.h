@@ -26,7 +26,7 @@
 #include <rll_msgs/MoveLin.h>
 #include <rll_msgs/MoveJoints.h>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
+#include "moveit/planning_scene_interface/planning_scene_interface.h"
 
 class RLLMoveIface
 {
@@ -38,7 +38,7 @@ public:
 	moveit::planning_interface::MoveGroupInterface manip_move_group;
 	moveit::planning_interface::MoveGroupInterface gripper_move_group;
 	moveit::core::RobotModelConstPtr manip_model;
-	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor;
+	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
 	bool pick_place(rll_msgs::PickPlace::Request &req,
 			rll_msgs::PickPlace::Response &resp);
@@ -56,6 +56,7 @@ private:
 	bool run_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
 			    bool info = true);
 	bool attach_grasp_object(std::string object_id);
+	bool detach_grasp_object(std::string object_id);
 };
 
 #endif  // RLL_MOVE_IFACE_H
