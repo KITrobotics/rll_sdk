@@ -11,18 +11,32 @@ find_package(catkin REQUIRED COMPONENTS
   geometry_msgs
 )
 
-## Generate services in the 'srv' folder
+## Generate messages in the 'msg' folder
+add_message_files(
+  FILES
+  JobStatus.msg
+)
+
+# Generate services in the 'srv' folder
 add_service_files(
   FILES
   PickPlace.srv
   MoveLin.srv
   MoveJoints.srv
+  JobEnv.srv
 )
 
-## Generate added messages and services with any dependencies listed here
+## Generate actions in the 'action' folder
+# add_action_files(
+#   FILES
+#   Action1.action
+#   Action2.action
+# )
+
+# Generate added messages and services with any dependencies listed here
 generate_messages(
   DEPENDENCIES
-  std_msgs  # Or other packages containing msgs
+  std_msgs
   geometry_msgs
 )
 
