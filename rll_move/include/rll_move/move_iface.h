@@ -22,6 +22,7 @@
 
 #include <ros/ros.h>
 
+#include <rll_msgs/JobEnv.h>
 #include <rll_msgs/PickPlace.h>
 #include <rll_msgs/MoveLin.h>
 #include <rll_msgs/MoveJoints.h>
@@ -40,6 +41,10 @@ public:
 	moveit::core::RobotModelConstPtr manip_model;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 
+	bool run_job(rll_msgs::JobEnv::Request &req,
+		     rll_msgs::JobEnv::Response &resp);
+	bool idle(rll_msgs::JobEnv::Request &req,
+		  rll_msgs::JobEnv::Response &resp);
 	bool pick_place(rll_msgs::PickPlace::Request &req,
 			rll_msgs::PickPlace::Response &resp);
 	bool move_lin(rll_msgs::MoveLin::Request &req,

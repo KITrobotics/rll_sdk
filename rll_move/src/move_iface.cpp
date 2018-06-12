@@ -40,6 +40,27 @@ RLLMoveIface::RLLMoveIface()
 		ROS_ERROR("init: failed to open gripper!");
 }
 
+bool RLLMoveIface::run_job(rll_msgs::JobEnv::Request &req,
+			   rll_msgs::JobEnv::Response &resp)
+{
+	ROS_INFO("got job running request");
+
+	return true;
+}
+
+bool RLLMoveIface::idle(rll_msgs::JobEnv::Request &req,
+			rll_msgs::JobEnv::Response &resp)
+{
+	// Send home position when idling
+	// This ensures that the brakes are not activated and the control cycle keeps running.
+	// If we don't do this, the robot won't move when a trajectory is sent and the brakes are active.
+	reset_to_home(false);
+	open_gripper();
+	resp.job.status = rll_msgs::JobStatus::SUCCESS;
+
+	return true;
+}
+
 bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 			      rll_msgs::PickPlace::Response &resp)
 {
