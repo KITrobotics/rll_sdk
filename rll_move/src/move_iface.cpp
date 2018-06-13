@@ -38,11 +38,6 @@ RLLMoveIface::RLLMoveIface()
 
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
-
-	reset_to_home();
-	bool success = open_gripper();
-	if (!success)
-		ROS_ERROR("init: failed to open gripper!");
 }
 
 bool RLLMoveIface::run_job(rll_msgs::JobEnv::Request &req,
