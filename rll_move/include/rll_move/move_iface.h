@@ -53,17 +53,18 @@ public:
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
 	bool reset_to_home(bool info = true);
-	bool close_gripper();
-	bool open_gripper();
+	virtual bool close_gripper();
+	virtual bool open_gripper();
 
 	~RLLMoveIface();
   
 private:
-	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
-				bool info = true);
+	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group);
 	bool run_lin_trajectory(geometry_msgs::Pose goal);
 	bool attach_grasp_object(std::string object_id);
 	bool detach_grasp_object(std::string object_id);
+	virtual bool modify_ptp_trajectory(moveit_msgs::RobotTrajectory &trajectory);
+	virtual bool modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 };
 
 #endif  // RLL_MOVE_IFACE_H

@@ -29,15 +29,15 @@ RLLMoveIface::RLLMoveIface()
 	gripper_move_group.setPlannerId("RRTConnectkConfigDefault");
 	gripper_move_group.setPlanningTime(2.0);
 
-	std::string ee_link = "iiwa_gripper_link_ee";
-	manip_move_group.setEndEffectorLink(ee_link);
-
 	manip_model = manip_move_group.getRobotModel();
 
 	ns = ros::this_node::getNamespace();
 	// remove the two slashes at the beginning
 	ns.erase(0, 2);
 	ROS_INFO("starting in ns %s", ns.c_str());
+
+	std::string ee_link = ns + "_gripper_link_ee";
+	manip_move_group.setEndEffectorLink(ee_link);
 
 	reset_to_home();
 	bool success = open_gripper();
@@ -148,48 +148,39 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 	manip_move_group.setStartStateToCurrentState();
 	success = manip_move_group.setJointValueTarget(joints);
 	if (!success) {
-		ROS_ERROR("requested joint values out of range");
+		ROS_ERROR("requested joint values are out of range");
 		resp.success = false;
 		return true;
 	}
 
-	success = (manip_move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = run_ptp_trajectory(manip_move_group);
 	if (!success) {
-		ROS_ERROR("path planning failed");
 		resp.success = false;
-		return true;
-	}
-
-	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-	if (!success) {
-		ROS_ERROR("path execution failed");
-		resp.success = false;
-		return true;
+		return false;
 	}
 
 	resp.success = true;
 	return true;
 }
 
-bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group, bool info)
+bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group)
 {
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 	bool success;
 
 	success = (move_group.plan(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-	if (info)
-		ROS_INFO("Planning result: %s",
-			 success ? "SUCCEEDED" : "FAILED");
+	if (!success) {
+		ROS_WARN("PTP planning failed");
+		return false;
+	}
 
-	if (success) {
-		success = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-		if (info)
-			ROS_INFO("Plan execution result: %s",
-				 success ? "SUCCEEDED" : "FAILED");
-		if (!success)
-			return false;
-	} else {
-		ROS_WARN("Not executing because planning failed");
+	success = modify_ptp_trajectory(my_plan.trajectory_);
+	if (!success)
+		return false;
+
+	success = (move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	if (!success) {
+		ROS_WARN("PTP plan execution failed");
 		return false;
 	}
 
@@ -203,6 +194,7 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
 	moveit_msgs::RobotTrajectory trajectory;
 	const double eef_step = 0.001;
 	const double jump_threshold = 1000.0;
+	bool success;
 
 	manip_move_group.setStartStateToCurrentState();
 	waypoints.push_back(goal);
@@ -216,9 +208,13 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
 		return false;
 	}
 
+	success = modify_lin_trajectory(trajectory);
+	if (!success)
+		return false;
+
 	my_plan.trajectory_= trajectory;
 
-	bool success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
 	if (!success) {
 		ROS_ERROR("path execution failed");
 		return false;
@@ -227,15 +223,27 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
 	return true;
 }
 
+bool RLLMoveIface::modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajectory)
+{
+	// Derived classes can put modifications here
+
+	return true;
+}
+
+bool RLLMoveIface::modify_ptp_trajectory(moveit_msgs::RobotTrajectory &trajectory)
+{
+	// Derived classes can put modifications here
+
+	return true;
+}
+
 bool RLLMoveIface::close_gripper()
 {
-	bool info = true;
-
 	ROS_INFO("Closing the gripper");
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_close");
-	bool success = run_ptp_trajectory(gripper_move_group, info);
+	bool success = run_ptp_trajectory(gripper_move_group);
 	if (!success)
 		return false;
 
@@ -244,13 +252,11 @@ bool RLLMoveIface::close_gripper()
 
 bool RLLMoveIface::open_gripper()
 {
-	bool info = true;
-
 	ROS_INFO("Opening the gripper");
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_open");
-	bool success = run_ptp_trajectory(gripper_move_group, info);
+	bool success = run_ptp_trajectory(gripper_move_group);
 	if (!success)
 		return false;
 
@@ -264,7 +270,7 @@ bool RLLMoveIface::reset_to_home(bool info)
 
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
-	bool success = run_ptp_trajectory(manip_move_group, info);
+	bool success = run_ptp_trajectory(manip_move_group);
 	if (!success)
 		return false;
 
