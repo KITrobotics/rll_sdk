@@ -34,6 +34,11 @@ RLLMoveIface::RLLMoveIface()
 
 	manip_model = manip_move_group.getRobotModel();
 
+	ns = ros::this_node::getNamespace();
+	// remove the two slashes at the beginning
+	ns.erase(0, 2);
+	ROS_INFO("starting in ns %s", ns.c_str());
+
 	reset_to_home();
 	bool success = open_gripper();
 	if (!success)
@@ -65,58 +70,19 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 			      rll_msgs::PickPlace::Response &resp)
 {
 	bool success;
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-	std::vector<geometry_msgs::Pose> waypoints_to;
-	std::vector<geometry_msgs::Pose> waypoints_grip;
-	std::vector<geometry_msgs::Pose> waypoints_away;
-	moveit_msgs::RobotTrajectory trajectory;
-	const double eef_step = 0.001;
-	const double jump_threshold = 1000.0;
 
 	ROS_INFO("Moving above target");
-	manip_move_group.setStartStateToCurrentState();
-	waypoints_to.push_back(req.pose_above);
-	double achieved = manip_move_group.computeCartesianPath(waypoints_to,
-								eef_step, jump_threshold, trajectory);
-	if (achieved < 1 && achieved > 0) {
-		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
-		resp.success = false;
-		return true;
-	} else if (achieved <= 0) {
-		ROS_ERROR("path planning completely failed");
-		resp.success = false;
-		return true;
-	}
-
-	my_plan.trajectory_= trajectory;
-
-	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = run_lin_trajectory(req.pose_above);
 	if (!success) {
-		ROS_ERROR("path execution failed");
+		ROS_WARN("Moving above target failed");
 		resp.success = false;
 		return true;
 	}
 
 	ROS_INFO("Moving to grip position");
-	manip_move_group.setStartStateToCurrentState();
-	waypoints_grip.push_back(req.pose_grip);
-	achieved = manip_move_group.computeCartesianPath(waypoints_grip,
-							 eef_step, jump_threshold, trajectory);
-	if (achieved < 1 && achieved > 0) {
-		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
-		resp.success = false;
-		return true;
-	} else if (achieved <= 0) {
-		ROS_ERROR("path planning completely failed");
-		resp.success = false;
-		return true;
-	}
-
-	my_plan.trajectory_= trajectory;
-
-	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	success = run_lin_trajectory(req.pose_grip);
 	if (!success) {
-		ROS_ERROR("path execution failed");
+		ROS_WARN("Moving to grip position failed");
 		resp.success = false;
 		return true;
 	}
@@ -130,29 +96,15 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 	}
 
 	if (!success) {
+		ROS_WARN("Opening or closing the gripper failed");
 		resp.success = false;
 		return true;
 	}
 
-	ROS_INFO("Moving above grip position");
-	manip_move_group.setStartStateToCurrentState();
-	waypoints_away.push_back(req.pose_above);
-	achieved = manip_move_group.computeCartesianPath(waypoints_away, eef_step, jump_threshold, trajectory);
-	if (achieved < 1 && achieved > 0) {
-		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
-		resp.success = false;
-		return true;
-	} else if (achieved <= 0) {
-		ROS_ERROR("path planning completely failed");
-		resp.success = false;
-		return true;
-	}
-
-	my_plan.trajectory_= trajectory;
-
-	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	ROS_INFO("Moving back above grip position");
+	success = run_lin_trajectory(req.pose_above);
 	if (!success) {
-		ROS_ERROR("path execution failed");
+		ROS_WARN("Moving back above target failed");
 		resp.success = false;
 		return true;
 	}
@@ -164,38 +116,14 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 			    rll_msgs::MoveLin::Response &resp)
 {
-	bool success;
-	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
-	std::vector<geometry_msgs::Pose> waypoints;
-	moveit_msgs::RobotTrajectory trajectory;
-	const double eef_step = 0.001;
-	const double jump_threshold = 1000.0;
-
 	ROS_INFO("Lin motion requested");
-	manip_move_group.setStartStateToCurrentState();
-	waypoints.push_back(req.pose);
-	double achieved = manip_move_group.computeCartesianPath(waypoints,
-								eef_step, jump_threshold, trajectory);
-	if (achieved < 1 && achieved > 0) {
-		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
-		resp.success = false;
-		return true;
-	} else if (achieved <= 0) {
-		ROS_ERROR("path planning completely failed");
-		resp.success = false;
-		return true;
-	}
 
-	my_plan.trajectory_= trajectory;
-
-	success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
-	if (!success) {
-		ROS_ERROR("path execution failed");
+	bool success = run_lin_trajectory(req.pose);
+	if (!success)
 		resp.success = false;
-		return true;
-	}
+	else
+		resp.success = true;
 
-	resp.success = true;
 	return true;
 }
 
@@ -243,7 +171,7 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 	return true;
 }
 
-bool RLLMoveIface::run_trajectory(moveit::planning_interface::MoveGroupInterface &move_group, bool info)
+bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group, bool info)
 {
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 	bool success;
@@ -268,6 +196,37 @@ bool RLLMoveIface::run_trajectory(moveit::planning_interface::MoveGroupInterface
 	return true;
 }
 
+bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
+{
+	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+	std::vector<geometry_msgs::Pose> waypoints;
+	moveit_msgs::RobotTrajectory trajectory;
+	const double eef_step = 0.001;
+	const double jump_threshold = 1000.0;
+
+	manip_move_group.setStartStateToCurrentState();
+	waypoints.push_back(goal);
+	double achieved = manip_move_group.computeCartesianPath(waypoints,
+								eef_step, jump_threshold, trajectory);
+	if (achieved < 1 && achieved > 0) {
+		ROS_ERROR("only achieved to compute %f of the requested path", achieved);
+		return false;
+	} else if (achieved <= 0) {
+		ROS_ERROR("path planning completely failed");
+		return false;
+	}
+
+	my_plan.trajectory_= trajectory;
+
+	bool success = (manip_move_group.execute(my_plan) == moveit::planning_interface::MoveItErrorCode::SUCCESS);
+	if (!success) {
+		ROS_ERROR("path execution failed");
+		return false;
+	}
+
+	return true;
+}
+
 bool RLLMoveIface::close_gripper()
 {
 	bool info = true;
@@ -276,7 +235,7 @@ bool RLLMoveIface::close_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_close");
-	bool success = run_trajectory(gripper_move_group, info);
+	bool success = run_ptp_trajectory(gripper_move_group, info);
 	if (!success)
 		return false;
 
@@ -291,7 +250,7 @@ bool RLLMoveIface::open_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_open");
-	bool success = run_trajectory(gripper_move_group, info);
+	bool success = run_ptp_trajectory(gripper_move_group, info);
 	if (!success)
 		return false;
 
@@ -305,7 +264,7 @@ bool RLLMoveIface::reset_to_home(bool info)
 
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
-	bool success = run_trajectory(manip_move_group, info);
+	bool success = run_ptp_trajectory(manip_move_group, info);
 	if (!success)
 		return false;
 
@@ -343,8 +302,7 @@ bool RLLMoveIface::attach_grasp_object(std::string object_id)
 	attached_object.link_name = manip_move_group.getEndEffectorLink();
 	attached_object.object = remove_object;
 	attached_object.object.operation = attached_object.object.ADD;
-	// TODO: account for different robot names (if it's not "iiwa")
-	attached_object.touch_links = std::vector<std::string>{ "iiwa_gripper_finger_left", "iiwa_gripper_finger_right", "table" };
+	attached_object.touch_links = std::vector<std::string>{ ns + "_gripper_finger_left", ns + "_gripper_finger_right", "table" };
 	planning_scene_interface.applyAttachedCollisionObject(attached_object);
 }
 

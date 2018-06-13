@@ -40,6 +40,7 @@ public:
 	moveit::planning_interface::MoveGroupInterface gripper_move_group;
 	moveit::core::RobotModelConstPtr manip_model;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
+	std::string ns;
 
 	bool run_job(rll_msgs::JobEnv::Request &req,
 		     rll_msgs::JobEnv::Response &resp);
@@ -58,8 +59,9 @@ public:
 	~RLLMoveIface();
   
 private:
-	bool run_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
-			    bool info = true);
+	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
+				bool info = true);
+	bool run_lin_trajectory(geometry_msgs::Pose goal);
 	bool attach_grasp_object(std::string object_id);
 	bool detach_grasp_object(std::string object_id);
 };
