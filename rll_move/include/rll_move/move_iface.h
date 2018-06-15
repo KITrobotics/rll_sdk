@@ -52,7 +52,7 @@ public:
 		      rll_msgs::MoveLin::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
-	bool reset_to_home(bool info = true);
+	bool reset_to_home();
 	virtual bool close_gripper();
 	virtual bool open_gripper();
 

@@ -51,10 +51,7 @@ bool RLLMoveIface::run_job(rll_msgs::JobEnv::Request &req,
 bool RLLMoveIface::idle(rll_msgs::JobEnv::Request &req,
 			rll_msgs::JobEnv::Response &resp)
 {
-	// Send home position when idling
-	// This ensures that the brakes are not activated and the control cycle keeps running.
-	// If we don't do this, the robot won't move when a trajectory is sent and the brakes are active.
-	reset_to_home(false);
+	reset_to_home();
 	open_gripper();
 	resp.job.status = rll_msgs::JobStatus::SUCCESS;
 
@@ -258,11 +255,8 @@ bool RLLMoveIface::open_gripper()
 	return true;
 }
 
-bool RLLMoveIface::reset_to_home(bool info)
+bool RLLMoveIface::reset_to_home()
 {
-	if (info)
-		ROS_INFO("Moving to home");
-
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
 	bool success = run_ptp_trajectory(manip_move_group);
