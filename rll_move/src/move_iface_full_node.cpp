@@ -33,6 +33,7 @@ int main(int argc, char **argv)
 	ros::ServiceServer service_idle = nh.advertiseService("job_idle", &RLLMoveIface::idle, &move_iface);
 	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place, &move_iface);
 	ros::ServiceServer move_lin = nh.advertiseService("move_lin", &RLLMoveIface::move_lin, &move_iface);
+	ros::ServiceServer move_ptp = nh.advertiseService("move_ptp", &RLLMoveIface::move_ptp, &move_iface);
 	ros::ServiceServer move_joints = nh.advertiseService("move_joints", &RLLMoveIface::move_joints, &move_iface);
 
 	ROS_INFO("RLL Move Interface started");

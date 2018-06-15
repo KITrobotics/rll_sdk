@@ -25,6 +25,7 @@
 #include <rll_msgs/JobEnv.h>
 #include <rll_msgs/PickPlace.h>
 #include <rll_msgs/MoveLin.h>
+#include <rll_msgs/MovePTP.h>
 #include <rll_msgs/MoveJoints.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include "moveit/planning_scene_interface/planning_scene_interface.h"
@@ -50,6 +51,8 @@ public:
 			rll_msgs::PickPlace::Response &resp);
 	bool move_lin(rll_msgs::MoveLin::Request &req,
 		      rll_msgs::MoveLin::Response &resp);
+	bool move_ptp(rll_msgs::MovePTP::Request &req,
+		      rll_msgs::MovePTP::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
 	bool reset_to_home();

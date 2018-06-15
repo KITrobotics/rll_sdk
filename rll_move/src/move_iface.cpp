@@ -119,6 +119,29 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 	return true;
 }
 
+bool RLLMoveIface::move_ptp(rll_msgs::MovePTP::Request &req,
+			    rll_msgs::MovePTP::Response &resp)
+{
+	bool success;
+
+	ROS_INFO("PTP motion requested");
+
+	success = manip_move_group.setPoseTarget(req.pose);
+	if (!success) {
+		ROS_ERROR("requested pose is out of range");
+		resp.success = false;
+		return true;
+	}
+
+	success = run_ptp_trajectory(manip_move_group);
+	if (!success)
+		resp.success = false;
+	else
+		resp.success = true;
+
+	return true;
+}
+
 bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 			       rll_msgs::MoveJoints::Response &resp)
 {

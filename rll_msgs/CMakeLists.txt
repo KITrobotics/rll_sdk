@@ -22,6 +22,7 @@ add_service_files(
   FILES
   PickPlace.srv
   MoveLin.srv
+  MovePTP.srv
   MoveJoints.srv
   JobEnv.srv
 )
