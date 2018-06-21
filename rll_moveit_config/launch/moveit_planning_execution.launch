@@ -1,42 +1,37 @@
 <?xml version="1.0"?>
 <launch>
-    <!-- The planning and execution components of MoveIt! configured to run -->
-    <!-- using the ROS-Industrial interface. -->
+  <arg name="hardware_interface" default="PositionJointInterface"/>
+  <arg name="robot_name" default="iiwa"/>
+  <arg name="headless" default="false"/>
+  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
-    <!-- |              PARAMETERS              | -->
-    <!-- hardware_interface to use : PositionJointInterface, EffortJointInterface, VelocityJointInterface. -->
-    <arg name="hardware_interface" default="PositionJointInterface"/>
-    <!-- The is gonna have its nodes/topics under a namespace with the same name. -->
-    <arg name="robot_name" default="iiwa"/>
-    <arg name="rviz" default="true" />
-    <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
+         to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
+  <remap from="/PositionJointInterface_gripper_controller/follow_joint_trajectory"
+         to="/$(arg robot_name)/PositionJointInterface_gripper_controller/follow_joint_trajectory" />
+  <remap from="robot_description" to="/$(arg robot_name)/robot_description" />
+  <remap from="/get_planning_scene" to="/$(arg robot_name)/get_planning_scene" />
 
-    <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
-           to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
-    <remap from="/PositionJointInterface_gripper_controller/follow_joint_trajectory"
-           to="/$(arg robot_name)/PositionJointInterface_gripper_controller/follow_joint_trajectory" />
-    <remap from="robot_description" to="/$(arg robot_name)/robot_description" />
-    <remap from="/get_planning_scene" to="/$(arg robot_name)/get_planning_scene" />
+  <!-- Run the robot within a Gazebo simulation. -->
+  <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
+    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="description_file" value="$(arg description_file)" />
+    <arg name="headless" value="$(arg headless)" />
+  </include>
 
-    <!-- Run the robot within a Gazebo simulation. -->
-    <include file="$(find rll_gazebo)/launch/rll_gazebo.launch">
+  <!-- Load move_group -->
+  <group ns="$(arg robot_name)">
+    <include file="$(find rll_moveit_config)/launch/move_group.launch">
+      <arg name="publish_monitored_planning_scene" value="true" />
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
-      <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="robot_name" value="$(arg robot_name)"/>
       <arg name="description_file" value="$(arg description_file)" />
     </include>
 
-    <!-- Load move_group -->
-    <group ns="$(arg robot_name)">
-        <include file="$(find rll_moveit_config)/launch/move_group.launch">
-            <arg name="publish_monitored_planning_scene" value="true" />
-            <arg name="hardware_interface" value="$(arg hardware_interface)"/>
-            <arg name="robot_name" value="$(arg robot_name)"/>
-            <arg name="description_file" value="$(arg description_file)" />            
-        </include>
-
-        <include if="$(arg rviz)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
-            <arg name="config" value="true"/>
-        </include>
-    </group>
+    <include unless="$(arg headless)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
+      <arg name="config" value="true"/>
+    </include>
+  </group>
 
 </launch>

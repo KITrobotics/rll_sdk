@@ -1,38 +1,38 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  <arg name="hardware_interface" default="PositionJointInterface"/>
+  <arg name="robot_name" default="iiwa" />
+  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
-    <!-- Loads the iiwa.world environment in Gazebo. -->
+  <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
+  <include unless="$(arg headless)" file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find rll_gazebo)/worlds/rll.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="true" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="false"/>
+  </include>
+  <include if="$(arg headless)" file="$(find gazebo_ros)/launch/empty_world.launch">
+    <arg name="world_name" value="$(find rll_gazebo)/worlds/rll.world"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="false" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="true"/>
+  </include>
 
-    <!-- These are the arguments you can pass this launch file, for example paused:=true -->
-    <arg name="paused" default="false"/>
-    <arg name="use_sim_time" default="true"/>
-    <arg name="gui" default="true"/>
-    <arg name="headless" default="false"/>
-    <arg name="debug" default="false"/>
-    <arg name="hardware_interface" default="PositionJointInterface"/>
-    <arg name="robot_name" default="iiwa" />
-    <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <include file="$(find rll_description)/launch/rll_description_upload.launch">
+    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="description_file" value="$(arg description_file)" />
+  </include>
 
-    <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
-    <include file="$(find gazebo_ros)/launch/empty_world.launch">
-        <arg name="world_name" value="$(find rll_gazebo)/worlds/rll.world"/>
-        <arg name="debug" value="$(arg debug)" />
-        <arg name="gui" value="$(arg gui)" />
-        <arg name="paused" value="$(arg paused)"/>
-        <arg name="use_sim_time" value="$(arg use_sim_time)"/>
-        <arg name="headless" value="$(arg headless)"/>
-    </include>
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
+        args="-urdf -model iiwa -param robot_description"/>
 
-    <!-- Load the URDF with the given hardware interface into the ROS Parameter Server -->
-    <include file="$(find rll_description)/launch/rll_description_upload.launch">
-        <arg name="hardware_interface" value="$(arg hardware_interface)"/>
-        <arg name="robot_name" value="$(arg robot_name)" />
-        <arg name="description_file" value="$(arg description_file)" />
-    </include>
-
-    <!-- Run a python script to send a service call to gazebo_ros to spawn a URDF robot -->
-    <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-          args="-urdf -model iiwa -param robot_description"/>
-
-
-    </launch>
+</launch>
