@@ -4,6 +4,7 @@
   <arg name="robot_name" default="iiwa"/>
   <arg name="headless" default="false"/>
   <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <arg name="rviz_config" default ="$(find rll_moveit_config)/launch/moveit.rviz" />
 
   <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
          to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
@@ -30,7 +31,7 @@
     </include>
 
     <include unless="$(arg headless)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
-      <arg name="config" value="true"/>
+      <arg name="command_args" value="-d $(arg rviz_config)" />
     </include>
   </group>
 
