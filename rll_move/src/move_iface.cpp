@@ -208,7 +208,7 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
 	std::vector<geometry_msgs::Pose> waypoints;
 	moveit_msgs::RobotTrajectory trajectory;
 	const double eef_step = 0.001;
-	const double jump_threshold = 1000.0;
+	const double jump_threshold = 350.0;
 	bool success;
 
 	manip_move_group.setStartStateToCurrentState();
