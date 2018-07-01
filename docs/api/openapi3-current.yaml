@@ -32,6 +32,7 @@ paths:
         required: true
         schema:
           type: string
+        example: 5b391e2af7971f5ba880525b
       responses:
         '200':
           description: Response of the call
@@ -81,6 +82,8 @@ paths:
         required: true
         schema:
           type: string
+          enum:
+          - rll_planning_project
       - in: query
         name: git_url
         description: Url to git repository
@@ -203,3 +206,4 @@ components:
           - User has a job in the queue
           - Git tag not found
           - Git URL invalid
+          - Username invalid
