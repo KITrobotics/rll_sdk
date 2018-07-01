@@ -1,0 +1,205 @@
+openapi: 3.0.0
+x-navigateMethodsByName: true
+info:
+  version: 0.1.0
+  title: Robot Learning Lab API
+servers: 
+  - url: https://rll-api.ipr.kit.edu
+tags:
+- name: jobs
+  description: Management of Jobs
+paths:
+  /jobs:
+    get:
+      tags:
+      - jobs
+      summary: Get status of job or logs for job
+      description: ''
+      operationId: getJobs
+      parameters:
+      - in: query
+        name: op
+        description: What operation should be performed, either retrieving status information about job or fetching log files
+        required: true
+        schema:
+          type: string
+          enum:
+          - status
+          - logs
+      - in: query
+        name: job
+        description: Job Id to perform operation on
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response of the call
+          content:
+            application/json:
+              schema:
+                type: object
+                oneOf:
+                  - $ref: '#/components/schemas/JobStatusSuccess'
+                  - $ref: '#/components/schemas/JobLogsSuccess'
+                  - $ref: '#/components/schemas/JobLogsError'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+    post:
+      tags:
+      - jobs
+      summary: Submit a job
+      description: ''
+      operationId: submitJob
+      parameters:
+      - in: query 
+        name: op
+        description: Operation to perform
+        required: true
+        schema:
+          type: string
+          enum:
+          - submit
+      - in: query
+        name: username
+        description: Author of the submitted code
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: secret
+        description: Password for submission access
+        required: true
+        schema:
+          type: string
+          format: password
+      - in: query
+        name: project
+        description: Name of the project the submission is for
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: git_url
+        description: Url to git repository
+        required: true
+        schema:
+          type: string
+      - in: query
+        name: git_tag
+        description: Tag to checkout
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response for submission
+          content:
+            application/json:
+              schema:
+                type: object
+                oneOf:
+                - $ref: '#/components/schemas/JobSubmissionSuccess'
+                - $ref: '#/components/schemas/JobSubmissionError'
+        '400':
+          description: Bad Request
+        '401':
+          description: Unauthorized
+        '500':
+          description: Internal Server Error
+components:
+  schemas:
+    JobStatusSuccess:
+      title: Successful job status query
+      required:
+      - status
+      - job_status
+      properties:
+        status:
+          type: string
+          description: Status of query
+          enum:
+          - success
+        job_status:
+          type: string
+          description: Status of job
+          enum:
+          - submitted
+          - running
+          - finished
+        job_result:
+          type: string
+          description: Result if the job has finished
+          enum:
+          - success
+          - failure
+          - internal error
+          - unknown
+          - fetching project code failed
+          - launching project failed
+          - building project failed
+    JobLogsSuccess:
+      title: Successfull query for job logs
+      required:
+      - status
+      - log_url
+      properties:
+        status:
+          type: string
+          description: Status of query
+          enum:
+          - success
+        log_url:
+          type: string
+          description: URL to log file
+    JobLogsError:
+      title: Failed query for job logs
+      required:
+      - status
+      - error
+      properties:
+        status:
+          type: string
+          description: Status of query
+          enum:
+          - error
+        error:
+          type: string
+          description: Error message
+          enum:
+          - No finished job with this ID
+    JobSubmissionSuccess:
+      title: Successful submission
+      required:
+      - status
+      - job_id
+      properties:
+        status:
+          type: string
+          description: Status of submission
+          enum:
+          - success
+        job_id:
+          type: string
+          description: Job id of submitted job
+          example: 5ab955b109b90e5707d2ccbe
+    JobSubmissionError:
+      title: Failed submission
+      required:
+      - status
+      - error
+      properties:
+        status:
+          type: string
+          description: Status of submission
+          enum:
+          - error
+        error:
+          type: string
+          description: Error message
+          enum:
+          - User has a job in the queue
+          - Git tag not found
+          - Git URL invalid
