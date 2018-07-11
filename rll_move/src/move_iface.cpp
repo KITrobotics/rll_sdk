@@ -126,6 +126,7 @@ bool RLLMoveIface::move_ptp(rll_msgs::MovePTP::Request &req,
 
 	ROS_INFO("PTP motion requested");
 
+	manip_move_group.setStartStateToCurrentState();
 	success = manip_move_group.setPoseTarget(req.pose);
 	if (!success) {
 		ROS_ERROR("requested pose is out of range");
