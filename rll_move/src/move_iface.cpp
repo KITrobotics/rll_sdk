@@ -43,7 +43,19 @@ RLLMoveIface::RLLMoveIface()
 bool RLLMoveIface::run_job(rll_msgs::JobEnv::Request &req,
 			   rll_msgs::JobEnv::Response &resp)
 {
+	rll_msgs::DefaultMoveIfaceGoal goal;
+
 	ROS_INFO("got job running request");
+
+	if (!action_client_ptr->waitForServer(ros::Duration(5.0))) {
+		ROS_ERROR("action service not available");
+		resp.job.status = rll_msgs::JobStatus::FAILURE;
+		return true;
+	}
+
+	action_client_ptr->sendGoal(goal);
+	ROS_INFO("called the interface client");
+	action_client_ptr->waitForResult();
 
 	return true;
 }

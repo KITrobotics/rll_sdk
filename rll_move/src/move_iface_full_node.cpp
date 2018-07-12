@@ -29,6 +29,9 @@ int main(int argc, char **argv)
 
 	RLLMoveIface move_iface;
 
+	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client("move_client", true);
+	move_iface.action_client_ptr = &action_client;
+
 	ros::ServiceServer service_job = nh.advertiseService("job_env", &RLLMoveIface::run_job, &move_iface);
 	ros::ServiceServer service_idle = nh.advertiseService("job_idle", &RLLMoveIface::idle, &move_iface);
 	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place, &move_iface);

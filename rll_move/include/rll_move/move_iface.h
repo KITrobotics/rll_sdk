@@ -28,7 +28,9 @@
 #include <rll_msgs/MovePTP.h>
 #include <rll_msgs/MoveJoints.h>
 #include <moveit/move_group_interface/move_group_interface.h>
-#include "moveit/planning_scene_interface/planning_scene_interface.h"
+#include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <actionlib/client/simple_action_client.h>
+#include <rll_msgs/DefaultMoveIfaceAction.h>
 
 class RLLMoveIface
 {
@@ -42,6 +44,7 @@ public:
 	moveit::core::RobotModelConstPtr manip_model;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	std::string ns;
+	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 
 	bool run_job(rll_msgs::JobEnv::Request &req,
 		     rll_msgs::JobEnv::Response &resp);
