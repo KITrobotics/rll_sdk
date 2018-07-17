@@ -19,8 +19,8 @@
 #
 
 import rospy
-from rll_msgs.srv import JobEnv
-from rll_msgs.msg import JobStatus
+import actionlib
+from rll_msgs.msg import *
 
 def job_result_codes_to_string(status):
     job_codes = {JobStatus.SUCCESS: "success", JobStatus.FAILURE: "failure",
@@ -31,17 +31,21 @@ def job_result_codes_to_string(status):
 if __name__ == '__main__':
     rospy.init_node('project_runner')
 
-    try:
-        job_env = rospy.ServiceProxy('job_env', JobEnv)
-        resp = job_env(True)
-        rospy.loginfo("executed project with status '%s'",
-                      job_result_codes_to_string(resp.job.status))
-    except rospy.ServiceException, e:
-        rospy.loginfo("service call failed: %s", e)
+    job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
+    job_env.wait_for_server(rospy.Duration.from_sec(2.0))
+
+    job_env_goal = JobEnvGoal()
+    job_env.send_goal(job_env_goal)
+    rospy.loginfo("started the project")
+    job_env.wait_for_result()
+    resp = job_env.get_result()
+    rospy.loginfo("executed project with status '%s'",
+                  job_result_codes_to_string(resp.job.status))
 
     # reset robot and environment
-    try:
-        job_idle = rospy.ServiceProxy("job_idle", JobEnv)
-        resp = job_idle(True)
-    except rospy.ServiceException, e:
-        rospy.loginfo("service call failed: %s", e)
+    job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
+    job_idle.wait_for_server(rospy.Duration.from_sec(2.0))
+    job_idle_goal = JobEnvGoal()
+    job_idle.send_goal(job_idle_goal)
+    rospy.loginfo("resetting environment back to start")
+    job_idle.wait_for_result()

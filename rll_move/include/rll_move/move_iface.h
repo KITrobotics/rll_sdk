@@ -22,7 +22,8 @@
 
 #include <ros/ros.h>
 
-#include <rll_msgs/JobEnv.h>
+#include <rll_msgs/JobEnvAction.h>
+#include <rll_msgs/DefaultMoveIfaceAction.h>
 #include <rll_msgs/PickPlace.h>
 #include <rll_msgs/MoveLin.h>
 #include <rll_msgs/MovePTP.h>
@@ -30,7 +31,7 @@
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <actionlib/client/simple_action_client.h>
-#include <rll_msgs/DefaultMoveIfaceAction.h>
+#include <actionlib/server/simple_action_server.h>
 
 class RLLMoveIface
 {
@@ -46,10 +47,11 @@ public:
 	std::string ns;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 
-	bool run_job(rll_msgs::JobEnv::Request &req,
-		     rll_msgs::JobEnv::Response &resp);
-	bool idle(rll_msgs::JobEnv::Request &req,
-		  rll_msgs::JobEnv::Response &resp);
+	typedef actionlib::SimpleActionServer<rll_msgs::JobEnvAction> JobServer;
+	void run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
+		     JobServer *as);
+	void idle(const rll_msgs::JobEnvGoalConstPtr &goal,
+		  JobServer *as);
 	bool pick_place(rll_msgs::PickPlace::Request &req,
 			rll_msgs::PickPlace::Response &resp);
 	bool move_lin(rll_msgs::MoveLin::Request &req,
@@ -63,7 +65,7 @@ public:
 	virtual bool open_gripper();
 
 	~RLLMoveIface();
-  
+
 private:
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group);
 	bool run_lin_trajectory(geometry_msgs::Pose goal);

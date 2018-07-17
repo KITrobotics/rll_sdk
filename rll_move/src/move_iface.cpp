@@ -40,34 +40,41 @@ RLLMoveIface::RLLMoveIface()
 	manip_move_group.setEndEffectorLink(ee_link);
 }
 
-bool RLLMoveIface::run_job(rll_msgs::JobEnv::Request &req,
-			   rll_msgs::JobEnv::Response &resp)
+void RLLMoveIface::run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
+			   JobServer *as)
 {
-	rll_msgs::DefaultMoveIfaceGoal goal;
+	rll_msgs::JobEnvResult result;
+	rll_msgs::DefaultMoveIfaceGoal goal_iface_client;
 
 	ROS_INFO("got job running request");
 
 	if (!action_client_ptr->waitForServer(ros::Duration(5.0))) {
 		ROS_ERROR("action service not available");
-		resp.job.status = rll_msgs::JobStatus::FAILURE;
-		return true;
+		result.job.status = rll_msgs::JobStatus::FAILURE;
+		as->setSucceeded(result);
+		return;
 	}
 
-	action_client_ptr->sendGoal(goal);
+	action_client_ptr->sendGoal(goal_iface_client);
 	ROS_INFO("called the interface client");
 	action_client_ptr->waitForResult();
+	result.job.status = rll_msgs::JobStatus::SUCCESS;
 
-	return true;
+	as->setSucceeded(result);
 }
 
-bool RLLMoveIface::idle(rll_msgs::JobEnv::Request &req,
-			rll_msgs::JobEnv::Response &resp)
+void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
+			JobServer *as)
 {
+	rll_msgs::JobEnvResult result;
+
+	ROS_INFO("got idle request");
+
 	reset_to_home();
 	open_gripper();
-	resp.job.status = rll_msgs::JobStatus::SUCCESS;
+	result.job.status = rll_msgs::JobStatus::SUCCESS;
 
-	return true;
+	as->setSucceeded(result);
 }
 
 bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
