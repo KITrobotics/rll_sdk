@@ -21,6 +21,7 @@
 import rospy
 import actionlib
 from rll_msgs.msg import *
+import sys
 
 def job_result_codes_to_string(status):
     job_codes = {JobStatus.SUCCESS: "success", JobStatus.FAILURE: "failure",
@@ -32,7 +33,11 @@ if __name__ == '__main__':
     rospy.init_node('project_runner')
 
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
-    job_env.wait_for_server(rospy.Duration.from_sec(2.0))
+    available = job_env.wait_for_server(rospy.Duration.from_sec(2.0))
+    if not available:
+        rospy.logerror("job env action server is not available")
+        sys.exit(1)
+    rospy.sleep(0.5)
 
     job_env_goal = JobEnvGoal()
     job_env.send_goal(job_env_goal)
