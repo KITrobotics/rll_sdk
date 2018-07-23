@@ -1,6 +1,11 @@
 <?xml version="1.0"?>
 <launch>
 
-  <node ns="iiwa" name="rll_project_runner" pkg="rll_project_runner" type="project_runner.py" output="screen"/>
+  <arg name="only_idle" default="false"/>
+
+  <node ns="iiwa" name="rll_project_runner" pkg="rll_project_runner" type="project_runner.py" output="screen">
+        <param name="only_idle" value="$(arg only_idle)"/>
+  </node>
+
 
 </launch>

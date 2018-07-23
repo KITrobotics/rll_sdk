@@ -28,16 +28,33 @@ def job_result_codes_to_string(status):
                  JobStatus.INTERNAL_ERROR: "internal error"}
     return job_codes.get(status, "unknown")
 
+# reset robot and environment
+def idle():
+    job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
+    rospy.sleep(0.5)
+    available = job_idle.wait_for_server(rospy.Duration.from_sec(4.0))
+    if not available:
+        rospy.logerr("job idle action server is not available")
+        sys.exit(1)
+
+    job_idle_goal = JobEnvGoal()
+    job_idle.send_goal(job_idle_goal)
+    rospy.loginfo("resetting environment back to start")
+    job_idle.wait_for_result()
 
 if __name__ == '__main__':
     rospy.init_node('project_runner')
+    only_idle = rospy.get_param("~only_idle")
+    if only_idle:
+        idle()
+        sys.exit(0)
 
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
-    available = job_env.wait_for_server(rospy.Duration.from_sec(2.0))
-    if not available:
-        rospy.logerror("job env action server is not available")
-        sys.exit(1)
     rospy.sleep(0.5)
+    available = job_env.wait_for_server(rospy.Duration.from_sec(4.0))
+    if not available:
+        rospy.logerr("job env action server is not available")
+        sys.exit(1)
 
     job_env_goal = JobEnvGoal()
     job_env.send_goal(job_env_goal)
@@ -47,10 +64,4 @@ if __name__ == '__main__':
     rospy.loginfo("executed project with status '%s'",
                   job_result_codes_to_string(resp.job.status))
 
-    # reset robot and environment
-    job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
-    job_idle.wait_for_server(rospy.Duration.from_sec(2.0))
-    job_idle_goal = JobEnvGoal()
-    job_idle.send_goal(job_idle_goal)
-    rospy.loginfo("resetting environment back to start")
-    job_idle.wait_for_result()
+    idle()
