@@ -27,7 +27,7 @@ paths:
           type: string
           enum:
           - status
-          - data
+          - data_urls
       - in: query
         name: job
         description: Job Id to perform operation on
@@ -162,9 +162,10 @@ components:
           description: Status of job
           enum:
           - submitted
+          - processing sim started
+          - processing real started
+          - downloading code
           - building
-          - built
-          - waiting for sim
           - running sim
           - waiting for real
           - running real
@@ -182,14 +183,14 @@ components:
           - fetching project code failed
           - launching project failed
           - building project failed
-        queue_position:
+        position:
           type: integer
           description: Position in queue if status is submitted or waiting
         cam_url:
           type: string
           description: URL to live stream of running job on robot
     JobDataSuccess:
-      title: Successfull query for job logs
+      title: Successfull query for job data
       required:
       - status
       - build_log_url

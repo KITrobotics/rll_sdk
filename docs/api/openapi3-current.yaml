@@ -13,19 +13,19 @@ paths:
     get:
       tags:
       - jobs
-      summary: Get status of job or logs for job
+      summary: Get status of job or data for job
       description: ''
       operationId: getJobs
       parameters:
       - in: query
         name: op
-        description: What operation should be performed, either retrieving status information about job or fetching log files
+        description: What operation should be performed, either retrieving status information about job or fetching data of a finished job
         required: true
         schema:
           type: string
           enum:
           - status
-          - logs
+          - data_urls
       - in: query
         name: job
         description: Job Id to perform operation on
@@ -42,8 +42,8 @@ paths:
                 type: object
                 oneOf:
                   - $ref: '#/components/schemas/JobStatusSuccess'
-                  - $ref: '#/components/schemas/JobLogsSuccess'
-                  - $ref: '#/components/schemas/JobLogsError'
+                  - $ref: '#/components/schemas/JobDataSuccess'
+                  - $ref: '#/components/schemas/JobDataError'
         '400':
           description: Bad Request
         '500':
@@ -52,7 +52,7 @@ paths:
       tags:
       - jobs
       summary: Submit a job
-      description: ''
+      description: Central submission of jobs using a single secret. It would also be possible to support OpenID and OAuth to directly authenticate users.
       operationId: submitJob
       parameters:
       - in: query 
@@ -130,35 +130,61 @@ components:
           description: Status of job
           enum:
           - submitted
-          - running
+          - processing sim started
+          - processing real started
+          - downloading code
+          - building
+          - running sim
+          - waiting for real
+          - running real
           - finished
         job_result:
           type: string
           description: Result if the job has finished
           enum:
-          - success
-          - failure
+          - success sim
+          - success real
+          - failure sim
+          - failure real
           - internal error
           - unknown
           - fetching project code failed
           - launching project failed
           - building project failed
-    JobLogsSuccess:
-      title: Successfull query for job logs
+        position:
+          type: integer
+          description: Position in queue if status is submitted or waiting
+    JobDataSuccess:
+      title: Successfull query for job data
       required:
       - status
-      - log_url
+      - build_log_url
       properties:
         status:
           type: string
           description: Status of query
           enum:
           - success
-        log_url:
+        build_log_url:
           type: string
-          description: URL to log file
-    JobLogsError:
-      title: Failed query for job logs
+          description: URL to build log file
+        video_url:
+          type: string
+          description: URL to video file of job
+        sim_run_client_log_url:
+          type: string
+          description: URL to client log file for simulation run
+        sim_run_iface_log_url:
+          type: string
+          description: URL to interface log file for simulation run
+        real_run_client_log_url:
+          type: string
+          description: URL to client log file for the run on the real robot
+        real_run_iface_log_url:
+          type: string
+          description: URL to interface log file for the run on the real robot
+    JobDataError:
+      title: Failed query for job data
       required:
       - status
       - error
@@ -207,3 +233,4 @@ components:
           - Git tag not found
           - Git URL invalid
           - Username invalid
+          - Queue at max size
