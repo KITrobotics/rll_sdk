@@ -183,6 +183,16 @@ components:
           - fetching project code failed
           - launching project failed
           - building project failed
+        job_data:
+          type: array
+          items:
+            type: object
+            properties:
+              description:
+                type: string
+                example: duration
+              value:
+                type: number
         position:
           type: integer
           description: Position in queue if status is submitted or waiting
