@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   JobStatus.msg
+  JobExtraField.msg
 )
 
 # Generate services in the 'srv' folder

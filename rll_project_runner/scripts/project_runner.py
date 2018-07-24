@@ -63,5 +63,9 @@ if __name__ == '__main__':
     resp = job_env.get_result()
     rospy.loginfo("executed project with status '%s'",
                   job_result_codes_to_string(resp.job.status))
+    if resp.job_data:
+        rospy.loginfo("extra job data:")
+        for element in resp.job_data:
+            rospy.loginfo("%s: %f", element.description, element.value)
 
     idle()
