@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <launch>
-
+  <arg name="robot" default="iiwa" />
   <arg name="only_idle" default="false"/>
 
-  <node ns="iiwa" name="rll_project_runner" pkg="rll_project_runner" type="project_runner.py" output="screen">
+  <node ns="$(arg robot)" name="rll_project_runner" pkg="rll_project_runner" type="project_runner.py" output="screen">
         <param name="only_idle" value="$(arg only_idle)"/>
   </node>
 
