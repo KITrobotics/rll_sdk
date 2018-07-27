@@ -59,12 +59,13 @@ paths:
       parameters:
       - in: query 
         name: op
-        description: Operation to perform
+        description: Operation to perform, either submitting a Git repo URL with a Git tag or a Tar archive with the code
         required: true
         schema:
           type: string
           enum:
-          - submit
+          - submit_git
+          - submit_tar
       - in: query
         name: username
         description: Author of the submitted code
@@ -89,13 +90,16 @@ paths:
       - in: query
         name: git_url
         description: Url to git repository
-        required: true
         schema:
           type: string
       - in: query
         name: git_tag
-        description: Tag to checkout
-        required: true
+        description: Tag to checkout in the submitted Git repo
+        schema:
+          type: string
+      - in: query
+        name: tar_url
+        description: URL to Tar archive with code
         schema:
           type: string
       responses:
