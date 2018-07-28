@@ -70,7 +70,13 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 
 	ROS_INFO("got idle request");
 
-	reset_to_home();
+	bool success = reset_to_home();
+	if (!success) {
+		result.job.status = rll_msgs::JobStatus::FAILURE;
+		as->setSucceeded(result);
+		return;
+	}
+
 	open_gripper();
 	result.job.status = rll_msgs::JobStatus::SUCCESS;
 
@@ -375,6 +381,9 @@ bool RLLMoveIface::detach_grasp_object(std::string object_id)
 	detached_object = remove_object.object;
 	detached_object.operation = detached_object.ADD;
 	planning_scene_interface.applyCollisionObject(detached_object);
+	// TODO: figure out if this is really needed
+	// occasionally, there seems to be a race condition with subsequent planning requests
+	ros::Duration(0.1).sleep();
 }
 
 RLLMoveIface::~RLLMoveIface() {}
