@@ -68,7 +68,7 @@ public:
 
 private:
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group);
-	bool run_lin_trajectory(geometry_msgs::Pose goal);
+	bool run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_time_parametrization = true);
 	bool attach_grasp_object(std::string object_id);
 	bool detach_grasp_object(std::string object_id);
 	virtual bool modify_ptp_trajectory(moveit_msgs::RobotTrajectory &trajectory);

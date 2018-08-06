@@ -135,7 +135,7 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 {
 	ROS_INFO("Lin motion requested");
 
-	bool success = run_lin_trajectory(req.pose);
+	bool success = run_lin_trajectory(req.pose, req.cartesian_time_parametrization);
 	if (!success)
 		resp.success = false;
 	else
@@ -228,7 +228,7 @@ bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInter
 	return true;
 }
 
-bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
+bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_time_parametrization)
 {
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 	std::vector<geometry_msgs::Pose> waypoints;
@@ -249,9 +249,12 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal)
 		return false;
 	}
 
-	success = modify_lin_trajectory(trajectory);
-	if (!success)
-		return false;
+	// time parametrization happens in joint space by default
+	if (cartesian_time_parametrization) {
+		success = modify_lin_trajectory(trajectory);
+		if (!success)
+			return false;
+	}
 
 	my_plan.trajectory_= trajectory;
 
