@@ -21,7 +21,8 @@
           <contact_surface_layer>0.001</contact_surface_layer>
         </constraints>
       </ode>
-      <max_step_size>0.001</max_step_size>
+	<max_step_size>0.000400</max_step_size>
+	<real_time_update_rate>2500.00</real_time_update_rate>
     </physics>
     <light type="point" name="point_light_0">
       <pose>0 0 3 0 0 0</pose>
