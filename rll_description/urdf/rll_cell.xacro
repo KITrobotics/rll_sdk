@@ -109,7 +109,7 @@
 
     <!-- Roboception camera -->
     <xacro:rc_160 parent="profile_cams" prefix="$(arg robot_name)_">
-      <origin xyz="0.577 0.8 0.825" rpy="0 ${180 * pi / 180} 0"/>
+      <origin xyz="0.577 0.8 0.829" rpy="0 ${180 * pi / 180} 0"/>
     </xacro:rc_160>
 
     <!-- Axis camera -->

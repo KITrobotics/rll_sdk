@@ -26,7 +26,7 @@
     <joint name="${prefix}roboception_adapter_joint" type="fixed">
       <parent link="${prefix}roboception_gusset" />
       <child link="${prefix}roboception_adapter" />
-      <origin xyz="0.03 -0.075 0" rpy="${-90 * pi / 180} 0 ${135 * pi / 180}"/>
+      <origin xyz="0.015 -0.075 0" rpy="${-90 * pi / 180} 0 ${125 * pi / 180}"/>
     </joint>
     <link name="${prefix}roboception_adapter">
       <visual>
@@ -40,7 +40,7 @@
     <joint name="${prefix}roboception_camera" type="fixed">
       <parent link="${prefix}roboception_adapter"/>
       <child link="${prefix}roboception_camera"/>
-      <origin xyz="-0.03 0.03 -0.08" rpy="${45 * pi / 180} ${-90 * pi / 180} 0"/>
+      <origin xyz="-0.031 0.0375 0.08" rpy="${-45 * pi / 180} ${90 * pi / 180} ${180 * pi / 180}"/>
     </joint>
     <link name="${prefix}roboception_camera">
       <visual>
@@ -55,14 +55,6 @@
         </geometry>
       </collision>
     </link>
-
-    <link name="${prefix}roboception_mounting"/>
-
-    <joint name="${prefix}mounting_to_camera" type="fixed">
-      <parent link="${prefix}roboception_camera"/>
-      <child link="${prefix}roboception_mounting"/>
-      <origin xyz="0.080 0.0375 -0.031" />
-    </joint>
 
   </xacro:macro>
 </robot>
