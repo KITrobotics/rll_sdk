@@ -24,9 +24,9 @@
     </joint>
     <link name="table">
       <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.18746" rpy="0 0 0"/>
         <mass value="600"/>
-        <inertia ixx="1" ixy="0" ixz="0" iyy="1" iyz="0" izz="1"/>
+        <inertia ixx="152.284" ixy="0" ixz="0" iyy="207.558" iyz="0" izz="288.142"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
