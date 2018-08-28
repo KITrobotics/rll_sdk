@@ -57,9 +57,13 @@ void RLLMoveIface::run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
 
 	action_client_ptr->sendGoal(goal_iface_client);
 	ROS_INFO("called the interface client");
-	action_client_ptr->waitForResult();
-	result.job.status = rll_msgs::JobStatus::SUCCESS;
-
+	bool success = action_client_ptr->waitForResult(ros::Duration(480.0));
+        if (!success) {
+		result.job.status = rll_msgs::JobStatus::FAILURE;
+	}else{
+                result.job.status = rll_msgs::JobStatus::SUCCESS;
+        }
+        
 	as->setSucceeded(result);
 }
 
