@@ -409,3 +409,16 @@ components:
         total real:
           type: integer
           description: Number of jobs with result total real
+  examples:
+    JobResultStatsSuccess:
+      description: Example response of JobResultStats
+      summary: Example how response of JobResultStats looks like
+      value: {"sim internal error": 0, "launching project failed": 0, "real failure": 0, "real success": 0, "sim success": 11, "sim failure": 1, "building project failed": 1, "total_real": 0, "fetching project code failed": 0, "unknown": 0, "total": 13}
+    JobStatusStatsSuccess:
+      description: Example response of JobStatusStats
+      summary: Example how response of JobStatusStats looks like
+      value: {"running real": 0, "submitted": 0, "running sim": 0, "processing sim started": 0, "finished": 2, "processing real started": 0, "total": 13, "waiting for real": 11, "downloading code": 0}
+    
+    
+    
+    
