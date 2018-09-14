@@ -369,15 +369,17 @@ components:
       title: Successful response for results of job_stats request
       required:
       - total
-      - sucess sim
-      - total_real
-      - success real
-      - failure sim
-      - internal error
+      - sim success
+      - real success
+      - real failure
+      - sim failure
+      - sim internal error
+      - real internal error
       - unknown
       - fetching project code failed
       - launching project failed
       - building project failed
+      - total real
       properties:
         total:
           type: integer
@@ -393,7 +395,7 @@ components:
           description: Number of jobs with result real failure
         sim failure:
           type: integer
-          description: Number of jobs with result sim_failure
+          description: Number of jobs with result sim failure
         sim internal error:
           type: integer
           description: Number of jobs with result sim internal error
@@ -419,7 +421,7 @@ components:
     JobResultStatsSuccess:
       description: Example response of JobResultStats
       summary: Example how response of JobResultStats looks like
-      value: {"sim internal error": 0, "launching project failed": 0, "real failure": 0, "real success": 0, "sim success": 11, "sim failure": 1, "building project failed": 1, "total_real": 0, "fetching project code failed": 0, "unknown": 0, "total": 13}
+      value: {"sim internal error": 0, "launching project failed": 0, "real failure": 0, "real success": 0, "sim success": 11, "total real": 0, "sim failure": 1, "building project failed": 1, "fetching project code failed": 0, "unknown": 0, "total": 13, "real internal error": 0}
     JobStatusStatsSuccess:
       description: Example response of JobStatusStats
       summary: Example how response of JobStatusStats looks like
