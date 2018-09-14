@@ -326,25 +326,25 @@ components:
       properties:
         total:
           type: integer
-          description: Status of query
+          description: Total number of jobs
         submitted:
           type: integer
-          description: Number of submitted jobs
+          description: Number of jobs in state submitted
         processing sim started:
           type: integer
-          description: Number of jobs in state
+          description: Number of jobs in state processing sim started
         processing real started:
           type: integer
-          description: Number of jobs in state
+          description: Number of jobs in state processing real started
         downloading code:
           type: integer
-          description: Number of jobs in state
+          description: Number of jobs in state downloading code
         building:
           type: integer
-          description: Number of jobs in state
+          description: Number of jobs in state building
         running sim:
           type: integer
-          description: Number of jobs in state
+          description: Number of jobs in state running sim
         waiting for real:
           type: integer
           description: Number of jobs in state waiting for real
@@ -381,19 +381,25 @@ components:
       properties:
         total:
           type: integer
-          description: Status of query
-        success sim:
+          description: Total number of jobs
+        sim success:
           type: integer
-          description: Number of jobs with result success sim
-        success real:
+          description: Number of jobs with result sim success
+        real success:
           type: integer
-          description: Number of jobs with result success real
-        failure sim:
+          description: Number of jobs with result real success
+        real failure:
           type: integer
-          description: Number of jobs with result failure sim
-        internal error:
+          description: Number of jobs with result real failure
+        sim failure:
           type: integer
-          description: Number of jobs with result internal error
+          description: Number of jobs with result sim_failure
+        sim internal error:
+          type: integer
+          description: Number of jobs with result sim internal error
+        real internal error:
+          type: integer
+          description: Number of jobs with result real internal error
         unknown:
           type: integer
           description: Number of jobs with result unknown
