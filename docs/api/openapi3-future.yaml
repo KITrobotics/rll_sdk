@@ -118,7 +118,7 @@ paths:
           description: Unauthorized
         '500':
           description: Internal Server Error
-  /system:
+  /system/state:
     get:
       tags:
       - system
@@ -148,6 +148,44 @@ paths:
           description: Bad Request
         '500':
           description: Internal Server Error
+  /system/job_stats:
+    get:
+      tags:
+      - system
+      summary: Get status of job or data for job
+      description: ''
+      operationId: getJobs
+      parameters:
+      - in: query
+        name: job_info_type
+        description: What operation should be performed, either retrieving status information about job or fetching data of a finished job
+        required: true
+        schema:
+          type: string
+          enum:
+          - status
+          - result
+      - in: query
+        name: project
+        description: Job Id to perform operation on
+        required: true
+        schema:
+          type: string
+      responses:
+        '200':
+          description: Response of the call
+          content:
+            application/json:
+              schema:
+                  type: object
+                  oneOf:
+                  - $ref: '#/components/schemas/JobStatusStatsSuccess'
+                  - $ref: '#/components/schemas/JobResultStatsSuccess'
+        '400':
+          description: Bad Request
+        '500':
+          description: Internal Server Error
+        
 components:
   schemas:
     JobStatusSuccess:
@@ -283,3 +321,91 @@ components:
           - Git URL invalid
           - Username invalid
           - Queue at max size
+    JobStatusStatsSuccess:
+      title: Successful response for status of job_stats request
+      properties:
+        total:
+          type: integer
+          description: Status of query
+        submitted:
+          type: integer
+          description: Number of submitted jobs
+        processing sim started:
+          type: integer
+          description: Number of jobs in state
+        processing real started:
+          type: integer
+          description: Number of jobs in state
+        downloading code:
+          type: integer
+          description: Number of jobs in state
+        building:
+          type: integer
+          description: Number of jobs in state
+        running sim:
+          type: integer
+          description: Number of jobs in state
+        waiting for real:
+          type: integer
+          description: Number of jobs in state waiting for real
+        running real:
+          type: integer
+          description: Number of jobs in state running real
+        finished:
+          type: integer
+          description: Number of jobs in state finished
+      required:
+      - total
+      - submitted
+      - processing sim started
+      - processing real started
+      - downloading code
+      - building
+      - running sim
+      - waiting for real
+      - running real
+      - finished
+    JobResultStatsSuccess:
+      title: Successful response for results of job_stats request
+      required:
+      - total
+      - sucess sim
+      - total_real
+      - success real
+      - failure sim
+      - internal error
+      - unknown
+      - fetching project code failed
+      - launching project failed
+      - building project failed
+      properties:
+        total:
+          type: integer
+          description: Status of query
+        success sim:
+          type: integer
+          description: Number of jobs with result success sim
+        success real:
+          type: integer
+          description: Number of jobs with result success real
+        failure sim:
+          type: integer
+          description: Number of jobs with result failure sim
+        internal error:
+          type: integer
+          description: Number of jobs with result internal error
+        unknown:
+          type: integer
+          description: Number of jobs with result unknown
+        fetching project code failed:
+          type: integer
+          description: Number of jobs with result fetching project code failed
+        launching project failed:
+          type: integer
+          description: Number of jobs with result launching project failed
+        building project failed:
+          type: integer
+          description: Number of jobs with result building project failed
+        total real:
+          type: integer
+          description: Number of jobs with result total real

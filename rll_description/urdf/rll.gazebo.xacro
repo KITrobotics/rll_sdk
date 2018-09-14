@@ -10,7 +10,7 @@
       <mu2>100.0</mu2>
       <kp>1000000.0</kp>
       <kd>1.0</kd>
-      <fdir1>0 0 1</fdir1>
+      <fdir1>1 0 0</fdir1>
       <minDepth>0.001</minDepth>
       <!-- <static>true</static> -->
     </gazebo>
@@ -64,6 +64,7 @@
     </gazebo>
 
     <!-- grasp plugin -->
+
     <gazebo>
       <plugin name="gazebo_grasp_fix" filename="libgazebo_grasp_fix.so">
         <arm>
