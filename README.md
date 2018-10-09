@@ -20,11 +20,11 @@ The SDK is intended to be used as a dependency of a RLL project. All components 
 
 The Gazebo simulation can be launched together with MoveIt! and an Rviz visualization using
 
-    `roslaunch rll_moveit_config moveit_planning_execution.launch`
+    roslaunch rll_moveit_config moveit_planning_execution.launch
 
 The Move Interface is started with
 
-    `roslaunch rll_move move_iface.launch`
+    roslaunch rll_move move_iface.launch
 
 Move services are available in the `/iiwa/` namespace, e.g. `/iiwa/pick_place` or `/iiwa/move_lin`.
 
