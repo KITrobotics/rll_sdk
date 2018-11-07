@@ -39,10 +39,10 @@
 
     <joint name="${prefix}roboception_camera" type="fixed">
       <parent link="${prefix}roboception_adapter"/>
-      <child link="${prefix}roboception_camera"/>
+      <child link="${prefix}roboception_camera_uncal"/>
       <origin xyz="-0.031 0.0375 0.08" rpy="${-45 * pi / 180} ${90 * pi / 180} ${180 * pi / 180}"/>
     </joint>
-    <link name="${prefix}roboception_camera">
+    <link name="${prefix}roboception_camera_uncal">
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/visard160/visual/rc_visard_160.dae"/>
