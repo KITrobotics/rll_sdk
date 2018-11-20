@@ -167,7 +167,7 @@ paths:
           - result
       - in: query
         name: project
-        description: Job Id to perform operation on
+        description: Project for which job stats should be generated
         required: true
         schema:
           type: string
@@ -416,7 +416,7 @@ components:
           description: Number of jobs with result building project failed
         total real:
           type: integer
-          description: Number of jobs with result total real
+          description: Number of jobs that did run on the real robots
   examples:
     JobResultStatsSuccess:
       description: Example response of JobResultStats
@@ -426,7 +426,3 @@ components:
       description: Example response of JobStatusStats
       summary: Example how response of JobStatusStats looks like
       value: {"running real": 0, "submitted": 0, "running sim": 0, "processing sim started": 0, "finished": 2, "processing real started": 0, "total": 13, "waiting for real": 11, "downloading code": 0}
-    
-    
-    
-    
