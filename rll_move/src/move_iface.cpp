@@ -77,7 +77,8 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 
 	bool success = reset_to_home();
 	if (!success) {
-		result.job.status = rll_msgs::JobStatus::FAILURE;
+		ROS_ERROR("failed to idle, setting result to %d", rll_msgs::JobStatus::INTERNAL_ERROR);
+		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
 		as->setSucceeded(result);
 		return;
 	}
@@ -86,6 +87,19 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 	result.job.status = rll_msgs::JobStatus::SUCCESS;
 
 	as->setSucceeded(result);
+}
+
+bool RLLMoveIface::manip_current_state_available()
+{
+	// Sometimes, the current state cannot be retrieved and a NULL pointer exception is thrown
+	// somewhere. Check here if the current state can be retrieved. Other methods can use this
+	// function to abort further MoveIt commands and to avoid sigterms.
+
+	robot_state::RobotStatePtr current_state = manip_move_group.getCurrentState();
+	if (current_state == NULL)
+		return false;
+
+	return true;
 }
 
 bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
@@ -156,6 +170,8 @@ bool RLLMoveIface::move_ptp(rll_msgs::MovePTP::Request &req,
 
 	ROS_INFO("PTP motion requested");
 
+	if (!manip_current_state_available())
+		return false;
 	manip_move_group.setStartStateToCurrentState();
 	success = manip_move_group.setPoseTarget(req.pose);
 	if (!success) {
@@ -182,6 +198,8 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 
 	ROS_INFO("Joint motion requested");
 
+	if (!manip_current_state_available())
+		return false;
 	manip_move_group.getCurrentState()->copyJointGroupPositions(manip_move_group.getCurrentState()->getRobotModel()->getJointModelGroup(manip_move_group.getName()), joints);
 	joints[0] = req.joint_1;
 	joints[1] = req.joint_2;
@@ -242,6 +260,8 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_t
 	const double jump_threshold = 4.5;
 	bool success;
 
+	if (!manip_current_state_available())
+		return false;
 	manip_move_group.setStartStateToCurrentState();
 	waypoints.push_back(goal);
 	double achieved = manip_move_group.computeCartesianPath(waypoints,
@@ -314,6 +334,8 @@ bool RLLMoveIface::open_gripper()
 
 bool RLLMoveIface::reset_to_home()
 {
+	if (!manip_current_state_available())
+		return false;
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
 	bool success = run_ptp_trajectory(manip_move_group);
