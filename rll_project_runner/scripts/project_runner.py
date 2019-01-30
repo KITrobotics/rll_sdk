@@ -64,7 +64,6 @@ def idle():
     resp = job_idle.get_result()
     rospy.loginfo("resetted environment with status '%s'",
                   job_result_codes_to_string(resp.job.status))
-    rospy.loginfo("reset stat %d", resp.job.status)
     if resp.job.status == JobStatus.INTERNAL_ERROR:
         rospy.logfatal("environment reset failed");
         sys.exit(1)

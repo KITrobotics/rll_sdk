@@ -77,7 +77,7 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 
 	bool success = reset_to_home();
 	if (!success) {
-		ROS_ERROR("failed to idle, setting result to %d", rll_msgs::JobStatus::INTERNAL_ERROR);
+		ROS_ERROR("failed to idle");
 		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
 		as->setSucceeded(result);
 		return;
