@@ -11,6 +11,8 @@
   <author email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</author>
 
   <depend>rll_msgs</depend>
+  <depend>moveit_ros_planning</depend>
+  <depend>moveit_ros_planning_interface</depend>
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
