@@ -48,6 +48,11 @@ def run_project():
         for element in resp.job_data:
             rospy.loginfo("%s: %f", element.description, element.value)
 
+    if resp.job.status == JobStatus.INTERNAL_ERROR:
+        return False
+
+    return True
+
 # reset robot and environment
 def idle():
     job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
@@ -76,5 +81,9 @@ if __name__ == '__main__':
         idle()
         sys.exit(0)
 
-    run_project()
+    success = run_project()
+    if not success:
+        rospy.logfatal("Internal error when running project")
+        sys.exit(1)
+
     idle()
