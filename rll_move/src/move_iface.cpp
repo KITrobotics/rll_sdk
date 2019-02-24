@@ -38,33 +38,48 @@ RLLMoveIface::RLLMoveIface()
 
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
+
+	bool success = reset_to_home();
+	if (!success)
+		ROS_FATAL("init: failed to reset to home position");
+
+	allowed_to_move = false;
 }
 
 void RLLMoveIface::run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
 			   JobServer *as)
 {
+	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client("move_client", true);
 	rll_msgs::JobEnvResult result;
 	rll_msgs::DefaultMoveIfaceGoal goal_iface_client;
 
 	ROS_INFO("got job running request");
 
-	if (!action_client_ptr->waitForServer(ros::Duration(5.0))) {
+	ros::Duration(0.5).sleep();
+	if (!action_client.waitForServer(ros::Duration(4.0))) {
 		ROS_ERROR("action service not available");
 		result.job.status = rll_msgs::JobStatus::FAILURE;
 		as->setSucceeded(result);
 		return;
 	}
 
+	action_client_ptr = &action_client;
+
+	allowed_to_move = true;
 	action_client_ptr->sendGoal(goal_iface_client);
 	ROS_INFO("called the interface client");
 	// wait a maximum of 8 minutes
 	bool success = action_client_ptr->waitForResult(ros::Duration(480.0));
-	if (!success) {
-		result.job.status = rll_msgs::JobStatus::FAILURE;
+	if (!success || !allowed_to_move) {
+		// This is the default job runner and should only be used for demos or testing
+		// Assume an internal error if something fails
+		ROS_FATAL("Error during current job execution, assuming internal error");
+		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
 	} else {
 		result.job.status = rll_msgs::JobStatus::SUCCESS;
 	}
 
+	allowed_to_move = false;
 	as->setSucceeded(result);
 }
 
@@ -83,9 +98,15 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 		return;
 	}
 
-	open_gripper();
-	result.job.status = rll_msgs::JobStatus::SUCCESS;
+	success = open_gripper();
+	if (!success) {
+		ROS_ERROR("failed to open the gripper during idle");
+		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+		as->setSucceeded(result);
+		return;
+	}
 
+	result.job.status = rll_msgs::JobStatus::SUCCESS;
 	as->setSucceeded(result);
 }
 
@@ -98,6 +119,22 @@ bool RLLMoveIface::manip_current_state_available()
 	robot_state::RobotStatePtr current_state = manip_move_group.getCurrentState();
 	if (current_state == NULL)
 		return false;
+
+	return true;
+}
+
+bool RLLMoveIface::pick_place_srv(rll_msgs::PickPlace::Request &req,
+				  rll_msgs::PickPlace::Response &resp)
+{
+	if (allowed_to_move)
+		pick_place(req, resp);
+	else
+		return true;
+	if (!resp.success) {
+		ROS_FATAL("pick_place service call failed");
+		action_client_ptr->cancelAllGoals();
+		allowed_to_move = false;
+	}
 
 	return true;
 }
@@ -149,6 +186,22 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 	return true;
 }
 
+bool RLLMoveIface::move_lin_srv(rll_msgs::MoveLin::Request &req,
+				rll_msgs::MoveLin::Response &resp)
+{
+	if (allowed_to_move)
+		move_lin(req, resp);
+	else
+		return true;
+	if (!resp.success) {
+		ROS_FATAL("move_lin service call failed");
+		action_client_ptr->cancelAllGoals();
+		allowed_to_move = false;
+	}
+
+	return true;
+}
+
 bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 			    rll_msgs::MoveLin::Response &resp)
 {
@@ -159,6 +212,22 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 		resp.success = false;
 	else
 		resp.success = true;
+
+	return true;
+}
+
+bool RLLMoveIface::move_ptp_srv(rll_msgs::MovePTP::Request &req,
+				rll_msgs::MovePTP::Response &resp)
+{
+	if (allowed_to_move)
+		move_ptp(req, resp);
+	else
+		return true;
+	if (!resp.success) {
+		ROS_FATAL("move_ptp service call failed");
+		action_client_ptr->cancelAllGoals();
+		allowed_to_move = false;
+	}
 
 	return true;
 }
@@ -185,6 +254,23 @@ bool RLLMoveIface::move_ptp(rll_msgs::MovePTP::Request &req,
 		resp.success = false;
 	else
 		resp.success = true;
+
+	return true;
+}
+
+
+bool RLLMoveIface::move_joints_srv(rll_msgs::MoveJoints::Request &req,
+				   rll_msgs::MoveJoints::Response &resp)
+{
+	if (allowed_to_move)
+		move_joints(req, resp);
+	else
+		return true;
+	if (!resp.success) {
+		ROS_FATAL("move_joints service call failed");
+		action_client_ptr->cancelAllGoals();
+		allowed_to_move = false;
+	}
 
 	return true;
 }

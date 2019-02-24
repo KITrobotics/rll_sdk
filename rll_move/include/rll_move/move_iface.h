@@ -45,19 +45,26 @@ public:
 	moveit::core::RobotModelConstPtr manip_model;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	std::string ns;
-	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 
 	typedef actionlib::SimpleActionServer<rll_msgs::JobEnvAction> JobServer;
 	void run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
 		     JobServer *as);
 	void idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 		  JobServer *as);
+	bool pick_place_srv(rll_msgs::PickPlace::Request &req,
+			    rll_msgs::PickPlace::Response &resp);
 	bool pick_place(rll_msgs::PickPlace::Request &req,
 			rll_msgs::PickPlace::Response &resp);
+	bool move_lin_srv(rll_msgs::MoveLin::Request &req,
+			  rll_msgs::MoveLin::Response &resp);
 	bool move_lin(rll_msgs::MoveLin::Request &req,
 		      rll_msgs::MoveLin::Response &resp);
+	bool move_ptp_srv(rll_msgs::MovePTP::Request &req,
+			  rll_msgs::MovePTP::Response &resp);
 	bool move_ptp(rll_msgs::MovePTP::Request &req,
 		      rll_msgs::MovePTP::Response &resp);
+	bool move_joints_srv(rll_msgs::MoveJoints::Request &req,
+			     rll_msgs::MoveJoints::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
 	bool reset_to_home();
@@ -67,6 +74,9 @@ public:
 	~RLLMoveIface();
 
 private:
+	bool allowed_to_move;
+	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
+
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group);
 	bool run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_time_parametrization = true);
 	bool attach_grasp_object(std::string object_id);

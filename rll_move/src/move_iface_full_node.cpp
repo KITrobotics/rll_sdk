@@ -29,17 +29,14 @@ int main(int argc, char **argv)
 
 	RLLMoveIface move_iface;
 
-	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client("move_client", true);
-	move_iface.action_client_ptr = &action_client;
-
 	RLLMoveIface::JobServer server_job(nh, "job_env", boost::bind(&RLLMoveIface::run_job, &move_iface, _1, &server_job), false);
 	server_job.start();
 	RLLMoveIface::JobServer server_idle(nh, "job_idle", boost::bind(&RLLMoveIface::idle, &move_iface, _1, &server_idle), false);
 	server_idle.start();
-	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place, &move_iface);
-	ros::ServiceServer move_lin = nh.advertiseService("move_lin", &RLLMoveIface::move_lin, &move_iface);
-	ros::ServiceServer move_ptp = nh.advertiseService("move_ptp", &RLLMoveIface::move_ptp, &move_iface);
-	ros::ServiceServer move_joints = nh.advertiseService("move_joints", &RLLMoveIface::move_joints, &move_iface);
+	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place_srv, &move_iface);
+	ros::ServiceServer move_lin = nh.advertiseService("move_lin", &RLLMoveIface::move_lin_srv, &move_iface);
+	ros::ServiceServer move_ptp = nh.advertiseService("move_ptp", &RLLMoveIface::move_ptp_srv, &move_iface);
+	ros::ServiceServer move_joints = nh.advertiseService("move_joints", &RLLMoveIface::move_joints_srv, &move_iface);
 
 	ROS_INFO("RLL Move Interface started");
 
