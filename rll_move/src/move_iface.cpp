@@ -42,6 +42,9 @@ RLLMoveIface::RLLMoveIface()
 	bool success = reset_to_home();
 	if (!success)
 		ROS_FATAL("init: failed to reset to home position");
+	success = open_gripper();
+	if (!success)
+		ROS_FATAL("init: failed to open the gripper");
 
 	allowed_to_move = false;
 }
