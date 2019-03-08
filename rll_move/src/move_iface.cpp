@@ -42,9 +42,6 @@ RLLMoveIface::RLLMoveIface()
 	bool success = reset_to_home();
 	if (!success)
 		ROS_FATAL("init: failed to reset to home position");
-	success = open_gripper();
-	if (!success)
-		ROS_FATAL("init: failed to open the gripper");
 
 	allowed_to_move = false;
 }
@@ -428,6 +425,10 @@ bool RLLMoveIface::reset_to_home()
 	manip_move_group.setStartStateToCurrentState();
 	manip_move_group.setNamedTarget("home_bow");
 	bool success = run_ptp_trajectory(manip_move_group);
+	if (!success)
+		return false;
+
+	success = open_gripper();
 	if (!success)
 		return false;
 
