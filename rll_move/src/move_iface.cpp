@@ -39,10 +39,6 @@ RLLMoveIface::RLLMoveIface()
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
 
-	bool success = reset_to_home();
-	if (!success)
-		ROS_FATAL("init: failed to reset to home position");
-
 	allowed_to_move = false;
 }
 

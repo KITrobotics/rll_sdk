@@ -28,6 +28,7 @@ int main(int argc, char **argv)
 	spinner.start();
 
 	RLLMoveIface move_iface;
+	move_iface.reset_to_home();
 
 	RLLMoveIface::JobServer server_job(nh, "job_env", boost::bind(&RLLMoveIface::run_job, &move_iface, _1, &server_job), false);
 	server_job.start();
