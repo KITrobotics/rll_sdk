@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>rll_project_runner</name>
+  <name>rll_tools</name>
   <version>0.0.1</version>
-  <description>A general runner for executing RLL projects</description>
+  <description>Different handy tools for the KUKA Robot Learning Lab at KIT</description>
 
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>
 
