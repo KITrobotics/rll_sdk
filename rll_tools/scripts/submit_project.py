@@ -133,12 +133,7 @@ def submit_project():
         rospy.logfatal("Could not find the project you want to submit. Make sure the project '%s' in your Catkin workspace", project)
         return
 
-    time_now = time.time()
-
     project_archive = create_project_archive(project_path)
-
-    rospy.loginfo("elapsed time %f", time.time() - time_now)
-
     upload_archive(project_archive, api_access_cfg)
 
 
