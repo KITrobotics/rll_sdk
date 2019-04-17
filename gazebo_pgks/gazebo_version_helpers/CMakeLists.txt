@@ -27,7 +27,6 @@ catkin_package(
   INCLUDE_DIRS include
   LIBRARIES gazebo_version_helpers
   CATKIN_DEPENDS gazebo_ros roscpp
-  DEPENDS gazebo 
 )
 
 ###########
