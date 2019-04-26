@@ -66,11 +66,13 @@ void RLLMoveIface::run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
 	ROS_INFO("called the interface client");
 	// wait a maximum of 8 minutes
 	bool success = action_client_ptr->waitForResult(ros::Duration(480.0));
-	if (!success || !allowed_to_move) {
+	if (!allowed_to_move) {
 		// This is the default job runner and should only be used for demos or testing
 		// Assume an internal error if something fails
 		ROS_FATAL("Error during current job execution, assuming internal error");
 		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+	} else if (!success) {
+		result.job.status = rll_msgs::JobStatus::FAILURE;
 	} else {
 		result.job.status = rll_msgs::JobStatus::SUCCESS;
 	}
@@ -122,14 +124,18 @@ bool RLLMoveIface::manip_current_state_available()
 bool RLLMoveIface::pick_place_srv(rll_msgs::PickPlace::Request &req,
 				  rll_msgs::PickPlace::Response &resp)
 {
-	if (allowed_to_move)
+	if (allowed_to_move) {
 		pick_place(req, resp);
-	else
+	} else {
+		ROS_WARN("Not allowed to send pick/place commands");
+		resp.success = false;
 		return true;
+	}
+
 	if (!resp.success) {
 		ROS_FATAL("pick_place service call failed");
-		action_client_ptr->cancelAllGoals();
 		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
 	}
 
 	return true;
@@ -185,14 +191,18 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 bool RLLMoveIface::move_lin_srv(rll_msgs::MoveLin::Request &req,
 				rll_msgs::MoveLin::Response &resp)
 {
-	if (allowed_to_move)
+	if (allowed_to_move) {
 		move_lin(req, resp);
-	else
+	} else {
+		ROS_WARN("Not allowed to send move lin commands");
+		resp.success = false;
 		return true;
+	}
+
 	if (!resp.success) {
 		ROS_FATAL("move_lin service call failed");
-		action_client_ptr->cancelAllGoals();
 		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
 	}
 
 	return true;
@@ -215,14 +225,18 @@ bool RLLMoveIface::move_lin(rll_msgs::MoveLin::Request &req,
 bool RLLMoveIface::move_ptp_srv(rll_msgs::MovePTP::Request &req,
 				rll_msgs::MovePTP::Response &resp)
 {
-	if (allowed_to_move)
+	if (allowed_to_move) {
 		move_ptp(req, resp);
-	else
+	} else {
+		ROS_WARN("Not allowed to send move ptp commands");
+		resp.success = false;
 		return true;
+	}
+
 	if (!resp.success) {
 		ROS_FATAL("move_ptp service call failed");
-		action_client_ptr->cancelAllGoals();
 		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
 	}
 
 	return true;
@@ -258,14 +272,18 @@ bool RLLMoveIface::move_ptp(rll_msgs::MovePTP::Request &req,
 bool RLLMoveIface::move_joints_srv(rll_msgs::MoveJoints::Request &req,
 				   rll_msgs::MoveJoints::Response &resp)
 {
-	if (allowed_to_move)
+	if (allowed_to_move) {
 		move_joints(req, resp);
-	else
+	} else {
+		ROS_WARN("Not allowed to send move joints commands");
+		resp.success = false;
 		return true;
+	}
+
 	if (!resp.success) {
 		ROS_FATAL("move_joints service call failed");
-		action_client_ptr->cancelAllGoals();
 		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
 	}
 
 	return true;
