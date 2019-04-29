@@ -106,7 +106,7 @@ def upload_archive(project_archive, api_access_cfg):
         else:
             rospy.logerr("submitting project failed with error '%s'", resp_msg["error"])
     else:
-        rospy.loginfo("successfully submitted job")
+        rospy.loginfo("SUCCESS: your job is submitted")
         rospy.loginfo("The job ID is %s", resp_msg["job_id"])
         rospy.loginfo("You can check the job status at %sjobs", webapp_url)
 
