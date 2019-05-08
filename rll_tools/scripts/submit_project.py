@@ -93,7 +93,8 @@ def create_project_archive(project_path):
 
 def upload_archive(project_archive, api_access_cfg):
     rospy.loginfo("uploading archive...")
-    submit_url = api_access_cfg["api_url"] + "jobs/submit_tar?username=" + api_access_cfg["username"] + "&project=" + project + "&token=" + api_access_cfg["token"]
+    submit_url = api_access_cfg["api_url"] + "jobs/submit_tar?username=" + api_access_cfg["username"] \
+                 + "&project=" + project + "&token=" + api_access_cfg["token"]
     with open(project_archive) as archive:
         archive_content = archive.read()
 
@@ -101,7 +102,8 @@ def upload_archive(project_archive, api_access_cfg):
     resp_msg = json.loads(resp.text)
     if resp_msg["status"] == "error":
         if resp_msg["error"] == "User has a running job in the queue":
-            rospy.logerr("You have a running job in the queue for this project. You can submit again once the job has finished.")
+            rospy.logerr("You have a running job in the queue for this project. "
+                         "You can submit again once the job has finished.")
             rospy.loginfo("You can check the job status at %sjobs", webapp_url)
         else:
             rospy.logerr("submitting project failed with error '%s'", resp_msg["error"])
@@ -130,7 +132,8 @@ def submit_project():
     try:
         project_path = rospack.get_path(project)
     except:
-        rospy.logfatal("Could not find the project you want to submit. Make sure the project '%s' in your Catkin workspace", project)
+        rospy.logfatal("Could not find the project you want to submit. "
+                       "Make sure the project '%s' in your Catkin workspace", project)
         return
 
     project_archive = create_project_archive(project_path)

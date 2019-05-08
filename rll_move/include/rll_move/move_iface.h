@@ -22,6 +22,7 @@
 
 #include <ros/ros.h>
 
+#include <std_srvs/Trigger.h>
 #include <rll_msgs/JobEnvAction.h>
 #include <rll_msgs/DefaultMoveIfaceAction.h>
 #include <rll_msgs/PickPlace.h>
@@ -51,6 +52,8 @@ public:
 		     JobServer *as);
 	void idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 		  JobServer *as);
+	bool robot_ready_srv(std_srvs::Trigger::Request &req,
+			     std_srvs::Trigger::Response &resp);
 	bool pick_place_srv(rll_msgs::PickPlace::Request &req,
 			    rll_msgs::PickPlace::Response &resp);
 	bool pick_place(rll_msgs::PickPlace::Request &req,

@@ -96,16 +96,19 @@ void RLLMoveIface::idle(const rll_msgs::JobEnvGoalConstPtr &goal,
 		return;
 	}
 
-	success = open_gripper();
-	if (!success) {
-		ROS_ERROR("failed to open the gripper during idle");
-		result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
-		as->setSucceeded(result);
-		return;
-	}
-
 	result.job.status = rll_msgs::JobStatus::SUCCESS;
 	as->setSucceeded(result);
+}
+
+bool RLLMoveIface::robot_ready_srv(std_srvs::Trigger::Request &req,
+				   std_srvs::Trigger::Response &resp)
+{
+	if (!reset_to_home())
+		resp.success = false;
+	else
+		resp.success = true;
+
+	return true;
 }
 
 bool RLLMoveIface::manip_current_state_available()
