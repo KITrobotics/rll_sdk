@@ -32,6 +32,8 @@
   <!-- <run_depend>warehouse_ros_mongo</run_depend> -->
   <build_depend>rll_description</build_depend>
   <run_depend>rll_description</run_depend>
-
+  <run_depend>rll_gazebo</run_depend>
+  <run_depend>rll_control</run_depend>
+  <run_depend>iiwa7_ikfast_manipulator_plugin</run_depend>
 
 </package>
