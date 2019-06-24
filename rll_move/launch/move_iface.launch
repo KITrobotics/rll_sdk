@@ -1,6 +1,7 @@
 <?xml version="1.0"?>
 <launch>
+  <arg name="robot" default="iiwa" />
 
-  <node ns="iiwa" name="move_iface" pkg="rll_move" type="move_iface_full" respawn="false" output="screen" />
+  <node ns="$(arg robot)" name="move_iface" pkg="rll_move" type="move_iface_full" respawn="false" output="screen" />
 
 </launch>
