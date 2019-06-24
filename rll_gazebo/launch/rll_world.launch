@@ -33,6 +33,6 @@
   </include>
 
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model" respawn="false" output="screen"
-        args="-urdf -model iiwa -param robot_description"/>
+        args="-urdf -model $(arg robot_name) -param robot_description"/>
 
 </launch>

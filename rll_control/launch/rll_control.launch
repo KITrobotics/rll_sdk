@@ -9,7 +9,7 @@
     <arg name="robot_name" default="rll_cell" />
 
     <!-- Loads joint controller configurations from YAML file to parameter server -->
-    <rosparam file="$(find rll_control)/config/rll_control.yaml" command="load" />
+    <rosparam subst_value="True" file="$(find rll_control)/config/rll_control.yaml" />
 
     <!-- Loads the controllers -->
     <node name="controller_spawner" pkg="controller_manager" type="spawner" respawn="false"

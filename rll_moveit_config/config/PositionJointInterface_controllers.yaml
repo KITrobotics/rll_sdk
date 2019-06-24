@@ -4,18 +4,18 @@ controller_list:
     type: FollowJointTrajectory
     default: true
     joints:
-      - iiwa_joint_1
-      - iiwa_joint_2
-      - iiwa_joint_3
-      - iiwa_joint_4
-      - iiwa_joint_5
-      - iiwa_joint_6
-      - iiwa_joint_7
+      - $(arg robot_name)_joint_1
+      - $(arg robot_name)_joint_2
+      - $(arg robot_name)_joint_3
+      - $(arg robot_name)_joint_4
+      - $(arg robot_name)_joint_5
+      - $(arg robot_name)_joint_6
+      - $(arg robot_name)_joint_7
 
   - name: PositionJointInterface_gripper_controller
     action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     default: true
     joints:
-      - iiwa_egl_position_left
-      - iiwa_egl_position_right
+      - $(arg robot_name)_egl_position_left
+      - $(arg robot_name)_egl_position_right

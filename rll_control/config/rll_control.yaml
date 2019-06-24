@@ -10,13 +10,13 @@
   PositionJointInterface_trajectory_controller:
     type: position_controllers/JointTrajectoryController
     joints:
-      - iiwa_joint_1
-      - iiwa_joint_2
-      - iiwa_joint_3
-      - iiwa_joint_4
-      - iiwa_joint_5
-      - iiwa_joint_6
-      - iiwa_joint_7
+      - $(arg robot_name)_joint_1
+      - $(arg robot_name)_joint_2
+      - $(arg robot_name)_joint_3
+      - $(arg robot_name)_joint_4
+      - $(arg robot_name)_joint_5
+      - $(arg robot_name)_joint_6
+      - $(arg robot_name)_joint_7
 
     constraints:
       goal_time: 2.0                   # Override default
@@ -30,13 +30,13 @@
   PosVelJointInterface_trajectory_controller:
     type: pos_vel_controllers/JointTrajectoryController
     joints:
-      - iiwa_joint_1
-      - iiwa_joint_2
-      - iiwa_joint_3
-      - iiwa_joint_4
-      - iiwa_joint_5
-      - iiwa_joint_6
-      - iiwa_joint_7
+      - $(arg robot_name)_joint_1
+      - $(arg robot_name)_joint_2
+      - $(arg robot_name)_joint_3
+      - $(arg robot_name)_joint_4
+      - $(arg robot_name)_joint_5
+      - $(arg robot_name)_joint_6
+      - $(arg robot_name)_joint_7
 
     constraints:
       goal_time: 2.0                   # Override default
@@ -49,15 +49,15 @@
   PositionJointInterface_gripper_controller:
     type: effort_controllers/JointTrajectoryController
     joints:
-      - iiwa_egl_position_left
-      - iiwa_egl_position_right
+      - $(arg robot_name)_egl_position_left
+      - $(arg robot_name)_egl_position_right
     gains:
-      iiwa_egl_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
-      iiwa_egl_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      $(arg robot_name)_egl_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      $(arg robot_name)_egl_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
     constraints:
       goal_time: 0.5
       stopped_velocity_tolerance: 0.03
-      iiwa_egl_position_left:
+      $(arg robot_name)_egl_position_left:
         goal: 0.04
-      iiwa_egl_position_right:
+      $(arg robot_name)_egl_position_right:
         goal: 0.04

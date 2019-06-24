@@ -41,6 +41,7 @@
     <arg name="moveit_controller_manager" value="rll_cell" unless="$(arg fake_execution)"/>
     <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
     <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+    <arg name="robot_name" value="$(arg robot_name)"/>
   </include>
 
   <!-- Sensors Functionality -->

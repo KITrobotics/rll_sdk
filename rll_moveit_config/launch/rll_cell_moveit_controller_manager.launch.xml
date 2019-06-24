@@ -1,7 +1,8 @@
 <launch>
     <arg name="moveit_controller_manager" default="moveit_simple_controller_manager/MoveItSimpleControllerManager"/>
     <arg name="hardware_interface" default="PositionJointInterface"/>
+    <arg name="robot_name" default="iiwa"/>
 
     <param name="moveit_controller_manager" value="$(arg moveit_controller_manager)"/>
-    <rosparam file="$(find rll_moveit_config)/config/$(arg hardware_interface)_controllers.yaml"/>
+    <rosparam subst_value="True" file="$(find rll_moveit_config)/config/$(arg hardware_interface)_controllers.yaml"/>
 </launch>
