@@ -15,14 +15,10 @@
     </include>
 
     <!-- Spawn controllers - it uses a JointTrajectoryController -->
-    <group  ns="$(arg robot_name)" >
-
-        <include file="$(find rll_control)/launch/rll_control.launch">
-            <arg name="hardware_interface" value="$(arg hardware_interface)" />
-            <arg name="controllers" value="joint_state_controller $(arg hardware_interface)_trajectory_controller PositionJointInterface_gripper_controller" />
-            <arg name="robot_name" value="$(arg robot_name)" />
-        </include>
-
-    </group>
+    <include file="$(find rll_control)/launch/rll_control.launch">
+        <arg name="hardware_interface" value="$(arg hardware_interface)" />
+        <arg name="controllers" value="joint_state_controller $(arg hardware_interface)_trajectory_controller PositionJointInterface_gripper_controller" />
+        <arg name="robot_name" value="$(arg robot_name)" />
+    </include>
 
 </launch>
