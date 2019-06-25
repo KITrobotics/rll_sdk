@@ -2,6 +2,8 @@
 <launch>
   <arg name="robot" default="iiwa" />
 
-  <node ns="$(arg robot)" name="move_iface" pkg="rll_move" type="move_iface_full" respawn="false" output="screen" />
+  <node ns="$(arg robot)" name="move_iface" pkg="rll_move" type="move_iface_full" respawn="false" output="screen">
+      <remap from="/clock" to="/$(arg robot)/clock" />
+  </node>
 
 </launch>
