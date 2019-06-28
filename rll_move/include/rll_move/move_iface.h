@@ -77,6 +77,7 @@ public:
 	~RLLMoveIface();
 
 private:
+	bool no_gripper_attached = false;
 	bool allowed_to_move;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 

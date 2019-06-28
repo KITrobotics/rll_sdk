@@ -23,6 +23,16 @@ RLLMoveIface::RLLMoveIface()
 	: manip_move_group(MANIP_PLANNING_GROUP),
 	  gripper_move_group(GRIPPER_PLANNING_GROUP)
 {
+	ns = ros::this_node::getNamespace();
+	// remove the two slashes at the beginning
+	ns.erase(0, 2);
+	ROS_INFO("starting in ns %s", ns.c_str());
+
+	std::string node_name = ros::this_node::getName();
+	ros::param::get(node_name + "/no_gripper", no_gripper_attached);
+	if (no_gripper_attached)
+		ROS_INFO("configured to not use a gripper");
+
 	manip_move_group.setPlannerId("RRTConnectkConfigDefault");
 	manip_move_group.setPlanningTime(2.0);
 	manip_move_group.setPoseReferenceFrame("world");
@@ -30,11 +40,6 @@ RLLMoveIface::RLLMoveIface()
 	gripper_move_group.setPlanningTime(2.0);
 
 	manip_model = manip_move_group.getRobotModel();
-
-	ns = ros::this_node::getNamespace();
-	// remove the two slashes at the beginning
-	ns.erase(0, 2);
-	ROS_INFO("starting in ns %s", ns.c_str());
 
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
@@ -445,9 +450,11 @@ bool RLLMoveIface::reset_to_home()
 	if (!success)
 		return false;
 
-	success = open_gripper();
-	if (!success)
-		return false;
+	if (!no_gripper_attached) {
+		success = open_gripper();
+		if (!success)
+			return false;
+	}
 
 	return true;
 }
