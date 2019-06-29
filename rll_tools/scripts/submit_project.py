@@ -52,13 +52,24 @@ def tar_excludes(filename):
     return False
 
 def gen_ignore_patterns(project_path):
-    gitignore_content = read_ignore_file(path.join(project_path, ".gitignore"))
+    gitignore_file = path.join(project_path, ".gitignore")
     rll_submit_ignore_file = path.join(project_path, ".rll_submit_ignore")
+    gitignore_content = None
+    rll_submit_ignore_content = None
+
+    if path.isfile(gitignore_file):
+        gitignore_content = read_ignore_file(gitignore_file)
     if path.isfile(rll_submit_ignore_file):
         rll_submit_ignore_content = read_ignore_file(rll_submit_ignore_file)
+
+    if gitignore_content and rll_submit_ignore_content:
         ignore_patterns = gitignore_content + rll_submit_ignore_content
-    else:
+    elif gitignore_content and not rll_submit_ignore_content:
         ignore_patterns = gitignore_content
+    elif not gitignore_content and rll_submit_ignore_content:
+        ignore_patterns = rll_submit_ignore_content
+    else:
+        ignore_patterns = []
 
     return ignore_patterns
 
