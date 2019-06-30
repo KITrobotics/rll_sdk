@@ -123,6 +123,17 @@ def upload_archive(project_archive, api_access_cfg):
         rospy.loginfo("The job ID is %s", resp_msg["job_id"])
         rospy.loginfo("You can check the job status at %sjobs", webapp_url)
 
+def check_size(project_archive):
+    max_file_size = 20*1024*1024 # upload file size is limited to 20MB
+
+    size = path.getsize(project_archive)
+    if size > max_file_size:
+        rospy.logerr("The project archive is too big for upload. The size is %dMB and %dMB are allowed.\n"
+                     "Do you have put large files into the project folder?", size/(1024*1024), max_file_size/(1024*1024))
+        return False
+
+    return True
+
 def submit_project():
     rospack = rospkg.RosPack()
     config_path = path.join(rospack.get_path("rll_tools"), "config", "api-access.yaml")
@@ -148,6 +159,9 @@ def submit_project():
         return
 
     project_archive = create_project_archive(project_path)
+    size_ok = check_size(project_archive)
+    if not size_ok:
+        return
     upload_archive(project_archive, api_access_cfg)
 
 
