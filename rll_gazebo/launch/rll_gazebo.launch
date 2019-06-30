@@ -9,6 +9,8 @@
 
     <env name="GAZEBO_MASTER_URI" value="http://localhost:$(arg gazebo_port)"/>
 
+    <param name="/$(arg robot_name)/use_sim_time" value="true"/>
+
     <!-- Loads the Gazebo world. -->
     <include file="$(find rll_gazebo)/launch/rll_world.launch">
         <arg name="hardware_interface" value="$(arg hardware_interface)" />

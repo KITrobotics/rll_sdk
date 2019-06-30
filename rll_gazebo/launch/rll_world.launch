@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="paused" default="false"/>
-  <arg name="use_sim_time" default="true"/>
+  <arg name="use_sim_time" default="false"/> <!-- set by us in the robot's namespace -->
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="hardware_interface" default="PositionJointInterface"/>
