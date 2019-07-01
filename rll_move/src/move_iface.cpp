@@ -24,8 +24,12 @@ RLLMoveIface::RLLMoveIface()
 	  gripper_move_group(GRIPPER_PLANNING_GROUP)
 {
 	ns = ros::this_node::getNamespace();
-	// remove the two slashes at the beginning
+	// remove the slashes at the beginning
+#if ROS_VERSION_MINIMUM(1, 14, 3) // Melodic
+	ns.erase(0, 1);
+#else // Kinetic and older
 	ns.erase(0, 2);
+#endif
 	ROS_INFO("starting in ns %s", ns.c_str());
 
 	std::string node_name = ros::this_node::getName();
