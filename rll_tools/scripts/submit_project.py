@@ -22,7 +22,7 @@ import rospy
 import rospkg
 import yaml
 
-from os import path, remove, walk
+from os import path, remove, walk, environ
 import tarfile
 import glob
 import time
@@ -105,7 +105,8 @@ def create_project_archive(project_path):
 def upload_archive(project_archive, api_access_cfg):
     rospy.loginfo("uploading archive...")
     submit_url = api_access_cfg["api_url"] + "jobs/submit_tar?username=" + api_access_cfg["username"] \
-                 + "&project=" + project + "&token=" + api_access_cfg["token"]
+                 + "&project=" + project + "&token=" + api_access_cfg["token"] \
+                 + "&ros_distro=" + environ["ROS_DISTRO"]
     with open(project_archive) as archive:
         archive_content = archive.read()
 
