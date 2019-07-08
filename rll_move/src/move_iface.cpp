@@ -438,7 +438,7 @@ bool RLLMoveIface::check_trajectory(moveit_msgs::RobotTrajectory &trajectory)
 	float distance = 0.0;
 	for (int i = 0; i < start.size(); ++i)
 		distance += fabs(start[i] - goal[i]);
-	if (distance < 0.05) {
+	if (distance < 0.005) {
 		ROS_INFO("trajectory: start state too close to goal state");
 		return false;
 	}
