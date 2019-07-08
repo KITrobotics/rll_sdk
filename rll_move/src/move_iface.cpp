@@ -350,6 +350,10 @@ bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInter
 		return false;
 	}
 
+	success = check_trajectory(my_plan.trajectory_);
+	if (!success)
+		return true;
+
 	success = modify_ptp_trajectory(my_plan.trajectory_);
 	if (!success)
 		return false;
@@ -386,6 +390,10 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_t
 		return false;
 	}
 
+	success = check_trajectory(my_plan.trajectory_);
+	if (!success)
+		return true;
+
 	// time parametrization happens in joint space by default
 	if (cartesian_time_parametrization) {
 		success = modify_lin_trajectory(trajectory);
@@ -414,6 +422,26 @@ bool RLLMoveIface::modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajector
 bool RLLMoveIface::modify_ptp_trajectory(moveit_msgs::RobotTrajectory &trajectory)
 {
 	// Derived classes can put modifications here
+
+	return true;
+}
+
+bool RLLMoveIface::check_trajectory(moveit_msgs::RobotTrajectory &trajectory)
+{
+	if (trajectory.joint_trajectory.points.size() < 3) {
+		ROS_WARN("trajectory has less than 3 points");
+		return false;
+	}
+
+	std::vector<double> start = trajectory.joint_trajectory.points[0].positions;
+	std::vector<double> goal = trajectory.joint_trajectory.points.back().positions;
+	float distance = 0.0;
+	for (int i = 0; i < start.size(); ++i)
+		distance += fabs(start[i] - goal[i]);
+	if (distance < 0.05) {
+		ROS_INFO("trajectory: start state too close to goal state");
+		return false;
+	}
 
 	return true;
 }

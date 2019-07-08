@@ -87,6 +87,7 @@ private:
 	bool detach_grasp_object(std::string object_id);
 	virtual bool modify_ptp_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	virtual bool modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajectory);
+	bool check_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	bool manip_current_state_available();
 };
 
