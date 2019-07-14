@@ -483,12 +483,23 @@ bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs:
 	geometry_msgs::Pose pose_tip;
 	std::string world_frame = manip_move_group.getPlanningFrame();
 	world_frame.erase(0, 1); // remove slash
-	ee_to_tip_stamped = tf_buffer.lookupTransform(manip_move_group.getEndEffectorLink(),
-						      solver->getTipFrame(), ros::Time(0),
-						      ros::Duration(1.0));
-	base_to_world_stamped = tf_buffer.lookupTransform(solver->getBaseFrame(),
-							  world_frame, ros::Time(0),
-						      ros::Duration(1.0));
+	try {
+		ee_to_tip_stamped = tf_buffer.lookupTransform(
+			manip_move_group.getEndEffectorLink(),
+			solver->getTipFrame(), ros::Time(0),
+			ros::Duration(1.0));
+		base_to_world_stamped = tf_buffer.lookupTransform(
+			solver->getBaseFrame(),
+			world_frame, ros::Time(0),
+			ros::Duration(1.0));
+	} catch (tf2::TransformException &ex) {
+		ROS_FATAL("%s",ex.what());
+		ros::Duration(1.0).sleep();
+		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
+		return true;
+	}
+
 	tf::transformMsgToTF(ee_to_tip_stamped.transform, ee_to_tip);
 	tf::transformMsgToTF(base_to_world_stamped.transform, base_to_world);
 
