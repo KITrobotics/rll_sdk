@@ -18,6 +18,7 @@
  */
 
 #include <rll_move/move_iface.h>
+#include <tf/transform_datatypes.h>
 #include <tf2_ros/transform_listener.h>
 
 RLLMoveIface::RLLMoveIface()
@@ -482,7 +483,11 @@ bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs:
 	geometry_msgs::TransformStamped ee_to_tip_stamped, base_to_world_stamped;
 	geometry_msgs::Pose pose_tip;
 	std::string world_frame = manip_move_group.getPlanningFrame();
+#if ROS_VERSION_MINIMUM(1, 14, 3) // Melodic
+	// leave world_frame as is
+#else // Kinetic and older
 	world_frame.erase(0, 1); // remove slash
+#endif
 	try {
 		ee_to_tip_stamped = tf_buffer.lookupTransform(
 			manip_move_group.getEndEffectorLink(),
