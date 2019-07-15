@@ -28,13 +28,6 @@
     </joint>
 
     <link name="wall_front">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.01 0.8 0.55" rpy="0 0 0"/>
-        </geometry>
-        <material name="transparent" />
-      </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
@@ -43,13 +36,6 @@
       </collision>
     </link>
     <link name="wall_back">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.01 0.8 0.55" rpy="0 0 0"/>
-        </geometry>
-        <material name="transparent" />
-      </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
@@ -58,13 +44,6 @@
       </collision>
     </link>
     <link name="wall_left">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.6 0.01 0.55" rpy="0 0 0"/>
-        </geometry>
-        <material name="transparent" />
-      </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
@@ -73,13 +52,6 @@
       </collision>
     </link>
     <link name="wall_right">
-      <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <box size="0.6 0.01 0.55" rpy="0 0 0"/>
-        </geometry>
-        <material name="transparent" />
-      </visual>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
