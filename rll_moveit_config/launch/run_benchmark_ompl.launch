@@ -3,7 +3,7 @@
 
   <!-- This argument must specify the list of .cfg files to process for benchmarking -->
   <arg name="cfg" />
-  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <arg name="description_file" default="$(find rll_description)/urdf/rll_main.urdf.xacro" />
 
   <!-- Load URDF -->
   <include file="$(find rll_moveit_config)/launch/planning_context.launch">

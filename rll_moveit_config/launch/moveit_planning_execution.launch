@@ -6,6 +6,7 @@
   <arg name="use_sim" default="true"/>
   <arg name="gazebo_port" default="11345"/>
   <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <arg name="semantic_description_file" default ="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
   <arg name="rviz_config" default ="$(find rll_moveit_config)/launch/moveit.rviz" />
 
   <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
@@ -41,6 +42,7 @@
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)"/>
       <arg name="description_file" value="$(arg description_file)" />
+      <arg name="semantic_description_file" value="$(arg semantic_description_file)" />
       <arg name="fake_execution" value="true" unless="$(arg use_sim)" />
     </include>
 
