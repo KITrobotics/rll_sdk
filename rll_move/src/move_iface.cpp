@@ -18,10 +18,13 @@
  */
 
 #include <rll_move/move_iface.h>
+#include <tf/transform_datatypes.h>
+#include <tf2_ros/transform_listener.h>
 
 RLLMoveIface::RLLMoveIface()
 	: manip_move_group(MANIP_PLANNING_GROUP),
-	  gripper_move_group(GRIPPER_PLANNING_GROUP)
+	  gripper_move_group(GRIPPER_PLANNING_GROUP),
+	  action_client("move_client", false)
 {
 	ns = ros::this_node::getNamespace();
 	// remove the slashes at the beginning
@@ -48,27 +51,24 @@ RLLMoveIface::RLLMoveIface()
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
 
+	action_client_ptr = &action_client;
 	allowed_to_move = false;
 }
 
 void RLLMoveIface::run_job(const rll_msgs::JobEnvGoalConstPtr &goal,
 			   JobServer *as)
 {
-	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client("move_client", true);
 	rll_msgs::JobEnvResult result;
 	rll_msgs::DefaultMoveIfaceGoal goal_iface_client;
 
 	ROS_INFO("got job running request");
 
-	ros::Duration(0.5).sleep();
-	if (!action_client.waitForServer(ros::Duration(4.0))) {
+	if (!action_client_ptr->waitForServer(ros::Duration(4.0))) {
 		ROS_ERROR("action service not available");
 		result.job.status = rll_msgs::JobStatus::FAILURE;
 		as->setSucceeded(result);
 		return;
 	}
-
-	action_client_ptr = &action_client;
 
 	allowed_to_move = true;
 	action_client_ptr->sendGoal(goal_iface_client);
@@ -133,6 +133,75 @@ bool RLLMoveIface::manip_current_state_available()
 	return true;
 }
 
+bool RLLMoveIface::move_random_srv(std_srvs::Trigger::Request &req,
+				   std_srvs::Trigger::Response &resp)
+{
+	if (allowed_to_move) {
+		move_random(req, resp);
+	} else {
+		ROS_WARN("Not allowed to send random move commands");
+		resp.success = false;
+		return true;
+	}
+
+	if (!resp.success) {
+		ROS_FATAL("move_random service call failed");
+		// allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
+	}
+
+	return true;
+}
+
+bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
+			       std_srvs::Trigger::Response &resp)
+{
+	bool success;
+	int retry_counter = 0;
+
+	ROS_INFO("random movement requested");
+
+	if (!manip_current_state_available())
+		return false;
+
+	geometry_msgs::Pose start = manip_move_group.getCurrentPose().pose;
+
+	while (retry_counter < 10) {
+		geometry_msgs::Pose random_pose = manip_move_group.getRandomPose().pose;
+		if (pose_goal_too_close(start, random_pose)) {
+			success = false;
+			ROS_INFO("last random pose to close to start pose, retrying...");
+			continue;
+		}
+
+		success = manip_move_group.setPoseTarget(random_pose);
+		if (!success) {
+			ROS_INFO("last random pose could not be set as target, retrying...");
+			continue;
+		}
+
+		success = run_ptp_trajectory(manip_move_group);
+		if (!success) {
+			ROS_INFO("planning failed for last random pose, retrying...");
+			continue;
+		} else {
+			break;
+		}
+
+		retry_counter++;
+	}
+
+	if (success) {
+		ROS_INFO("moved to random position");
+		resp.success = true;
+	} else {
+		ROS_WARN("failed to move to random position");
+		resp.success = false;
+	}
+
+	return true;
+}
+
 bool RLLMoveIface::pick_place_srv(rll_msgs::PickPlace::Request &req,
 				  rll_msgs::PickPlace::Response &resp)
 {
@@ -158,12 +227,17 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 {
 	bool success;
 
-	ROS_INFO("Moving above target");
-	success = run_lin_trajectory(req.pose_above);
-	if (!success) {
-		ROS_WARN("Moving above target failed");
-		resp.success = false;
-		return true;
+	geometry_msgs::Pose start = manip_move_group.getCurrentPose().pose;
+	if (pose_goal_too_close(start, req.pose_above)) {
+		ROS_INFO("pick above close");
+	} else {
+		ROS_INFO("Moving above target");
+		success = run_lin_trajectory(req.pose_above);
+		if (!success) {
+			ROS_WARN("Moving above target failed");
+			resp.success = false;
+			return true;
+		}
 	}
 
 	ROS_INFO("Moving to grip position");
@@ -312,7 +386,10 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 
 	if (!manip_current_state_available())
 		return false;
-	manip_move_group.getCurrentState()->copyJointGroupPositions(manip_move_group.getCurrentState()->getRobotModel()->getJointModelGroup(manip_move_group.getName()), joints);
+	manip_move_group.getCurrentState()->copyJointGroupPositions(
+		manip_move_group.getCurrentState()->getRobotModel()->getJointModelGroup(
+			manip_move_group.getName()),
+		joints);
 	joints[0] = req.joint_1;
 	joints[1] = req.joint_2;
 	joints[2] = req.joint_3;
@@ -339,7 +416,8 @@ bool RLLMoveIface::move_joints(rll_msgs::MoveJoints::Request &req,
 	return true;
 }
 
-bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group)
+bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
+				      bool for_gripper)
 {
 	moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 	bool success;
@@ -350,9 +428,11 @@ bool RLLMoveIface::run_ptp_trajectory(moveit::planning_interface::MoveGroupInter
 		return false;
 	}
 
-	success = check_trajectory(my_plan.trajectory_);
-	if (!success)
-		return true;
+	if (!for_gripper) {
+		success = check_trajectory(my_plan.trajectory_);
+		if (!success)
+			return false;
+	}
 
 	success = modify_ptp_trajectory(my_plan.trajectory_);
 	if (!success)
@@ -390,9 +470,9 @@ bool RLLMoveIface::run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_t
 		return false;
 	}
 
-	success = check_trajectory(my_plan.trajectory_);
+	success = check_trajectory(trajectory);
 	if (!success)
-		return true;
+		return false;
 
 	// time parametrization happens in joint space by default
 	if (cartesian_time_parametrization) {
@@ -435,16 +515,90 @@ bool RLLMoveIface::check_trajectory(moveit_msgs::RobotTrajectory &trajectory)
 
 	std::vector<double> start = trajectory.joint_trajectory.points[0].positions;
 	std::vector<double> goal = trajectory.joint_trajectory.points.back().positions;
-	float distance = 0.0;
-	for (int i = 0; i < start.size(); ++i)
-		distance += fabs(start[i] - goal[i]);
-	if (distance < 0.005) {
-		ROS_INFO("trajectory: start state too close to goal state");
+	if (joints_goal_too_close(start, goal)) {
+		ROS_WARN("trajectory: start state too close to goal state");
 		return false;
 	}
 
 	return true;
 }
+
+bool RLLMoveIface::joints_goal_too_close(std::vector<double> start, std::vector<double> goal)
+{
+	float distance = 0.0;
+	for (int i = 0; i < start.size(); ++i)
+		distance += fabs(start[i] - goal[i]);
+	if (distance < 0.01) {
+		return true;
+	}
+
+	return false;
+}
+
+bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal)
+{
+	std::vector<double> start_joints,  goal_joints;
+	moveit_msgs::MoveItErrorCodes error_code;
+	kinematics::KinematicsBaseConstPtr solver = manip_move_group.getRobotModel()->getJointModelGroup(
+		manip_move_group.getName())->getSolverInstance();
+	std::vector<double> seed = manip_move_group.getCurrentJointValues();
+
+	tf2_ros::Buffer tf_buffer;
+	tf2_ros::TransformListener tf_listener(tf_buffer);
+	tf::Transform world_to_ee, base_to_tip, ee_to_tip, base_to_world;
+	geometry_msgs::TransformStamped ee_to_tip_stamped, base_to_world_stamped;
+	geometry_msgs::Pose pose_tip;
+	std::string world_frame = manip_move_group.getPlanningFrame();
+#if ROS_VERSION_MINIMUM(1, 14, 3) // Melodic
+	// leave world_frame as is
+#else // Kinetic and older
+	world_frame.erase(0, 1); // remove slash
+#endif
+	try {
+		ee_to_tip_stamped = tf_buffer.lookupTransform(
+			manip_move_group.getEndEffectorLink(),
+			solver->getTipFrame(), ros::Time(0),
+			ros::Duration(1.0));
+		base_to_world_stamped = tf_buffer.lookupTransform(
+			solver->getBaseFrame(),
+			world_frame, ros::Time(0),
+			ros::Duration(1.0));
+	} catch (tf2::TransformException &ex) {
+		ROS_FATAL("%s",ex.what());
+		ros::Duration(1.0).sleep();
+		allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
+		return true;
+	}
+
+	tf::transformMsgToTF(ee_to_tip_stamped.transform, ee_to_tip);
+	tf::transformMsgToTF(base_to_world_stamped.transform, base_to_world);
+
+	tf::poseMsgToTF(start, world_to_ee);
+	base_to_tip = base_to_world * world_to_ee * ee_to_tip;
+	tf::poseTFToMsg(base_to_tip, pose_tip);
+	if (!solver->searchPositionIK(pose_tip, seed, 0.1, start_joints, error_code)) {
+		ROS_WARN("start pose for goal distance check invalid: error code %d",
+			 error_code.val);
+		return true;
+	}
+
+	tf::poseMsgToTF(goal, world_to_ee);
+	base_to_tip = base_to_world * world_to_ee * ee_to_tip;
+	tf::poseTFToMsg(base_to_tip, pose_tip);
+	if (!solver->searchPositionIK(pose_tip, seed, 0.1, goal_joints, error_code)) {
+		ROS_WARN("goal pose for goal distance check invalid: error code %d",
+			 error_code.val);
+		return true;
+	}
+
+	if (joints_goal_too_close(start_joints, goal_joints)) {
+		return true;
+	}
+
+	return false;
+}
+
 
 bool RLLMoveIface::close_gripper()
 {
@@ -452,7 +606,7 @@ bool RLLMoveIface::close_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_close");
-	bool success = run_ptp_trajectory(gripper_move_group);
+	bool success = run_ptp_trajectory(gripper_move_group, true);
 	if (!success)
 		return false;
 
@@ -465,7 +619,7 @@ bool RLLMoveIface::open_gripper()
 
 	gripper_move_group.setStartStateToCurrentState();
 	gripper_move_group.setNamedTarget("gripper_open");
-	bool success = run_ptp_trajectory(gripper_move_group);
+	bool success = run_ptp_trajectory(gripper_move_group, true);
 	if (!success)
 		return false;
 
@@ -474,13 +628,24 @@ bool RLLMoveIface::open_gripper()
 
 bool RLLMoveIface::reset_to_home()
 {
+	bool success;
+	std::string home_name = "home_bow";
 	if (!manip_current_state_available())
 		return false;
-	manip_move_group.setStartStateToCurrentState();
-	manip_move_group.setNamedTarget("home_bow");
-	bool success = run_ptp_trajectory(manip_move_group);
-	if (!success)
-		return false;
+
+	std::vector<double> start = manip_move_group.getCurrentJointValues();
+	std::vector<double> goal;
+	std::map<std::string, double> home_pose = manip_move_group.getNamedTargetValues(home_name);
+	for (auto const& it : home_pose) {
+		goal.push_back(it.second);
+	}
+	if (!joints_goal_too_close(start, goal)) {
+		manip_move_group.setStartStateToCurrentState();
+		manip_move_group.setNamedTarget(home_name);
+		success = run_ptp_trajectory(manip_move_group);
+		if (!success)
+			return false;
+	}
 
 	if (!no_gripper_attached) {
 		success = open_gripper();

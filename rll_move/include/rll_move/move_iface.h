@@ -70,9 +70,15 @@ public:
 			     rll_msgs::MoveJoints::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
+	bool move_random_srv(std_srvs::Trigger::Request &req,
+			     std_srvs::Trigger::Response &resp);
+	bool move_random(std_srvs::Trigger::Request &req,
+			 std_srvs::Trigger::Response &resp);
 	bool reset_to_home();
 	virtual bool close_gripper();
 	virtual bool open_gripper();
+	bool joints_goal_too_close(std::vector<double> start, std::vector<double> goal);
+	bool pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal);
 
 	~RLLMoveIface();
 
@@ -80,8 +86,10 @@ private:
 	bool no_gripper_attached = false;
 	bool allowed_to_move;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
+	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client;
 
-	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group);
+	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
+				bool for_gripper = false);
 	bool run_lin_trajectory(geometry_msgs::Pose goal, bool cartesian_time_parametrization = true);
 	bool attach_grasp_object(std::string object_id);
 	bool detach_grasp_object(std::string object_id);
