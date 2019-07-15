@@ -133,6 +133,75 @@ bool RLLMoveIface::manip_current_state_available()
 	return true;
 }
 
+bool RLLMoveIface::move_random_srv(std_srvs::Trigger::Request &req,
+				   std_srvs::Trigger::Response &resp)
+{
+	if (allowed_to_move) {
+		move_random(req, resp);
+	} else {
+		ROS_WARN("Not allowed to send random move commands");
+		resp.success = false;
+		return true;
+	}
+
+	if (!resp.success) {
+		ROS_FATAL("move_random service call failed");
+		// allowed_to_move = false;
+		action_client_ptr->cancelAllGoals();
+	}
+
+	return true;
+}
+
+bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
+			       std_srvs::Trigger::Response &resp)
+{
+	bool success;
+	int retry_counter = 0;
+
+	ROS_INFO("random movement requested");
+
+	if (!manip_current_state_available())
+		return false;
+
+	geometry_msgs::Pose start = manip_move_group.getCurrentPose().pose;
+
+	while (retry_counter < 10) {
+		geometry_msgs::Pose random_pose = manip_move_group.getRandomPose().pose;
+		if (pose_goal_too_close(start, random_pose)) {
+			success = false;
+			ROS_INFO("last random pose to close to start pose, retrying...");
+			continue;
+		}
+
+		success = manip_move_group.setPoseTarget(random_pose);
+		if (!success) {
+			ROS_INFO("last random pose could not be set as target, retrying...");
+			continue;
+		}
+
+		success = run_ptp_trajectory(manip_move_group);
+		if (!success) {
+			ROS_INFO("planning failed for last random pose, retrying...");
+			continue;
+		} else {
+			break;
+		}
+
+		retry_counter++;
+	}
+
+	if (success) {
+		ROS_INFO("moved to random position");
+		resp.success = true;
+	} else {
+		ROS_WARN("failed to move to random position");
+		resp.success = false;
+	}
+
+	return true;
+}
+
 bool RLLMoveIface::pick_place_srv(rll_msgs::PickPlace::Request &req,
 				  rll_msgs::PickPlace::Response &resp)
 {
@@ -473,9 +542,6 @@ bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs:
 	kinematics::KinematicsBaseConstPtr solver = manip_move_group.getRobotModel()->getJointModelGroup(
 		manip_move_group.getName())->getSolverInstance();
 	std::vector<double> seed = manip_move_group.getCurrentJointValues();
-
-	ROS_INFO("ik for frame %s, base frame %s", solver->getTipFrame().c_str(),
-		 solver->getBaseFrame().c_str());
 
 	tf2_ros::Buffer tf_buffer;
 	tf2_ros::TransformListener tf_listener(tf_buffer);

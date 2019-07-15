@@ -70,6 +70,10 @@ public:
 			     rll_msgs::MoveJoints::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
+	bool move_random_srv(std_srvs::Trigger::Request &req,
+			     std_srvs::Trigger::Response &resp);
+	bool move_random(std_srvs::Trigger::Request &req,
+			 std_srvs::Trigger::Response &resp);
 	bool reset_to_home();
 	virtual bool close_gripper();
 	virtual bool open_gripper();

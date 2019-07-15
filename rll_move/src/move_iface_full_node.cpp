@@ -35,6 +35,7 @@ int main(int argc, char **argv)
 	RLLMoveIface::JobServer server_idle(nh, "job_idle", boost::bind(&RLLMoveIface::idle, &move_iface, _1, &server_idle), false);
 	server_idle.start();
 	ros::ServiceServer robot_ready = nh.advertiseService("robot_ready", &RLLMoveIface::robot_ready_srv, &move_iface);
+	ros::ServiceServer move_random = nh.advertiseService("move_random", &RLLMoveIface::move_random_srv, &move_iface);
 	ros::ServiceServer pick_place = nh.advertiseService("pick_place", &RLLMoveIface::pick_place_srv, &move_iface);
 	ros::ServiceServer move_lin = nh.advertiseService("move_lin", &RLLMoveIface::move_lin_srv, &move_iface);
 	ros::ServiceServer move_ptp = nh.advertiseService("move_ptp", &RLLMoveIface::move_ptp_srv, &move_iface);
