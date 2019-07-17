@@ -52,6 +52,7 @@
 
     <include unless="$(arg headless)" file="$(find rll_moveit_config)/launch/moveit_rviz.launch">
       <arg name="command_args" value="-d $(arg rviz_config)" />
+      <arg name="robot_name" value="$(arg robot_name)" />
     </include>
   </group>
 
