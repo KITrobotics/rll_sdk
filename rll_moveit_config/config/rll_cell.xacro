@@ -251,6 +251,7 @@
     <disable_collisions link1="$(arg robot_name)_link_4" link2="wall_left" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="wall_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_6" reason="Adjacent" />
+    <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_7" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
