@@ -10,8 +10,8 @@
   <xacro:property name="safety_controller_k_pos" value="100" />
   <xacro:property name="safety_controller_k_vel" value="2" />
   <xacro:property name="joint_damping" value="0.5" />
+  <!-- TODO: set the correct individual effort values for every joint -->
   <xacro:property name="max_effort" value="300"/>
-  <xacro:property name="max_velocity" value="10"/>
 
   <xacro:macro name="iiwa7" params="parent hardware_interface robot_name *origin">
 
