@@ -57,7 +57,6 @@ RLLMoveIface::RLLMoveIface()
 	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
 	planning_scene = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor);
 
-
 	action_client_ptr = &action_client;
 	allowed_to_move = false;
 }
@@ -639,6 +638,7 @@ bool RLLMoveIface::pose_goal_in_collision(geometry_msgs::Pose goal)
 
 robot_state::RobotState RLLMoveIface::get_current_robot_state()
 {
+	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
 	planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor);
 	planning_scene_rw->getCurrentStateNonConst().update();
 	return planning_scene_rw->getCurrentState();
