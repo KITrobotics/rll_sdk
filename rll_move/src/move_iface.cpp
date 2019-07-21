@@ -51,6 +51,8 @@ RLLMoveIface::RLLMoveIface()
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
 
+	planning_scene_monitor = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+
 	action_client_ptr = &action_client;
 	allowed_to_move = false;
 }
@@ -146,7 +148,7 @@ bool RLLMoveIface::move_random_srv(std_srvs::Trigger::Request &req,
 
 	if (!resp.success) {
 		ROS_FATAL("move_random service call failed");
-		// allowed_to_move = false;
+		allowed_to_move = false;
 		action_client_ptr->cancelAllGoals();
 	}
 
@@ -166,11 +168,18 @@ bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
 
 	geometry_msgs::Pose start = manip_move_group.getCurrentPose().pose;
 
-	while (retry_counter < 10) {
+	while (retry_counter < 30) {
+		retry_counter++;
 		geometry_msgs::Pose random_pose = manip_move_group.getRandomPose().pose;
 		if (pose_goal_too_close(start, random_pose)) {
 			success = false;
-			ROS_INFO("last random pose to close to start pose, retrying...");
+			ROS_INFO("last random pose too close to start pose, retrying...");
+			continue;
+		}
+
+		if (pose_goal_in_collision(random_pose)) {
+			success = false;
+			ROS_INFO("last random pose is in collision, retrying...");
 			continue;
 		}
 
@@ -187,8 +196,6 @@ bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
 		} else {
 			break;
 		}
-
-		retry_counter++;
 	}
 
 	if (success) {
@@ -228,9 +235,7 @@ bool RLLMoveIface::pick_place(rll_msgs::PickPlace::Request &req,
 	bool success;
 
 	geometry_msgs::Pose start = manip_move_group.getCurrentPose().pose;
-	if (pose_goal_too_close(start, req.pose_above)) {
-		ROS_INFO("pick above close");
-	} else {
+	if (!pose_goal_too_close(start, req.pose_above)) {
 		ROS_INFO("Moving above target");
 		success = run_lin_trajectory(req.pose_above);
 		if (!success) {
@@ -518,6 +523,9 @@ bool RLLMoveIface::check_trajectory(moveit_msgs::RobotTrajectory &trajectory)
 	if (joints_goal_too_close(start, goal)) {
 		ROS_WARN("trajectory: start state too close to goal state");
 		return false;
+	} else if (pose_goal_in_collision(goal)) {
+		ROS_WARN("goal pose is in collision");
+		return false;
 	}
 
 	return true;
@@ -599,6 +607,39 @@ bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs:
 	return false;
 }
 
+bool RLLMoveIface::pose_goal_in_collision(geometry_msgs::Pose goal)
+{
+	const robot_state::JointModelGroup* manip_joint_model_group = manip_model->getJointModelGroup(
+		manip_move_group.getName());
+	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
+	// TODO: make this static for speedup?
+	planning_scene_monitor::LockedPlanningSceneRW planning_scene(planning_scene_monitor);
+	planning_scene->getCurrentStateNonConst().update();
+	robot_state::RobotState goal_state = planning_scene->getCurrentState();
+	if (!goal_state.setFromIK(manip_joint_model_group, goal,
+				  manip_move_group.getEndEffectorLink())) {
+		ROS_WARN("goal pose not valid");
+		return true;
+	}
+
+	goal_state.update(true);
+	collision_detection::CollisionRequest request;
+	request.distance = true;
+	collision_detection::CollisionResult result;
+	result.clear();
+	planning_scene->checkCollision(request, result, goal_state);
+	if (result.collision || result.distance < 0.001) {
+		// There is either a collision or the distance between the robot
+		// and the nearest collision object is less than 1mm.
+		// Positions that are that close to a collision are disallowed
+		// because the robot may end up being in collision when it
+		// moves into the goal pose and ends up in a slightly different
+		// position.
+		return true;
+	}
+
+	return false;
+}
 
 bool RLLMoveIface::close_gripper()
 {

@@ -31,6 +31,7 @@
 #include <rll_msgs/MoveJoints.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
+#include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <actionlib/client/simple_action_client.h>
 #include <actionlib/server/simple_action_server.h>
 
@@ -79,6 +80,7 @@ public:
 	virtual bool open_gripper();
 	bool joints_goal_too_close(std::vector<double> start, std::vector<double> goal);
 	bool pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal);
+	bool pose_goal_in_collision(geometry_msgs::Pose goal);
 
 	~RLLMoveIface();
 
@@ -87,6 +89,7 @@ private:
 	bool allowed_to_move;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client;
+	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor;
 
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
 				bool for_gripper = false);
