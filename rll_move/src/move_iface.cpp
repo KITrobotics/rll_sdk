@@ -47,11 +47,16 @@ RLLMoveIface::RLLMoveIface()
 	gripper_move_group.setPlanningTime(2.0);
 
 	manip_model = manip_move_group.getRobotModel();
+	manip_joint_model_group = manip_model->getJointModelGroup(
+		manip_move_group.getName());
 
 	std::string ee_link = ns + "_gripper_link_ee";
 	manip_move_group.setEndEffectorLink(ee_link);
 
 	planning_scene_monitor = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
+	planning_scene = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor);
+
 
 	action_client_ptr = &action_client;
 	allowed_to_move = false;
@@ -523,7 +528,7 @@ bool RLLMoveIface::check_trajectory(moveit_msgs::RobotTrajectory &trajectory)
 	if (joints_goal_too_close(start, goal)) {
 		ROS_WARN("trajectory: start state too close to goal state");
 		return false;
-	} else if (pose_goal_in_collision(goal)) {
+	} else if (joints_goal_in_collision(goal)) {
 		ROS_WARN("goal pose is in collision");
 		return false;
 	}
@@ -607,27 +612,46 @@ bool RLLMoveIface::pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs:
 	return false;
 }
 
+bool RLLMoveIface::joints_goal_in_collision(std::vector<double> goal)
+{
+	robot_state::RobotState goal_state = get_current_robot_state();
+	goal_state.setJointGroupPositions(manip_joint_model_group, goal);
+	if (state_in_collision(goal_state))
+		return true;
+
+	return false;
+}
+
 bool RLLMoveIface::pose_goal_in_collision(geometry_msgs::Pose goal)
 {
-	const robot_state::JointModelGroup* manip_joint_model_group = manip_model->getJointModelGroup(
-		manip_move_group.getName());
-	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
-	// TODO: make this static for speedup?
-	planning_scene_monitor::LockedPlanningSceneRW planning_scene(planning_scene_monitor);
-	planning_scene->getCurrentStateNonConst().update();
-	robot_state::RobotState goal_state = planning_scene->getCurrentState();
+	robot_state::RobotState goal_state = get_current_robot_state();
 	if (!goal_state.setFromIK(manip_joint_model_group, goal,
 				  manip_move_group.getEndEffectorLink())) {
 		ROS_WARN("goal pose not valid");
 		return true;
 	}
 
-	goal_state.update(true);
+	if (state_in_collision(goal_state))
+		return true;
+
+	return false;
+}
+
+robot_state::RobotState RLLMoveIface::get_current_robot_state()
+{
+	planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor);
+	planning_scene_rw->getCurrentStateNonConst().update();
+	return planning_scene_rw->getCurrentState();
+}
+
+bool RLLMoveIface::state_in_collision(robot_state::RobotState &state)
+{
+	state.update(true);
 	collision_detection::CollisionRequest request;
 	request.distance = true;
 	collision_detection::CollisionResult result;
 	result.clear();
-	planning_scene->checkCollision(request, result, goal_state);
+	planning_scene->checkCollision(request, result, state);
 	if (result.collision || result.distance < 0.001) {
 		// There is either a collision or the distance between the robot
 		// and the nearest collision object is less than 1mm.

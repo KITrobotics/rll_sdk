@@ -45,6 +45,7 @@ public:
 	moveit::planning_interface::MoveGroupInterface manip_move_group;
 	moveit::planning_interface::MoveGroupInterface gripper_move_group;
 	moveit::core::RobotModelConstPtr manip_model;
+	const robot_state::JointModelGroup* manip_joint_model_group;
 	moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
 	std::string ns;
 
@@ -81,6 +82,7 @@ public:
 	bool joints_goal_too_close(std::vector<double> start, std::vector<double> goal);
 	bool pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal);
 	bool pose_goal_in_collision(geometry_msgs::Pose goal);
+	bool joints_goal_in_collision(std::vector<double> goal);
 
 	~RLLMoveIface();
 
@@ -90,6 +92,7 @@ private:
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction>* action_client_ptr;
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client;
 	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor;
+	planning_scene::PlanningSceneConstPtr planning_scene;
 
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
 				bool for_gripper = false);
@@ -100,6 +103,8 @@ private:
 	virtual bool modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	bool check_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	bool manip_current_state_available();
+	robot_state::RobotState get_current_robot_state();
+	bool state_in_collision(robot_state::RobotState &state);
 };
 
 #endif  // RLL_MOVE_IFACE_H
