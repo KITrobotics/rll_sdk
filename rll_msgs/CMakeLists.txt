@@ -26,6 +26,7 @@ add_service_files(
   MoveLin.srv
   MovePTP.srv
   MoveJoints.srv
+  MoveRandom.srv
 )
 
 add_action_files(DIRECTORY action FILES

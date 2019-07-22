@@ -29,6 +29,7 @@
 #include <rll_msgs/MoveLin.h>
 #include <rll_msgs/MovePTP.h>
 #include <rll_msgs/MoveJoints.h>
+#include <rll_msgs/MoveRandom.h>
 #include <moveit/move_group_interface/move_group_interface.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
@@ -72,10 +73,10 @@ public:
 			     rll_msgs::MoveJoints::Response &resp);
 	bool move_joints(rll_msgs::MoveJoints::Request &req,
 			 rll_msgs::MoveJoints::Response &resp);
-	bool move_random_srv(std_srvs::Trigger::Request &req,
-			     std_srvs::Trigger::Response &resp);
-	bool move_random(std_srvs::Trigger::Request &req,
-			 std_srvs::Trigger::Response &resp);
+	bool move_random_srv(rll_msgs::MoveRandom::Request &req,
+			     rll_msgs::MoveRandom::Response &resp);
+	bool move_random(rll_msgs::MoveRandom::Request &req,
+			 rll_msgs::MoveRandom::Response &resp);
 	bool reset_to_home();
 	virtual bool close_gripper();
 	virtual bool open_gripper();

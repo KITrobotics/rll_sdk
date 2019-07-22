@@ -139,8 +139,8 @@ bool RLLMoveIface::manip_current_state_available()
 	return true;
 }
 
-bool RLLMoveIface::move_random_srv(std_srvs::Trigger::Request &req,
-				   std_srvs::Trigger::Response &resp)
+bool RLLMoveIface::move_random_srv(rll_msgs::MoveRandom::Request &req,
+				   rll_msgs::MoveRandom::Response &resp)
 {
 	if (allowed_to_move) {
 		move_random(req, resp);
@@ -159,11 +159,12 @@ bool RLLMoveIface::move_random_srv(std_srvs::Trigger::Request &req,
 	return true;
 }
 
-bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
-			       std_srvs::Trigger::Response &resp)
+bool RLLMoveIface::move_random(rll_msgs::MoveRandom::Request &req,
+			       rll_msgs::MoveRandom::Response &resp)
 {
 	bool success;
 	int retry_counter = 0;
+	geometry_msgs::Pose random_pose;
 
 	ROS_INFO("random movement requested");
 
@@ -174,7 +175,7 @@ bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
 
 	while (retry_counter < 30) {
 		retry_counter++;
-		geometry_msgs::Pose random_pose = manip_move_group.getRandomPose().pose;
+		random_pose = manip_move_group.getRandomPose().pose;
 		if (pose_goal_too_close(start, random_pose)) {
 			success = false;
 			ROS_INFO("last random pose too close to start pose, retrying...");
@@ -205,6 +206,7 @@ bool RLLMoveIface::move_random(std_srvs::Trigger::Request &req,
 	if (success) {
 		ROS_INFO("moved to random position");
 		resp.success = true;
+		resp.pose = random_pose;
 	} else {
 		ROS_WARN("failed to move to random position");
 		resp.success = false;
