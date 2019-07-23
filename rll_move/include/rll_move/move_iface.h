@@ -84,6 +84,8 @@ public:
 	bool pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal);
 	bool pose_goal_in_collision(geometry_msgs::Pose goal);
 	bool joints_goal_in_collision(std::vector<double> goal);
+	robot_state::RobotState get_current_robot_state();
+	void disable_collision(std::string link_1, std::string link_2);
 
 	~RLLMoveIface();
 
@@ -94,6 +96,7 @@ private:
 	actionlib::SimpleActionClient<rll_msgs::DefaultMoveIfaceAction> action_client;
 	planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor;
 	planning_scene::PlanningSceneConstPtr planning_scene;
+	collision_detection::AllowedCollisionMatrix acm;
 
 	bool run_ptp_trajectory(moveit::planning_interface::MoveGroupInterface &move_group,
 				bool for_gripper = false);
@@ -104,7 +107,6 @@ private:
 	virtual bool modify_lin_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	bool check_trajectory(moveit_msgs::RobotTrajectory &trajectory);
 	bool manip_current_state_available();
-	robot_state::RobotState get_current_robot_state();
 	bool state_in_collision(robot_state::RobotState &state);
 };
 

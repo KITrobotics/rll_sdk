@@ -54,8 +54,10 @@ RLLMoveIface::RLLMoveIface()
 	manip_move_group.setEndEffectorLink(ee_link);
 
 	planning_scene_monitor = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
+
 	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
 	planning_scene = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor);
+	acm = planning_scene->getAllowedCollisionMatrix();
 
 	action_client_ptr = &action_client;
 	allowed_to_move = false;
@@ -640,6 +642,7 @@ bool RLLMoveIface::pose_goal_in_collision(geometry_msgs::Pose goal)
 
 robot_state::RobotState RLLMoveIface::get_current_robot_state()
 {
+	planning_scene_monitor->waitForCurrentRobotState(ros::Time::now());
 	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
 	planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor);
 	planning_scene_rw->getCurrentStateNonConst().update();
@@ -651,10 +654,11 @@ bool RLLMoveIface::state_in_collision(robot_state::RobotState &state)
 	state.update(true);
 	collision_detection::CollisionRequest request;
 	request.distance = true;
+
 	collision_detection::CollisionResult result;
 	result.clear();
-	planning_scene->checkCollision(request, result, state);
-	if (result.collision || result.distance < 0.001) {
+	planning_scene->checkCollision(request, result, state, acm);
+	if (result.collision || (result.distance < 0.001 && result.distance > 0.0)) {
 		// There is either a collision or the distance between the robot
 		// and the nearest collision object is less than 1mm.
 		// Positions that are that close to a collision are disallowed
@@ -665,6 +669,15 @@ bool RLLMoveIface::state_in_collision(robot_state::RobotState &state)
 	}
 
 	return false;
+}
+
+void RLLMoveIface::disable_collision(std::string link_1, std::string link_2)
+{
+	planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor);
+	planning_scene_rw->getAllowedCollisionMatrixNonConst().setEntry(link_1, link_2, true);
+	// we need a local copy because checkCollision doesn't automatically use the
+	// updated collision matrix from the planning scene
+	acm = planning_scene_rw->getAllowedCollisionMatrixNonConst();
 }
 
 bool RLLMoveIface::close_gripper()
