@@ -640,9 +640,11 @@ bool RLLMoveIface::pose_goal_in_collision(geometry_msgs::Pose goal)
 	return false;
 }
 
-robot_state::RobotState RLLMoveIface::get_current_robot_state()
+robot_state::RobotState RLLMoveIface::get_current_robot_state(bool wait_for_state)
 {
-	planning_scene_monitor->waitForCurrentRobotState(ros::Time::now());
+	if (wait_for_state)
+		planning_scene_monitor->waitForCurrentRobotState(ros::Time::now());
+
 	planning_scene_monitor->requestPlanningSceneState("get_planning_scene");
 	planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor);
 	planning_scene_rw->getCurrentStateNonConst().update();

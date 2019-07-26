@@ -84,7 +84,7 @@ public:
 	bool pose_goal_too_close(geometry_msgs::Pose start, geometry_msgs::Pose goal);
 	bool pose_goal_in_collision(geometry_msgs::Pose goal);
 	bool joints_goal_in_collision(std::vector<double> goal);
-	robot_state::RobotState get_current_robot_state();
+	robot_state::RobotState get_current_robot_state(bool wait_for_state = false);
 	void disable_collision(std::string link_1, std::string link_2);
 
 	~RLLMoveIface();
