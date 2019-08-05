@@ -111,7 +111,12 @@ def upload_archive(project_archive, api_access_cfg):
         archive_content = archive.read()
 
     resp = requests.put(submit_url, data = archive_content)
-    resp_msg = json.loads(resp.text)
+    try:
+        resp_msg = json.loads(resp.text)
+    except:
+        rospy.logfatal("failed to decode server response:\n"
+                       "%s", resp.text)
+        return
     if resp_msg["status"] == "error":
         if resp_msg["error"] == "User has a running job in the queue":
             rospy.logerr("You have a running job in the queue for this project. "
