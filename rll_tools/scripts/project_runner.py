@@ -20,13 +20,15 @@
 
 import rospy
 import actionlib
-from rll_msgs.msg import *
+from rll_msgs.msg import JobStatus, JobEnvAction, JobEnvGoal
 import sys
+
 
 def job_result_codes_to_string(status):
     job_codes = {JobStatus.SUCCESS: "success", JobStatus.FAILURE: "failure",
                  JobStatus.INTERNAL_ERROR: "internal error"}
     return job_codes.get(status, "unknown")
+
 
 def run_project():
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
@@ -53,6 +55,7 @@ def run_project():
 
     return True
 
+
 # reset robot and environment
 def idle():
     job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
@@ -70,7 +73,7 @@ def idle():
     rospy.loginfo("resetted environment with status '%s'",
                   job_result_codes_to_string(resp.job.status))
     if resp.job.status == JobStatus.INTERNAL_ERROR:
-        rospy.logfatal("environment reset failed");
+        rospy.logfatal("environment reset failed")
         sys.exit(1)
 
 

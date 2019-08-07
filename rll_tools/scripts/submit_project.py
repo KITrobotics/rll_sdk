@@ -25,12 +25,12 @@ import yaml
 from os import path, remove, walk, environ
 import tarfile
 import glob
-import time
 import requests
 import json
 
 exclude_files = []
 webapp_url = "https://rll.ipr.kit.edu/"
+
 
 def read_ignore_file(filename):
     with open(filename, 'r') as frp:
@@ -38,9 +38,10 @@ def read_ignore_file(filename):
 
     # remove empty lines and comments
     file_content = filter(None, file_content)
-    file_content = [ line for line in file_content if not line.startswith('#') ]
+    file_content = [line for line in file_content if not line.startswith('#')]
 
     return file_content
+
 
 def tar_excludes(filename):
     if exclude_files == []:
@@ -50,6 +51,7 @@ def tar_excludes(filename):
         return True
 
     return False
+
 
 def gen_ignore_patterns(project_path):
     gitignore_file = path.join(project_path, ".gitignore")
@@ -73,6 +75,7 @@ def gen_ignore_patterns(project_path):
 
     return ignore_patterns
 
+
 def gen_exclude_filelist(project_path):
     files_to_exclude = []
 
@@ -90,6 +93,7 @@ def gen_exclude_filelist(project_path):
 
     exclude_files.extend(files_to_exclude)
 
+
 def create_project_archive(project_path):
     rospy.loginfo("creating project archive...")
     gen_exclude_filelist(project_path)
@@ -98,19 +102,22 @@ def create_project_archive(project_path):
     if path.isfile(submit_archive):
         remove(submit_archive)
     with tarfile.open(submit_archive, "w:gz") as tar:
-        tar.add(project_path, arcname=path.basename(project_path), exclude=tar_excludes)
+        tar.add(project_path, arcname=path.basename(project_path),
+                exclude=tar_excludes)
 
     return submit_archive
 
+
 def upload_archive(project_archive, api_access_cfg):
     rospy.loginfo("uploading archive...")
-    submit_url = api_access_cfg["api_url"] + "jobs/submit_tar?username=" + api_access_cfg["username"] \
-                 + "&project=" + project + "&token=" + api_access_cfg["token"] \
-                 + "&ros_distro=" + environ["ROS_DISTRO"]
+    submit_url = (api_access_cfg["api_url"] + "jobs/submit_tar?username="
+                  + api_access_cfg["username"] + "&project=" + project
+                  + "&token=" + api_access_cfg["token"] + "&ros_distro="
+                  + environ["ROS_DISTRO"])
     with open(project_archive) as archive:
         archive_content = archive.read()
 
-    resp = requests.put(submit_url, data = archive_content)
+    resp = requests.put(submit_url, data=archive_content)
     try:
         resp_msg = json.loads(resp.text)
     except:
@@ -119,35 +126,42 @@ def upload_archive(project_archive, api_access_cfg):
         return
     if resp_msg["status"] == "error":
         if resp_msg["error"] == "User has a running job in the queue":
-            rospy.logerr("You have a running job in the queue for this project. "
-                         "You can submit again once the job has finished.")
+            rospy.logerr("You have a running job in the queue for this "
+                         "project. You can submit again once the job has "
+                         "finished.")
             rospy.loginfo("You can check the job status at %sjobs", webapp_url)
         else:
-            rospy.logerr("submitting project failed with error '%s'", resp_msg["error"])
+            rospy.logerr("submitting project failed with error '%s'",
+                         resp_msg["error"])
     else:
         rospy.loginfo("SUCCESS: your job is submitted")
         rospy.loginfo("The job ID is %s", resp_msg["job_id"])
         rospy.loginfo("You can check the job status at %sjobs", webapp_url)
 
+
 def check_size(project_archive):
-    max_file_size = 20*1024*1024 # upload file size is limited to 20MB
+    max_file_size = 20 * 1024 * 1024  # upload file size is limited to 20MB
 
     size = path.getsize(project_archive)
     if size > max_file_size:
-        rospy.logerr("The project archive is too big for upload. The size is %dMB and %dMB are allowed.\n"
-                     "Do you have put large files into the project folder?", size/(1024*1024), max_file_size/(1024*1024))
+        rospy.logerr("The project archive is too big for upload. "
+                     "The size is %dMB and %dMB are allowed.\n"
+                     "Do you have put large files into the project folder?",
+                     size / (1024 * 1024), max_file_size / (1024 * 1024))
         return False
 
     return True
 
+
 def submit_project():
     rospack = rospkg.RosPack()
-    config_path = path.join(rospack.get_path("rll_tools"), "config", "api-access.yaml")
+    config_path = path.join(rospack.get_path("rll_tools"), "config",
+                            "api-access.yaml")
 
     if not path.isfile(config_path):
         rospy.logfatal("API access config file not found.")
-        rospy.loginfo("Please download the file at %ssettings and save it to %s",
-                      webapp_url, config_path)
+        rospy.loginfo("Please download the file at %ssettings "
+                      "and save it to %s", webapp_url, config_path)
         return
 
     with open(config_path, 'r') as doc:
@@ -161,7 +175,8 @@ def submit_project():
         project_path = rospack.get_path(project)
     except:
         rospy.logfatal("Could not find the project you want to submit. "
-                       "Make sure the project '%s' in your Catkin workspace", project)
+                       "Make sure the project '%s' in your Catkin workspace",
+                       project)
         return
 
     project_archive = create_project_archive(project_path)
