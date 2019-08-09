@@ -1,0 +1,5 @@
+[flake8]
+ignore = W503
+max-complexity = 10
+show-source = true
+statistics = true
