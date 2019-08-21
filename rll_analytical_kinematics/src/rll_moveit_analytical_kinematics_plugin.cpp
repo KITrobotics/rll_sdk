@@ -30,17 +30,25 @@ RLLMoveItAnalyticalKinematicsPlugin::RLLMoveItAnalyticalKinematicsPlugin() : ini
 
 bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
-    const moveit::core::RobotModel& robot_model, const std::string& group_name,
+    const moveit::core::RobotModel& robot_model,
 #else  // Kinetic and older
     const std::string& robot_description,
 #endif
-    const std::string& base_frame, const std::vector<std::string>& tip_frames, double search_discretization)
+    const std::string& group_name, const std::string& base_frame,
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+    const std::vector<std::string>& tip_frames,
+#else  // Kinetic and older
+    const std::string& tip_frame,
+#endif
+    double search_discretization)
 {
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
   if (tip_frames.size() != 1)
   {
     ROS_ERROR_STREAM("Expecting exactly one tip frame.");
     return false;
   }
+#endif
 
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
   ROS_INFO_STREAM("robot_model_getName()=" << robot_model.getName() << " group_name=" << group_name << " base_frame="
@@ -50,10 +58,10 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   storeValues(robot_model, group_name, base_frame, tip_frames, search_discretization);
 #else  // Kinetic and older
   ROS_INFO_STREAM("robot_description=" << robot_description << " group_name=" << group_name << " base_frame="
-                                       << base_frame << " tip_frames=" << tip_frames[0]  // only one tip_frame
+                                       << base_frame << " tip_frames=" << tip_frame
                                        << " search_discretization=" << search_discretization);
 
-  setValues(robot_description, group_name, base_frame, tip_frames, search_discretization);
+  setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
 
   rdf_loader::RDFLoader rdf_loader(robot_description);
   const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
@@ -65,7 +73,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
     return false;
   }
 
-  moveit::core::RobotModel robot_model_(urdf_model, srdf);
+  moveit::core::RobotModel robot_model_instance_(urdf_model, srdf);
+  moveit::core::RobotModel* robot_model_ = &robot_model_instance_;
 #endif
 
   const moveit::core::JointModelGroup* jmg = robot_model_->getJointModelGroup(group_name);
@@ -113,9 +122,14 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
     ROS_INFO_STREAM(joint_names[joint_id] << " " << joint_min_vector[joint_id] << " " << joint_max_vector[joint_id]);
 
   // get parent_to_joint_origin_transform.position.z for all joints from urdf to calculate limb lengths:
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
   std::shared_ptr<const urdf::ModelInterface> robot_model_urdf;
   robot_model_urdf = robot_model.getURDF();
   std::shared_ptr<const urdf::Joint> urdf_joint;
+#else  // Kinetic and older
+  const urdf::ModelInterfaceSharedPtr robot_model_urdf = robot_model_instance_.getURDF();
+  urdf::JointConstSharedPtr urdf_joint;
+#endif
 
   for (auto & joint_name : joint_names)
   {
