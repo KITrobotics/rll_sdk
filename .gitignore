@@ -21,16 +21,8 @@ lbr_fri/fri
 
 # Build products
 tmp/*
-build/Makefile*
-build/CMakeFiles
-build/CMakeCache.txt
-build/*/Makefile*
-build/*/object_script*
-build/*/Release/*
-build/*/Debug/*
-build/*/MinSizeRel/*
-build/*/RelWithDebInfo/*
 build
+_build
 
 *#
 *.#
