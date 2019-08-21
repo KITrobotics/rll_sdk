@@ -51,15 +51,15 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
 #endif
 
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
-  ROS_INFO_STREAM("robot_model_getName()=" << robot_model.getName() << " group_name=" << group_name << " base_frame="
-                                           << base_frame << " tip_frames=" << tip_frames[0]  // only one tip_frame
-                                           << " search_discretization=" << search_discretization);
+  ROS_DEBUG_STREAM("robot_model_getName()=" << robot_model.getName() << " group_name=" << group_name << " base_frame="
+                                            << base_frame << " tip_frames=" << tip_frames[0]  // only one tip_frame
+                                            << " search_discretization=" << search_discretization);
 
   storeValues(robot_model, group_name, base_frame, tip_frames, search_discretization);
 #else  // Kinetic and older
-  ROS_INFO_STREAM("robot_description=" << robot_description << " group_name=" << group_name << " base_frame="
-                                       << base_frame << " tip_frames=" << tip_frame
-                                       << " search_discretization=" << search_discretization);
+  ROS_DEBUG_STREAM("robot_description=" << robot_description << " group_name=" << group_name << " base_frame="
+                                        << base_frame << " tip_frames=" << tip_frame
+                                        << " search_discretization=" << search_discretization);
 
   setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
 
@@ -84,17 +84,17 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
     return false;
   }
 
-  ROS_INFO_STREAM("Registering joints and links");
+  ROS_DEBUG_STREAM("Registering joints and links");
   const moveit::core::LinkModel* link = robot_model_->getLinkModel(tip_frames_[0]);
   const moveit::core::LinkModel* base_link = robot_model_->getLinkModel(base_frame_);
   while (link && link != base_link)
   {
-    ROS_INFO_STREAM("Link " << link->getName());
+    ROS_DEBUG_STREAM("Link " << link->getName());
     link_names.push_back(link->getName());
     const moveit::core::JointModel* joint = link->getParentJointModel();
     if (joint->getType() != joint->UNKNOWN && joint->getType() != joint->FIXED && joint->getVariableCount() == 1)
     {
-      ROS_INFO_STREAM("Adding joint " << joint->getName());
+      ROS_DEBUG_STREAM("Adding joint " << joint->getName());
 
       joint_names.push_back(joint->getName());
       const moveit::core::VariableBounds& bounds = joint->getVariableBounds()[0];
@@ -117,9 +117,9 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   std::reverse(joint_min_vector.begin(), joint_min_vector.end());
   std::reverse(joint_max_vector.begin(), joint_max_vector.end());
 
-  ROS_INFO("joint limits:");
+  ROS_DEBUG("joint limits:");
   for (size_t joint_id = 0; joint_id < num_joints; ++joint_id)
-    ROS_INFO_STREAM(joint_names[joint_id] << " " << joint_min_vector[joint_id] << " " << joint_max_vector[joint_id]);
+    ROS_DEBUG_STREAM(joint_names[joint_id] << " " << joint_min_vector[joint_id] << " " << joint_max_vector[joint_id]);
 
   // get parent_to_joint_origin_transform.position.z for all joints from urdf to calculate limb lengths:
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
@@ -142,7 +142,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   const moveit::core::JointModel* joint = link->getParentJointModel();
   urdf_joint = robot_model_urdf->getJoint(joint->getName());
   joint_origin_z_vector.push_back(urdf_joint->parent_to_joint_origin_transform.position.z);
-  ROS_INFO_STREAM(joint->getName() << " " << joint_origin_z_vector[num_joints]);
+  ROS_DEBUG_STREAM(joint->getName() << " " << joint_origin_z_vector[num_joints]);
 
   // initialize inverse kinematics solver
   solver.initialize(joint_origin_z_vector, joint_min_vector, joint_max_vector);
