@@ -85,7 +85,7 @@ def gen_exclude_filelist(project_path):
         for root, dirs, files in walk(project_path):
             matched_files = glob.glob(path.join(root, pattern))
             if matched_files:
-                    files_to_exclude.extend(matched_files)
+                files_to_exclude.extend(matched_files)
             for dir_name in dirs:
                 matched_files = glob.glob(path.join(dir_name, pattern))
                 if matched_files:
@@ -120,7 +120,7 @@ def upload_archive(project_archive, api_access_cfg):
     resp = requests.put(submit_url, data=archive_content)
     try:
         resp_msg = json.loads(resp.text)
-    except:
+    except json.JSONDecodeError:
         rospy.logfatal("failed to decode server response:\n"
                        "%s", resp.text)
         return
@@ -167,13 +167,13 @@ def submit_project():
     with open(config_path, 'r') as doc:
         try:
             api_access_cfg = yaml.load(doc)
-        except:
+        except yaml.YAMLError:
             rospy.logfatal("malformed api-access.yaml file")
             return
 
     try:
         project_path = rospack.get_path(project)
-    except:
+    except rospkg.ResourceNotFound:
         rospy.logfatal("Could not find the project you want to submit. "
                        "Make sure the project '%s' in your Catkin workspace",
                        project)
