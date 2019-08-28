@@ -1,0 +1,61 @@
+# based on: https://github.com/frankaemika/franka_ros/blob/kinetic-devel/.clang-tidy
+Checks: 'clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,google-*,misc-*,readability-*,modernize-*,performance-*,-clang-diagnostic-deprecated-declarations,-modernize-pass-by-value,-clang-diagnostic-reinterpret-base-class,-clang-diagnostic-return-type,-clang-diagnostic-switch'
+
+CheckOptions:
+# Classes, structs, ...
+  - key:    readability-identifier-naming.NamespaceCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ClassCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.StructCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.EnumCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.UnionCase
+    value:  CamelCase
+  - key:    readability-identifier-naming.TypedefCase
+    value:  CamelCase
+
+# Variables, member variables, ...
+  - key:    readability-identifier-naming.ParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.VariableCase
+    value:  lower_case
+  - key:    readability-identifier-naming.MemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PublicMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ProtectedMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PrivateMemberCase
+    value:  lower_case
+  - key:    readability-identifier-naming.PrivateMemberSuffix
+    value:  _
+
+# Functions, methods, ...
+  - key:    readability-identifier-naming.FunctionCase
+    value:  camelBack
+  - key:    readability-identifier-naming.MethodCase
+    value:  camelBack
+
+# Constants
+  - key:    readability-identifier-naming.ConstantPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.ConstantMemberPrefix
+    value:  ''
+  - key:    readability-identifier-naming.ConstantMemberCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.ConstantParameterCase
+    value:  lower_case
+  - key:    readability-identifier-naming.ConstantParameterPrefix
+    value:  ''
+  - key:    readability-identifier-naming.EnumConstantCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.StaticConstantCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.ClassConstantCase
+    value:  UPPER_CASE
+  - key:    readability-identifier-naming.GlobalVariableCase
+    value:  UPPER_CASE

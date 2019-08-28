@@ -27,6 +27,8 @@ add_service_files(
   MovePTP.srv
   MoveJoints.srv
   MoveRandom.srv
+  GetPose.srv
+  GetJointValues.srv
 )
 
 add_action_files(DIRECTORY action FILES
