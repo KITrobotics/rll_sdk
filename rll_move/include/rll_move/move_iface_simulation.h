@@ -18,21 +18,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_move/move_iface_default_simulation.h>
+#ifndef RLL_MOVE_IFACE_SIMULATION_H_
+#define RLL_MOVE_IFACE_SIMULATION_H_
 
-int main(int argc, char** argv)
+#include <rll_move/move_iface.h>
+
+class RLLSimulationMoveIface : public virtual RLLMoveIface
 {
-  ros::init(argc, argv, "move_iface");
-  ros::NodeHandle nh;
-  RLLDefaultMoveIface iface(nh, "move_client");
-  iface.startServicesAndRunNode(nh);
+public:
+  explicit RLLSimulationMoveIface() = default;
+  virtual ~RLLSimulationMoveIface() = default;
 
-  return 0;
-}
+  RLLErrorCode closeGripper() override;
+  RLLErrorCode openGripper() override;
 
-/*
- * Local Variables:
- * c-file-style: "linux"
- * indent-tabs-mode: t
- * End:
- */
+  bool modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory) override;
+  bool modifyLinTrajectory(moveit_msgs::RobotTrajectory& trajectory) override;
+};
+
+#endif /* RLL_MOVE_IFACE_SIMULATION_H_ */

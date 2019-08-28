@@ -18,21 +18,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_move/move_iface_default_simulation.h>
+#ifndef RLL_MOVE_IFACE_DEFAULT_H
+#define RLL_MOVE_IFACE_DEFAULT_H
 
-int main(int argc, char** argv)
+#include <rll_move/move_iface_base.h>
+
+class RLLDefaultMoveIfaceBase : public RLLMoveIfaceBase<>
 {
-  ros::init(argc, argv, "move_iface");
-  ros::NodeHandle nh;
-  RLLDefaultMoveIface iface(nh, "move_client");
-  iface.startServicesAndRunNode(nh);
+public:
+  RLLDefaultMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name = "move_client")
+    : RLLMoveIfaceBase(nh, action_name)
+  {
+  }
+  void startServicesAndRunNode(ros::NodeHandle& nh) override;
+};
 
-  return 0;
-}
+#endif  // RLL_MOVE_IFACE_DEFAULT_H
 
 /*
  * Local Variables:
- * c-file-style: "linux"
- * indent-tabs-mode: t
+ * c-file-style: "google"
  * End:
  */

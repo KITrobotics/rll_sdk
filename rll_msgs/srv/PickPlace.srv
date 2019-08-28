@@ -4,3 +4,4 @@ bool gripper_close
 string grasp_object
 ---
 bool success
+uint8 error_code

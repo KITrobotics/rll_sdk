@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rll_move)
 
+# required for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-std=c++11)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -22,6 +24,9 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
   src/move_iface.cpp
+  src/move_iface_error.cpp
+  src/move_iface_default.cpp
+  src/move_iface_simulation.cpp
 )
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 target_link_libraries(${PROJECT_NAME}

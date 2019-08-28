@@ -18,21 +18,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_move/move_iface_default_simulation.h>
+#ifndef INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_
+#define INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_
 
-int main(int argc, char** argv)
-{
-  ros::init(argc, argv, "move_iface");
-  ros::NodeHandle nh;
-  RLLDefaultMoveIface iface(nh, "move_client");
-  iface.startServicesAndRunNode(nh);
+#include <rll_move/move_iface_default.h>
+#include <rll_move/move_iface_simulation.h>
 
-  return 0;
-}
+// Combine the shared implementation for the default move interface with the simulation code:
+// both classes are virtually based of RLLMoveIface. RLLDefaultMoveIface contains the project
+// specific code that is relevant for both simulation and the real world.
+// To be able to run the RLLDefaultMoveIface we inherit from RLLSimulationMoveIface
+// which provides the simulation implementation for the abstract member functions
+using RLLDefaultMoveIface = RLLCombinedMoveIface<RLLDefaultMoveIfaceBase, RLLSimulationMoveIface>;
 
-/*
- * Local Variables:
- * c-file-style: "linux"
- * indent-tabs-mode: t
- * End:
- */
+#endif /* INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_ */
