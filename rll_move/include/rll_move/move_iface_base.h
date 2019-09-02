@@ -18,22 +18,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INCLUDE_RLL_MOVE_MOVE_IFACE_BASE_H_
-#define INCLUDE_RLL_MOVE_MOVE_IFACE_BASE_H_
+#ifndef RLL_MOVE_IFACE_BASE_H_
+#define RLL_MOVE_IFACE_BASE_H_
 
 #include <rll_move/move_iface.h>
+#include <actionlib/client/simple_action_client.h>
 #include <rll_msgs/DefaultMoveIfaceAction.h>
 
-// NOTE: to avoid making RLLMoveIface a template class, RLLMoveIfaceBase is introduced as an intermediary class.
-// It should be used as the base class for implementing custom interfaces
+// NOTE: to avoid making RLLMoveIface a template class and to keep the SimpleActionClient code out of it,
+// RLLMoveIfaceBase is introduced as an intermediary class. It should be used as the base class for custom interfaces.
 template <class Action = rll_msgs::DefaultMoveIfaceAction, class Goal = rll_msgs::DefaultMoveIfaceGoal>
 class RLLMoveIfaceBase : public virtual RLLMoveIface
 {
 public:
-  RLLMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name)
-    : RLLMoveIface(), nh_(nh), action_client_(action_name, false), action_client_ptr_(&action_client_)
-  {
-  }
+  RLLMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name);
 
   // since there will be a sim/real version, setup the services/actions in here und make sure to call spin()
   // or use global service objects to keep them alive
@@ -50,12 +48,22 @@ protected:
     action_client_ptr_->cancelAllGoals();
   }
 
+  int job_execution_timeout_seconds_ = 600;  // default is ten minutes
   actionlib::SimpleActionClient<Action>* const action_client_ptr_;
   actionlib::SimpleActionClient<Action> action_client_;
 };
 
-// the definition for this function needs to be in the header
-// since the compiler requires the full defintion for template deduction
+template <class Action, class Goal>
+RLLMoveIfaceBase<Action, Goal>::RLLMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name)
+  : RLLMoveIface(), nh_(nh), action_client_(action_name, false), action_client_ptr_(&action_client_)
+{
+  bool retrieved = ros::param::get(node_name_ + "/job_execution_timeout", job_execution_timeout_seconds_);
+  if (retrieved)
+  {
+    ROS_INFO("job execution timeout changed to %ds", job_execution_timeout_seconds_);
+  }
+}
+
 template <class Action, class Goal>
 void RLLMoveIfaceBase<Action, Goal>::runJob(const rll_msgs::JobEnvGoalConstPtr& /*goal*/,
                                             rll_msgs::JobEnvResult& result)
@@ -74,8 +82,10 @@ void RLLMoveIfaceBase<Action, Goal>::runJob(const rll_msgs::JobEnvGoalConstPtr& 
   action_client_ptr_->sendGoal(goal_iface_client);
   ROS_INFO("called the interface client");
 
-  // wait a maximum of 8 minutes
-  bool success = action_client_ptr_->waitForResult(ros::Duration(480.0));
+  // wait for the job to complete or reach the timeout
+  bool success = action_client_ptr_->waitForResult(ros::Duration(job_execution_timeout_seconds_));
+  ROS_INFO("interface client completed or timed out");
+
   if (!allowed_to_move_)
   {
     // This is the default job runner and should only be used for demos or testing
@@ -93,4 +103,4 @@ void RLLMoveIfaceBase<Action, Goal>::runJob(const rll_msgs::JobEnvGoalConstPtr& 
   }
 }
 
-#endif /* INCLUDE_RLL_MOVE_MOVE_IFACE_BASE_H_ */
+#endif /* RLL_MOVE_IFACE_BASE_H_ */
