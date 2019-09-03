@@ -17,7 +17,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES rll_move
-   CATKIN_DEPENDS message_runtime rll_msgs
+   CATKIN_DEPENDS message_runtime rll_msgs moveit_ros_planning_interface
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
