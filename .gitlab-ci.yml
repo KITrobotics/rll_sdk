@@ -28,9 +28,6 @@ variables:
   # blacklist packages that should not be build
   #CATKIN_CONFIG: '--blacklist gazebo_version_helpers, gazebo_grasp_plugin'
 
-stages:
-  - format
-  - build
 
 before_script:
   - apk add --update bash coreutils tar # install industrial_ci dependencies
@@ -44,7 +41,6 @@ before_script:
 
 # Format checks are run for every branch regardless of the ROS_DISTRO
 format-check:
-  stage: format
   variables:
     # run clang format check
     CLANG_FORMAT_VERSION: "3.9"    
@@ -56,7 +52,6 @@ format-check:
 
 # kinetic jobs to run if a commit is made to master
 kinetic-build:
-  stage: build
   # run default -> build
   script: .industrial_ci/gitlab.sh
   only:
@@ -68,7 +63,6 @@ kinetic-build:
 
 # melodic jobs to run if a commit is made to master
 melodic-build:
-  stage: format
   variables:
     ROS_DISTRO: "melodic" # override ROS_DISTRO variable 
   # run default -> build    
