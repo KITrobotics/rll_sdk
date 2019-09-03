@@ -1,0 +1,80 @@
+# based on: https://gitlab.ipr.kit.edu/IPR/intelligent_robotic_automation/blob/kinetic/.gitlab-ci.yml
+
+# The following block is needed for the shared Docker-based runner
+# For local runners you might want to enable the overlay driver:
+# https://docs.gitlab.com/ce/ci/docker/using_docker_build.html#using-the-overlayfs-driver
+
+image: docker:git # docker and git clients
+
+# enable docker-in-docker
+services:
+  - docker:dind
+
+# The docker runner does not expose /tmp to the docker-in-docker service
+# This config ensures that the temp folder is located inside the project directory (e.g. for prerelease tests or SSH agent forwarding)
+variables:
+  TMPDIR: "${CI_PROJECT_DIR}.tmp"
+  UPSTREAM_WORKSPACE: "file"
+
+  ROSINSTALL_FILENAME: ".ci.rosinstall"
+  ROS_DISTRO: "kinetic"
+  
+  # most projects will require the rll_sdk to be installed, 
+  # if you want to install it without providing a .ci.rosinstall file 
+  # adjust the ROSINSTALL_DEFAULT variable below as indicated by the comment
+  ROSINSTALL_SDK: "- git: {local-name: rll_sdk, uri: 'https://gitlab.ipr.kit.edu/rll/rll_sdk.git', version: master}"
+  ROSINSTALL_DEFAULT: "" # ${ROSINSTALL_SDK} 
+  
+  # blacklist packages that should not be build
+  #CATKIN_CONFIG: '--blacklist gazebo_version_helpers, gazebo_grasp_plugin'
+
+stages:
+  - format
+  - build
+
+before_script:
+  - apk add --update bash coreutils tar # install industrial_ci dependencies
+  - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci .industrial_ci
+# create the .rosinstall file IF it does not exist
+  - test ! -f ${ROSINSTALL_FILENAME} && echo ${ROSINSTALL_DEFAULT} >> ${ROSINSTALL_FILENAME} 
+  - sed -i 's/https\:\/\/gitlab\.ipr\.kit\.edu/https\:\/\/gitlab-ci-token\:'${CI_JOB_TOKEN}'\@gitlab\.ipr\.kit\.edu/g' ${CI_PROJECT_DIR}/${ROSINSTALL_FILENAME}
+# Download the .clang-format config IF it does not exist
+  - test ! -f .clang-format && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.clang-format
+
+
+# Format checks are run for every branch regardless of the ROS_DISTRO
+format-check:
+  stage: format
+  variables:
+    # run clang format check
+    CLANG_FORMAT_VERSION: "3.9"    
+    CLANG_FORMAT_CHECK: "file"
+  script: .industrial_ci/gitlab.sh
+  tags:
+    - docker # use docker runner
+
+
+# kinetic jobs to run if a commit is made to master
+kinetic-build:
+  stage: build
+  # run default -> build
+  script: .industrial_ci/gitlab.sh
+  only:
+    refs:
+      - master
+  tags:
+    - docker
+
+
+# melodic jobs to run if a commit is made to master
+melodic-build:
+  stage: format
+  variables:
+    ROS_DISTRO: "melodic" # override ROS_DISTRO variable 
+  # run default -> build    
+  script: .industrial_ci/gitlab.sh
+  only:
+    refs:
+      - master
+  tags:
+    - docker
