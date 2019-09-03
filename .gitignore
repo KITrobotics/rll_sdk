@@ -61,3 +61,8 @@ CVS/*
 /config
 *.kdev_include_paths
 *.orig
+.vscode/
+.idea/
+
+# python bytecode
+*.pyc
