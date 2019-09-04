@@ -19,7 +19,7 @@
 
 #include <rll_move_client/move_client.h>
 
-const char* AnsiCodes::END = "\x1B[30m";
+const char* AnsiCodes::END = "\x1B[0m";
 const char* AnsiCodes::RED = "\x1B[31m";
 const char* AnsiCodes::GRN = "\x1B[32m";
 const char* AnsiCodes::YEL = "\x1B[33m";
