@@ -151,7 +151,7 @@ public:
   }
   bool moveRandom(geometry_msgs::Pose* result_pose);
   bool movePTP(const geometry_msgs::Pose& pose);
-  bool moveLin(const geometry_msgs::Pose& pose, bool cartesian_time_parametrization = true);
+  bool moveLin(const geometry_msgs::Pose& pose);
 
   bool moveJoints(const std::vector<double>& joint_values);
   bool moveJoints(double a1, double a2, double a3, double a4, double a5, double a6, double a7);
