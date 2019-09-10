@@ -372,7 +372,8 @@ RLLErrorCode RLLMoveIface::moveLin(rll_msgs::MoveLin::Request& req, rll_msgs::Mo
     return RLLErrorCode::GOAL_IN_COLLISION;
   }
 
-  return runLinearTrajectory(req.pose, req.cartesian_time_parametrization != 0u);
+  // moveLin service calls are disallowed to use cartesian_time_parametrization
+  return runLinearTrajectory(req.pose, false);
 }
 
 bool RLLMoveIface::movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp)

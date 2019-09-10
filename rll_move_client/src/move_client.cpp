@@ -109,11 +109,10 @@ bool RLLBasicMoveClient::movePTP(const geometry_msgs::Pose& pose)
   return callServiceWithErrorCode<rll_msgs::MovePTP>(RLLMoveIface::MOVE_PTP_SRV_NAME, move_ptp_, move_ptp_msg);
 }
 
-bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose, bool cartesian_time_parametrization)
+bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose)
 {
   rll_msgs::MoveLin move_lin_msg;
   move_lin_msg.request.pose = pose;
-  move_lin_msg.request.cartesian_time_parametrization = cartesian_time_parametrization;  // NOLINT
 
   return callServiceWithErrorCode<rll_msgs::MoveLin>(RLLMoveIface::MOVE_LIN_SRV_NAME, move_lin_, move_lin_msg);
 }

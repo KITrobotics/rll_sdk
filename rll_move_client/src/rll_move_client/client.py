@@ -194,12 +194,12 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             self.move_random_service, self.MOVE_RANDOM_SRV_NAME,
             "%s requested", handle_random_resp)
 
-    def move_lin(self, pose, cartesian_parametrization=True):
+    def move_lin(self, pose):
 
         return self._call_service_with_error_check(
             self.move_lin_service, self.MOVE_LIN_SRV_NAME,
             "%s requested with %s", self._handle_response_error_code,
-            pose, cartesian_parametrization)
+            pose)
 
     def get_current_joint_values(self):
         self._log_service_call(self.GET_JOINT_VALUES_SRV_NAME)
