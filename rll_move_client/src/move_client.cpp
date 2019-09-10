@@ -20,18 +20,18 @@
 #include <rll_move_client/move_client.h>
 
 const char* AnsiCodes::END = "\x1B[0m";
-const char* AnsiCodes::RED = "\x1B[31m";
-const char* AnsiCodes::GRN = "\x1B[32m";
-const char* AnsiCodes::YEL = "\x1B[33m";
-const char* AnsiCodes::BLU = "\x1B[34m";
-const char* AnsiCodes::MAG = "\x1B[35m";
-const char* AnsiCodes::CYN = "\x1B[36m";
-const char* AnsiCodes::WHT = "\x1B[37m";
+const char* AnsiCodes::RED = "\x1B[91m";
+const char* AnsiCodes::GRN = "\x1B[92m";
+const char* AnsiCodes::YEL = "\x1B[93m";
+const char* AnsiCodes::BLU = "\x1B[94m";
+const char* AnsiCodes::MAG = "\x1B[95m";
+const char* AnsiCodes::CYN = "\x1B[96m";
+const char* AnsiCodes::WHT = "\x1B[97m";
 const char* AnsiCodes::BOLD = "\x1B[1m";
-const char* AnsiCodes::NAME = "\x1B[1m\x1B[34m";
-const char* AnsiCodes::OK = "\x1B[1m\x1B[32m";
-const char* AnsiCodes::WARN = "\x1B[1m\x1B[33m";
-const char* AnsiCodes::FAIL = "\x1B[1m\x1B[31m";
+const char* AnsiCodes::NAME = "\x1B[1m\x1B[94m";
+const char* AnsiCodes::OK = "\x1B[1m\x1B[92m";
+const char* AnsiCodes::WARN = "\x1B[1m\x1B[95m";
+const char* AnsiCodes::FAIL = "\x1B[1m\x1B[91m";
 
 bool RLLMoveClientBase::handleResponseWithoutErrorCode(const std::string& srv_name, bool call_success)
 {
@@ -62,13 +62,13 @@ bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name,
 
   if (error_code.isCriticalFailure())
   {
-    ROS_ERROR("%s failed critically: %s%s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
+    ROS_ERROR("%s %sfailed critically: %s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
 
     throw CriticalServiceCallFailure("Service call " + srv_name + "failed critically: " + error_code.message());
   }
   else
   {
-    ROS_ERROR("%s failed: %s%s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
+    ROS_WARN("%s %sfailed: %s%s", name.c_str(), AnsiCodes::WARN, error_code.message(), AnsiCodes::END);
 
     if (exception_on_any_failure_)
     {

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<launch>
+  <arg name="robot" default="iiwa" />
+  <arg name="use-python" default="true" />
+
+  <node if="$(arg use-python)"     ns="$(arg robot)" name="move_client_example" pkg="rll_move_client" type="move_client_example.py" output="screen"/>
+  <node unless="$(arg use-python)" ns="$(arg robot)" name="move_client_example" pkg="rll_move_client" type="move_client_example" output="screen"/>
+
+</launch>

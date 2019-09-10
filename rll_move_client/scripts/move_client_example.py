@@ -23,7 +23,7 @@ from math import pi
 from geometry_msgs.msg import Pose, Point
 
 from rll_move_client.client import RLLDefaultMoveClient
-from rll_move_client.util import euler_to_quaternion, compare_joint_values
+from rll_move_client.util import orientation_from_rpy, compare_joint_values
 
 
 def execute(move_client):
@@ -46,7 +46,8 @@ def execute(move_client):
 
     goal_pose = Pose()
     goal_pose.position = Point(.4, .4, .5)
-    goal_pose.orientation = euler_to_quaternion(0, pi / 2, 0)
+    goal_pose.orientation = orientation_from_rpy(pi / 2, -pi / 4, pi)
+
     # move ptp to the specified pose
     move_client.move_ptp(goal_pose)
 

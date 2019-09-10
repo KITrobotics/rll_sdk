@@ -70,14 +70,14 @@ class RLLMoveClientBase(object):
         code = ErrorCode(resp.error_code)
         if code.is_critical_failure():
             rospy.logerr(
-                "%s %sfailed critically%s with error: %s",
+                "%s %sfailed critically with error: %s%s",
                 name, C_FAIL, C_END, code)
 
             raise CriticalServiceCallFailure(
                 code,
                 "Service call %s failed with error: %s" % (srv_name, code))
         else:
-            rospy.logwarn("%s %sfailed%s: %s", name, C_WARN, C_END, code)
+            rospy.logwarn("%s %sfailed: %s%s", name, C_WARN, C_END, code)
 
             if self._exception_on_any_failure:
                 raise ServiceCallFailure(
