@@ -60,5 +60,9 @@ def euler_to_quaternion(ai, aj, ak, axes='sxyz'):
         tf.transformations.quaternion_from_euler(ai, aj, ak, axes))
 
 
+def orientation_from_rpy(roll, pitch, yaw):
+    return euler_to_quaternion(roll, pitch, yaw, 'sxyz')
+
+
 def compare_joint_values(joint_values_1, joint_values_2, atol=1.e-4):
     return numpy.allclose(joint_values_1, joint_values_2, atol=atol)

@@ -49,7 +49,7 @@ void execute(RLLDefaultMoveClient* const move_client)
   goal_pose.position.x = .4;
   goal_pose.position.y = .4;
   goal_pose.position.z = .5;
-  orientationFromRPY(0, M_PI / 2, 0, &goal_pose.orientation);
+  orientationFromRPY(M_PI / 2, -M_PI / 4, M_PI, &goal_pose.orientation);
   // move ptp to the specified pose
   move_client->movePTP(goal_pose);
 
