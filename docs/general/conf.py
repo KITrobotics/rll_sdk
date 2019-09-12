@@ -41,6 +41,7 @@ release = ''
 extensions = [
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
+    'sphinx_tabs.tabs'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -92,6 +93,11 @@ html_static_path = ['_static']
 html_context = {
     'css_files': [
         '_static/style_override.css',
+        # these files are not added by default for some reason?
+        '_static/sphinx_tabs/tabs.css',        
+        '_static/sphinx_tabs/semantic-ui-2.4.1/segment.min.css',
+        '_static/sphinx_tabs/semantic-ui-2.4.1/menu.min.css',
+        '_static/sphinx_tabs/semantic-ui-2.4.1/tab.min.css',
     ],
 }
 

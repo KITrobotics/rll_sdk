@@ -4,6 +4,8 @@ Manual installation
 The following instructions will help you to set up a development environment
 for the Robot Learning Lab.
 
+.. _setting-up-ros:
+
 Setting up ROS
 --------------
 
@@ -56,5 +58,6 @@ You can launch the visualization with the robot simulation to check if everythin
 It should look similar to the screenshot below. You should have an RViz window with the robot workcell
 and the shell should print `You can start planning now!`.
 
-.. todo::
-   Add sreenshot from VM image with RViz and terminal as example for how it should look like
+.. figure:: _static/rll_robot_playground_moveit_planning_execution.png
+    :align: center
+    :figclass: align-center
