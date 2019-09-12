@@ -123,6 +123,7 @@ protected:
   bool attachGraspObject(const std::string& object_id);
   bool detachGraspObject(const std::string& object_id);
   bool manipCurrentStateAvailable();
+  bool isCollisionLinkAvailable();
   bool stateInCollision(robot_state::RobotState& state);
   void handleFailureSeverity(const RLLErrorCode& error_code);
   std::vector<double> getJointValuesFromNamedTarget(const std::string& name);

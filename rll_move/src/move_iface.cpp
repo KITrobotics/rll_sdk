@@ -78,6 +78,13 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
   acm_ = planning_scene_->getAllowedCollisionMatrix();
 
   allowed_to_move_ = false;
+
+  // startup checks, shutdown the node if something is wrong
+  if (!isCollisionLinkAvailable())
+  {
+    ROS_FATAL("Startup checks failed, shutting the node down!");
+    ros::shutdown();
+  }
 }
 
 void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as)
@@ -149,6 +156,34 @@ bool RLLMoveIface::robotReadySrv(std_srvs::Trigger::Request& /*req*/, std_srvs::
 {
   RLLErrorCode error_code = resetToHome();
   resp.success = error_code.succeeded();  // NOLINT
+  return true;
+}
+
+bool RLLMoveIface::isCollisionLinkAvailable()
+{
+  std::string collision_link;
+  bool success = ros::param::get(node_name_ + "/collision_link", collision_link);
+  if (!success)
+  {
+    ROS_FATAL("No 'collision_link' param set. Please specify a collision_link param "
+              "to verify that the collision model is loaded.");
+    return false;
+  }
+
+  tf2_ros::Buffer tf_buffer;
+  // required to allow specifying a timeout in lookupTransform
+  tf2_ros::TransformListener listener(tf_buffer);
+
+  // if the workcell is loaded correctly the collision_link should be available
+  success = tf_buffer.canTransform("world", collision_link, ros::Time(0), ros::Duration(5));
+
+  if (!success)
+  {
+    ROS_FATAL("Failed to look up the collision link '%s'. Did you launch the correct file?", collision_link.c_str());
+    return false;
+  }
+
+  ROS_DEBUG("collision link '%s' lookup succeeded", collision_link.c_str());
   return true;
 }
 
