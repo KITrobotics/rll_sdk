@@ -18,6 +18,8 @@ the job is running and inspect job data, including log files once the job has fi
 The :doc:`job processing chapter <job_processing>` explains how your submission is handled by the lab system
 and what the different job states mean.
 
+.. _making-your-first-submission:
+
 Making your first submission
 ----------------------------
 
