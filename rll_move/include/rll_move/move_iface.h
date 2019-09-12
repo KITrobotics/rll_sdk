@@ -127,6 +127,7 @@ protected:
   bool stateInCollision(robot_state::RobotState& state);
   void handleFailureSeverity(const RLLErrorCode& error_code);
   std::vector<double> getJointValuesFromNamedTarget(const std::string& name);
+  float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
 
   // these function depend on whether we run in simulation or on the real robot
   // the actual implementation is implemented in a subclass, e.g. RLLMoveIfaceSimulation
