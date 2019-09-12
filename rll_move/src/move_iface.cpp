@@ -526,7 +526,17 @@ RLLErrorCode RLLMoveIface::runLinearTrajectory(const geometry_msgs::Pose& goal, 
   std::vector<geometry_msgs::Pose> waypoints;
   const double EEF_STEP = 0.0005;
   const double JUMP_THRESHOLD = 4.5;
+  const double MIN_LIN_MOVEMENT_DISTANCE = 0.005;
   bool success;
+
+  float distance = distanceToCurrentPosition(goal);
+  if (distance < MIN_LIN_MOVEMENT_DISTANCE)
+  {
+    ROS_WARN("Linear motions that cover a distance of less than 5 mm are currently not supported."
+             " Please use the 'move_ptp' service instead.");
+
+    return RLLErrorCode::TOO_FEW_WAYPOINTS;
+  }
 
   manip_move_group_.setStartStateToCurrentState();
   waypoints.push_back(goal);
@@ -885,6 +895,14 @@ bool RLLMoveIface::detachGraspObject(const std::string& object_id)
   ros::Duration(0.1).sleep();
 
   return true;
+}
+
+float RLLMoveIface::distanceToCurrentPosition(const geometry_msgs::Pose& pose)
+{
+  geometry_msgs::Pose current_pose = manip_move_group_.getCurrentPose().pose;
+
+  return sqrt(pow(current_pose.position.x - pose.position.x, 2) + pow(current_pose.position.y - pose.position.y, 2) +
+              pow(current_pose.position.z - pose.position.z, 2));
 }
 
 /*
