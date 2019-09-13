@@ -1,8 +1,8 @@
 FAQ
 ===
 
-Why can I only submit my code for the Path Planning project?
-------------------------------------------------------------
+Why can I only submit my code for the Robot Playground project?
+---------------------------------------------------------------
 
 It is the only project that is currently available for submissions. The Tower of Hanoi
 project can only be used for demo submissions. But we are planning to make further projects
