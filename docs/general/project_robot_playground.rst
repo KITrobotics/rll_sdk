@@ -65,20 +65,20 @@ steps. Execute each command in a **new** terminal tab or window.
 
      .. code-block:: bash
 
-        roslaunch rll_robot_playground_project hello_world.launch
+        roslaunch rll_robot_playground_project move_sender.launch
 
    - C++ version:
 
      .. code-block:: bash
 
-        roslaunch rll_robot_playground_project hello_world.launch use_python:=false
+        roslaunch rll_robot_playground_project move_sender.launch use_python:=false
 
 
 4. Trigger the execution of your project code:
 
    .. code-block:: bash
 
-      roslaunch rll_tools run_project
+      roslaunch rll_tools run_project.launch
 
 
 To execute the project code again, simply repeat step 4.
