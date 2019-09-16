@@ -24,8 +24,8 @@ Demo submissions run directly on the robots, while regular submissions are first
 simulation. If the simulation check does not detect serious errors, then the job is inserted
 into the job queue for execution on the real robots.
 
-Every user can have at least one job per project in the job queue. If more than one robot in the lab
-is currently processing a certain project, then as many submissions as robots are online
+Every user can have at least five jobs per project in the job queue. If more than five robots in the lab
+are currently processing a certain project, then as many submissions as robots are online
 for the particular project are allowed for every user.
 
 As long as a job has the status `submitted` and processing did not yet start,

@@ -125,10 +125,10 @@ def upload_archive(project_archive, api_access_cfg):
                        "%s", resp.text)
         return
     if resp_msg["status"] == "error":
-        if resp_msg["error"] == "User has a running job in the queue":
-            rospy.logerr("You have a running job in the queue for this "
-                         "project. You can submit again once the job has "
-                         "finished.")
+        if resp_msg["error"] == ("User reached max allowed limit "
+                                 "of running jobs"):
+            rospy.logerr("You reached the submission limit for this project. "
+                         "Please wait until one of your jobs has finished.")
             rospy.loginfo("You can check the job status at %sjobs", webapp_url)
         else:
             rospy.logerr("submitting project failed with error '%s'",
