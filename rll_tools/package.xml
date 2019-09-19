@@ -9,6 +9,7 @@
   <license>GPLv3+</license>
 
   <exec_depend>message_runtime</exec_depend>
+  <exec_depend>python-requests</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
 
 </package>
