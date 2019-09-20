@@ -135,7 +135,6 @@ public:
     init = false;
   };
 
-  static void quickSortLower(InvKinElbowInterval intervals[], int left, int right);  // quicksort for lower_limit
   static void mergeSortedIntervals(InvKinElbowInterval intervals[],
                                    int n);  // merge intervals that are already sorted by quickSort_lower()
 
@@ -157,12 +156,12 @@ public:
                          const double& cd);  // calculate derivative of joint-angle w.r.t elbow-angle
   double jointAnglePivot(const double& an, const double& bn, const double& cn, const double& ad, const double& bd,
                          const double& cd,
-                         const double& GC);  // calculate joint-angle with elbow-angle set to lower_limit
+                         const double& gc);  // calculate joint-angle with elbow-angle set to lower_limit
 
-  double derivativeHinge(const double& a, const double& b, const double& c, const double& GC);
-  double jointAngleHinge(const double& a, const double& b, const double& c, const double& GC);
+  double derivativeHinge(const double& a, const double& b, const double& c, const double& gc);
+  double jointAngleHinge(const double& a, const double& b, const double& c, const double& gc);
 
-  bool operator<(InvKinElbowInterval) const;
+  bool operator<(const InvKinElbowInterval& rhs) const;  // compares lower_limit
 
   double lower_limit;
   double upper_limit;
@@ -175,97 +174,56 @@ class InvKin
 {
 public:
   // Robot properties
-  static double limbs_[4];
-  static InvKinJoints lower_joint_limits_;
-  static InvKinJoints upper_joint_limits_;
-  static bool initialized_;
+  static double LIMBS[4];
+  static InvKinJoints LOWER_JOINT_LIMITS;
+  static InvKinJoints UPPER_JOINT_LIMITS;
+  static bool INITIALIZED;
 
   // methods:
 
   // Compute FK:
-  static InvKinMsg forwardKinematics(InvKinXCart& xCartPose, InvKinJoints& jointAngles);
+  static InvKinMsg forwardKinematics(InvKinXCart& cart_pose, InvKinJoints& joint_angles);
 
   // Compute IK:
-  static InvKinMsg inverseKinematics(InvKinJoints& jointAngles, InvKinXCart& xCartPose);
+  static InvKinMsg inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose);
   // Compute IK and return helper matrices
-  static InvKinMsg inverseKinematics(InvKinJoints& jointAngles, InvKinXCart& xCartPose, Matrix3d& As, Matrix3d& Bs,
-                                     Matrix3d& Cs, Matrix3d& Aw, Matrix3d& Bw, Matrix3d& Cw, bool check_limits = false);
+  static InvKinMsg inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose, Matrix3d& as, Matrix3d& bs,
+                                     Matrix3d& cs, Matrix3d& aw, Matrix3d& bw, Matrix3d& cw, bool check_limits = false);
 
   // Initialize:
-  bool initialize(const std::vector<double>& joint_distances, const std::vector<double>& lower_jointLimits,
-                  const std::vector<double>& upper_jointLimits);
+  bool initialize(const std::vector<double>& joint_distances, const std::vector<double>& lower_joint_limits,
+                  const std::vector<double>& upper_joint_limits);
 
   // Compute feasible intervals in nullspace
-  static InvKinMsg computeFeasibleIntervals(InvKinElbowInterval feasibleIntervals[], InvKinXCart& xCartPose,
-                                            Matrix3d& As, Matrix3d& Bs, Matrix3d& Cs, Matrix3d& Aw, Matrix3d& Bw,
-                                            Matrix3d& Cw, int& n);
+  static InvKinMsg computeFeasibleIntervals(InvKinElbowInterval feasible_intervals[], InvKinXCart& cart_pose,
+                                            Matrix3d& as, Matrix3d& bs, Matrix3d& cs, Matrix3d& aw, Matrix3d& bw,
+                                            Matrix3d& cw, int& n);
 
   // get closest solution to seed-state using optimization defined in optimize()
   static InvKinMsg getClosestPositionIK(InvKinJoints sol[], int& index_sol, InvKinJoints& seed_state,
-                                        InvKinXCart& seed_state_x, InvKinXCart& cartXPose, int configs[], int nConfigs,
+                                        InvKinXCart& seed_state_x, InvKinXCart& cart_pose, int configs[], int n_configs,
                                         InvKinMsg (*optimize)(InvKinElbowInterval[], int&, InvKinXCart&, InvKinXCart&));
 
   // redundancy resolution using exponential function
-  static InvKinMsg redundancyResolutionExp(InvKinElbowInterval intervals[], int& n, InvKinXCart& seed_state,
-                                           InvKinXCart& cartXPose);
+  static InvKinMsg redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], int& n, InvKinXCart& seed_state,
+                                           InvKinXCart& cart_pose);
 
   // wrapper-methods for KinematicsBase-Plugin
   // redundancy resolution using e-function and hard coded config in ik_pose.config
   static InvKinMsg getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
+  // redundancy resolution using fixed nsparam
+  static InvKinMsg getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
   // redundancy resolution using e-function and hard coded config and nsparam in ik_pose
   static InvKinMsg getIKefuncFixedConfigFixedNs(InvKinXCart ik_pose, InvKinJoints seed_state,
-                                             std::vector<double>& solution);
+                                                std::vector<double>& solution);
   // redundancy-resolution using e-function
   static InvKinMsg getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
+
+  static void determineClosestConfigs(int configs[], int& counter, InvKinJoints& joint_angles);
 
 private:
 };
 
-ostream& operator<<(ostream& stream, InvKinMsg const& val)
-{
-  stream << "InvKinError: ";
-
-  if (val & InvKin_WARNING)
-  {
-    stream << "WARN ";
-  }
-
-  if (val & InvKin_ERROR)
-  {
-    stream << "ERROR ";
-  }
-
-  if (val & InvKin_JOINTLIMIT)
-  {
-    stream << "jointlimit ";
-  }
-
-  if (val & InvKin_TARGET_TOO_FAR)
-  {
-    stream << "target_too_far ";
-  }
-
-  if (val & InvKin_TARGET_TOO_CLOSE)
-  {
-    stream << "target_too_close ";
-  }
-
-  if (val & InvKin_CLOSE_TO_SINGULARITY)
-  {
-    stream << "close_to_singularity ";
-  }
-
-  if (val & InvKin_SINGULARITY)
-  {
-    stream << "singularity ";
-  }
-
-  if (val & InvKin_NO_SOLUTION_FOR_ELBOW)
-  {
-    stream << "no_solution_for_elbow ";
-  }
-
-  return stream;
-}
+ostream& operator<<(ostream& stream, InvKinMsg const& val);
 
 #endif /* INCLUDE_INVKINLIBRARY_H_ */

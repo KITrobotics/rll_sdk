@@ -19,8 +19,10 @@
  */
 
 #include <rll_move/move_iface.h>
-#include <tf/transform_datatypes.h>
+
 #include <tf2_ros/transform_listener.h>
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#include <eigen_conversions/eigen_msg.h>  // Msg to Isometry3d
 
 const std::string RLLMoveIface::MANIP_PLANNING_GROUP = "manipulator";
 const std::string RLLMoveIface::GRIPPER_PLANNING_GROUP = "gripper";
@@ -30,7 +32,9 @@ const std::string RLLMoveIface::RUN_JOB_SRV_NAME = "job_env";
 
 const std::string RLLMoveIface::ROBOT_READY_SRV_NAME = "robot_ready";
 const std::string RLLMoveIface::MOVE_PTP_SRV_NAME = "move_ptp";
+const std::string RLLMoveIface::MOVE_PTP_ELB_SRV_NAME = "move_ptp_elb";
 const std::string RLLMoveIface::MOVE_LIN_SRV_NAME = "move_lin";
+const std::string RLLMoveIface::MOVE_LIN_ELB_SRV_NAME = "move_lin_elb";
 const std::string RLLMoveIface::MOVE_JOINTS_SRV_NAME = "move_joints";
 const std::string RLLMoveIface::MOVE_RANDOM_SRV_NAME = "move_random";
 const std::string RLLMoveIface::PICK_PLACE_SRV_NAME = "pick_place";
@@ -351,7 +355,7 @@ RLLErrorCode RLLMoveIface::pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs
   if (!poseGoalTooClose(start, req.pose_above))
   {
     ROS_INFO("Moving above target");
-    error_code = runLinearTrajectory(req.pose_above);
+    error_code = moveToGoalLinear(req.pose_above);
     if (error_code.failed())
     {
       ROS_WARN("Moving above target failed");
@@ -360,7 +364,7 @@ RLLErrorCode RLLMoveIface::pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs
   }
 
   ROS_INFO("Moving to grip position");
-  error_code = runLinearTrajectory(req.pose_grip);
+  error_code = moveToGoalLinear(req.pose_grip);
   if (error_code.failed())
   {
     ROS_WARN("Moving to grip position failed");
@@ -386,7 +390,7 @@ RLLErrorCode RLLMoveIface::pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs
   }
 
   ROS_INFO("Moving back above grip position");
-  error_code = runLinearTrajectory(req.pose_above);
+  error_code = moveToGoalLinear(req.pose_above);
   if (error_code.failed())
   {
     ROS_WARN("Moving back above target failed");
@@ -408,7 +412,97 @@ RLLErrorCode RLLMoveIface::moveLin(rll_msgs::MoveLin::Request& req, rll_msgs::Mo
   }
 
   // moveLin service calls are disallowed to use cartesian_time_parametrization
-  return runLinearTrajectory(req.pose, false);
+  return moveToGoalLinear(req.pose, false);
+}
+
+bool RLLMoveIface::moveLinElbSrv(rll_msgs::MoveLinElb::Request& req, rll_msgs::MoveLinElb::Response& resp)
+{
+  return controlledMovementExecution(req, resp, MOVE_LIN_ELB_SRV_NAME, &RLLMoveIface::moveLinElb);
+}
+
+RLLErrorCode RLLMoveIface::moveLinElb(rll_msgs::MoveLinElb::Request& req, rll_msgs::MoveLinElb::Response& /*resp*/)
+{
+  bool success;
+  std::vector<double> seed;
+  double elb = req.elbow_angle;
+  int dir = static_cast<int>(req.direction);
+  const double JUMP_THRESHOLD = 4.5;
+
+  if (elb < -M_PI || elb > M_PI)
+  {
+    ROS_WARN("requested elbow angle is out of range [-Pi,Pi]");
+    return RLLErrorCode::INVALID_INPUT;
+  }
+  ROS_INFO_STREAM("Linear motion requested with elbow angle: " << elb);
+
+  manip_move_group_.getCurrentState()->copyJointGroupPositions(manip_joint_model_group_, seed);
+
+  std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin> kinematics_plugin;
+  if (!getKinematicsSolver(kinematics_plugin))
+  {
+    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
+  }
+
+  // get elbow angle in start pose
+  std::vector<std::string> link_names;
+  std::vector<geometry_msgs::Pose> poses;
+  double elb_start;
+  kinematics_plugin->getPositionFKelb(link_names, seed, poses, elb_start);
+
+  // calculate waypoints
+  std::vector<geometry_msgs::Pose> waypoints;
+  std::vector<double> waypoints_elb;
+
+  interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, req.pose, waypoints);
+  transformPosesForIK(waypoints);
+  interpolateElbLinear(elb_start, elb, dir, waypoints.size(), waypoints_elb);
+
+  // calculate trajectory
+  std::vector<robot_state::RobotStatePtr> traj;
+  moveit_msgs::MoveItErrorCodes error_code;
+  double last_valid_percentage = 0.0;
+
+  kinematics_plugin->getPathIKelb(waypoints, waypoints_elb, seed, traj, manip_joint_model_group_, error_code,
+                                  last_valid_percentage);
+
+  // test for jump_threshold
+  moveit::core::JumpThreshold thresh(JUMP_THRESHOLD);
+  last_valid_percentage *= getCurrentRobotState().testJointSpaceJump(manip_joint_model_group_, traj, thresh);
+
+  if (last_valid_percentage < 1 && last_valid_percentage > 0)
+  {  // TODO(updim): visualize path until collision
+    ROS_ERROR("only achieved to compute %f %% of the requested path", last_valid_percentage * 100.0);
+    return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
+  }
+  if (last_valid_percentage <= 0)
+  {
+    ROS_ERROR("path planning completely failed");
+    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
+  }
+
+  // time trajectory
+  robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
+
+  for (int i = 0; i < waypoints.size(); i++)
+  {
+    rt.addSuffixWayPoint(traj[i], 0.0);
+  }
+
+  trajectory_processing::IterativeParabolicTimeParameterization time_param;
+  time_param.computeTimeStamps(rt, 1.0);
+
+  moveit_msgs::RobotTrajectory trajectory;
+  rt.getRobotTrajectoryMsg(trajectory);
+
+  // check for collisions
+  if (!planning_scene_->isPathValid(rt))
+  {  // TODO(updim): maybe output collision state
+    ROS_ERROR("path colliding");
+    return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
+  }
+
+  // moveLinElb service calls are disallowed to use cartesian_time_parametrization
+  return runLinearTrajectory(trajectory, false);
 }
 
 bool RLLMoveIface::movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp)
@@ -423,6 +517,61 @@ RLLErrorCode RLLMoveIface::movePTP(rll_msgs::MovePTP::Request& req, rll_msgs::Mo
   if (!success)
   {
     return RLLErrorCode::INVALID_TARGET_POSE;
+  }
+
+  return runPTPTrajectory(manip_move_group_);
+}
+
+bool RLLMoveIface::movePTPelbSrv(rll_msgs::MovePTPelb::Request& req, rll_msgs::MovePTPelb::Response& resp)
+{
+  return controlledMovementExecution(req, resp, MOVE_PTP_ELB_SRV_NAME, &RLLMoveIface::movePTPelb);
+}
+
+RLLErrorCode RLLMoveIface::movePTPelb(rll_msgs::MovePTPelb::Request& req, rll_msgs::MovePTPelb::Response& /*resp*/)
+{
+  bool success;
+  std::vector<double> seed;
+  std::vector<double> sol;
+  double elb = req.elbow_angle;
+
+  if (elb < -M_PI || elb > M_PI)
+  {
+    ROS_WARN("requested elbow angle is out of range [-Pi,Pi]");
+    return RLLErrorCode::INVALID_INPUT;
+  }
+  ROS_INFO_STREAM("PTP motion requested with elbow angle: " << elb);
+
+  manip_move_group_.getCurrentState()->copyJointGroupPositions(manip_joint_model_group_, seed);
+
+  std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin> kinematics_plugin;
+  if (!getKinematicsSolver(kinematics_plugin))
+  {
+    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
+  }
+
+  // Transformations between frames
+  tf::Transform world_to_ee, base_to_tip;
+  geometry_msgs::Pose pose_tip;
+
+  tf::poseMsgToTF(req.pose, world_to_ee);
+  base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
+  tf::poseTFToMsg(base_to_tip, pose_tip);
+
+  // get solution
+  moveit_msgs::MoveItErrorCodes error_code;
+  if (!kinematics_plugin->getPositionIKelb(pose_tip, seed, sol, error_code, elb))
+  {
+    ROS_ERROR("Inverse kinematics calculation failed");
+    return RLLErrorCode::INVALID_TARGET_POSE;
+  }
+
+  manip_move_group_.setStartStateToCurrentState();
+  success = manip_move_group_.setJointValueTarget(sol);
+
+  if (!success)
+  {
+    ROS_ERROR("requested joint values are out of range");
+    return RLLErrorCode::JOINT_VALUES_OUT_OF_RANGE;
   }
 
   return runPTPTrajectory(manip_move_group_);
@@ -520,9 +669,9 @@ RLLErrorCode RLLMoveIface::runPTPTrajectory(moveit::planning_interface::MoveGrou
   return RLLErrorCode::SUCCESS;
 }
 
-RLLErrorCode RLLMoveIface::runLinearTrajectory(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization)
+RLLErrorCode RLLMoveIface::moveToGoalLinear(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization)
 {
-  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  moveit_msgs::RobotTrajectory trajectory;
   std::vector<geometry_msgs::Pose> waypoints;
   const double EEF_STEP = 0.0005;
   const double JUMP_THRESHOLD = 4.5;
@@ -542,8 +691,8 @@ RLLErrorCode RLLMoveIface::runLinearTrajectory(const geometry_msgs::Pose& goal, 
   waypoints.push_back(goal);
 
   moveit::planning_interface::MoveItErrorCode moveit_error_code;
-  double achieved = manip_move_group_.computeCartesianPath(waypoints, EEF_STEP, JUMP_THRESHOLD, my_plan.trajectory_,
-                                                           true, &moveit_error_code);
+  double achieved =
+      manip_move_group_.computeCartesianPath(waypoints, EEF_STEP, JUMP_THRESHOLD, trajectory, true, &moveit_error_code);
 
   if (achieved > 0 && achieved < 1)
   {
@@ -555,6 +704,18 @@ RLLErrorCode RLLMoveIface::runLinearTrajectory(const geometry_msgs::Pose& goal, 
     ROS_ERROR("path planning completely failed, error code %s", stringifyMoveItErrorCodes(moveit_error_code));
     return RLLErrorCode::MOVEIT_PLANNING_FAILED;
   }
+
+  return runLinearTrajectory(trajectory, cartesian_time_parametrization);
+}
+
+RLLErrorCode RLLMoveIface::runLinearTrajectory(const moveit_msgs::RobotTrajectory& trajectory,
+                                               bool cartesian_time_parametrization)
+{
+  moveit::planning_interface::MoveGroupInterface::Plan my_plan;
+  bool success;
+  moveit::planning_interface::MoveItErrorCode moveit_error_code;
+
+  my_plan.trajectory_ = trajectory;
 
   RLLErrorCode error_code = checkTrajectory(my_plan.trajectory_);
   if (error_code.failed())
@@ -638,38 +799,11 @@ bool RLLMoveIface::poseGoalTooClose(const geometry_msgs::Pose& start, const geom
       manip_move_group_.getRobotModel()->getJointModelGroup(manip_move_group_.getName())->getSolverInstance();
   std::vector<double> seed = manip_move_group_.getCurrentJointValues();
 
-  tf2_ros::Buffer tf_buffer;
-  tf2_ros::TransformListener tf_listener(tf_buffer);
-  tf::Transform world_to_ee, base_to_tip, ee_to_tip, base_to_world;
-  geometry_msgs::TransformStamped ee_to_tip_stamped, base_to_world_stamped;
+  tf::Transform world_to_ee, base_to_tip;
   geometry_msgs::Pose pose_tip;
-  std::string world_frame = manip_move_group_.getPlanningFrame();
-#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
-                                   // leave world_frame as is
-#else                              // Kinetic and older
-  world_frame.erase(0, 1);  // remove slash
-#endif
-  try
-  {
-    ee_to_tip_stamped = tf_buffer.lookupTransform(manip_move_group_.getEndEffectorLink(), solver->getTipFrame(),
-                                                  ros::Time(0), ros::Duration(1.0));
-    base_to_world_stamped =
-        tf_buffer.lookupTransform(solver->getBaseFrame(), world_frame, ros::Time(0), ros::Duration(1.0));
-  }
-  catch (tf2::TransformException& ex)
-  {
-    ROS_FATAL("%s", ex.what());
-    ros::Duration(1.0).sleep();
-    // TODO(uieai): is this mandatory? e.g. move_random uses this function as a test
-    abortDueToCriticalFailure();
-    return true;
-  }
-
-  tf::transformMsgToTF(ee_to_tip_stamped.transform, ee_to_tip);
-  tf::transformMsgToTF(base_to_world_stamped.transform, base_to_world);
 
   tf::poseMsgToTF(start, world_to_ee);
-  base_to_tip = base_to_world * world_to_ee * ee_to_tip;
+  base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
   tf::poseTFToMsg(base_to_tip, pose_tip);
   if (!solver->searchPositionIK(pose_tip, seed, 0.1, start_joints, error_code))
   {
@@ -678,7 +812,7 @@ bool RLLMoveIface::poseGoalTooClose(const geometry_msgs::Pose& start, const geom
   }
 
   tf::poseMsgToTF(goal, world_to_ee);
-  base_to_tip = base_to_world * world_to_ee * ee_to_tip;
+  base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
   tf::poseTFToMsg(base_to_tip, pose_tip);
   if (!solver->searchPositionIK(pose_tip, seed, 0.1, goal_joints, error_code))
   {
@@ -894,6 +1028,137 @@ bool RLLMoveIface::detachGraspObject(const std::string& object_id)
   // occasionally, there seems to be a race condition with subsequent planning requests
   ros::Duration(0.1).sleep();
 
+  return true;
+}
+
+void RLLMoveIface::interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
+                                          std::vector<geometry_msgs::Pose>& waypoints)
+{
+  // most parts of code for cartesian interpolation from moveit's computeCartesianPath()
+  const double EEF_STEP = 0.0005;
+
+  Eigen::Isometry3d start_pose;
+  tf::poseMsgToEigen(start, start_pose);
+
+  Eigen::Isometry3d target_pose;
+  tf::poseMsgToEigen(end, target_pose);
+
+  Eigen::Quaterniond start_quaternion(start_pose.rotation());
+  Eigen::Quaterniond target_quaternion(target_pose.rotation());
+
+  // double rotation_distance = start_quaternion.angularDistance(target_quaternion);
+  double translation_distance = (target_pose.translation() - start_pose.translation()).norm();
+
+  // decide how many steps we will need for this trajectory
+  std::size_t translation_steps = 0;
+  if (EEF_STEP > 0.0)
+  {
+    translation_steps = floor(translation_distance / EEF_STEP);
+  }
+
+  // At least 30 steps even at constant pose for nullspace interpolation
+  std::size_t steps = translation_steps + 1;
+  if (steps < 30)  // in moveit 10 = MIN_STEPS_FOR_JUMP_THRESH
+  {
+    steps = 30;
+  }
+
+  waypoints.clear();
+  waypoints.push_back(start);
+
+  geometry_msgs::Pose tmp;
+
+  for (std::size_t i = 1; i <= steps; ++i)  // slerp-interpolation
+  {
+    double percentage = static_cast<double>(i) / static_cast<double>(steps);
+
+    Eigen::Isometry3d pose(start_quaternion.slerp(percentage, target_quaternion));
+    pose.translation() = percentage * target_pose.translation() + (1 - percentage) * start_pose.translation();
+
+    tf::poseEigenToMsg(pose, tmp);
+    waypoints.push_back(tmp);
+  }
+}
+
+void RLLMoveIface::interpolateElbLinear(const double start, const double end, const int dir, const int n,
+                                        std::vector<double>& elb)
+{
+  double step_size_elb = (end - start) / (n - 1);
+
+  // calculate step_size depending on direction and number of points
+  if (dir == 1 && end < start)
+  {
+    step_size_elb = (2 * M_PI + end - start) / (n - 1);
+  }
+  else if (dir == -1 && end > start)
+  {
+    step_size_elb = (-2 * M_PI + end - start) / (n - 1);
+  }
+
+  // fill vector elb
+  elb.clear();
+  for (int i = 0; i < n; i++)
+  {
+    elb.push_back(start + i * step_size_elb);
+  }
+}
+
+void RLLMoveIface::transformPosesForIK(std::vector<geometry_msgs::Pose>& waypoints)
+{
+  tf::Transform world_to_ee;
+  tf::Transform base_to_tip;
+  for (auto& waypoint : waypoints)
+  {
+    tf::poseMsgToTF(waypoint, world_to_ee);
+    base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
+    tf::poseTFToMsg(base_to_tip, waypoint);
+  }
+}
+
+bool RLLMoveIface::getKinematicsSolver(
+    std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>& kinematics_plugin)
+{
+  // Load instance of solver and kinematics plugin
+  const kinematics::KinematicsBaseConstPtr& solver = manip_joint_model_group_->getSolverInstance();
+  kinematics_plugin =
+      dynamic_pointer_cast<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>(solver);
+  if (!kinematics_plugin)
+  {
+    ROS_ERROR("service only available using RLLMoveItAnalyticalKinematicsPlugin");
+    return false;
+  }
+  return true;
+}
+
+bool RLLMoveIface::initConstTransforms()
+{
+  // Static Transformations between frames
+  const kinematics::KinematicsBaseConstPtr& solver = manip_joint_model_group_->getSolverInstance();
+  tf2_ros::Buffer tf_buffer;
+  tf2_ros::TransformListener tf_listener(tf_buffer);
+  geometry_msgs::TransformStamped ee_to_tip_stamped, base_to_world_stamped;
+  std::string world_frame = manip_move_group_.getPlanningFrame();
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+                                   // leave world_frame as is
+#else                              // Kinetic and older
+  world_frame.erase(0, 1);  // remove slash
+#endif
+  try
+  {
+    ee_to_tip_stamped = tf_buffer.lookupTransform(manip_move_group_.getEndEffectorLink(), solver->getTipFrame(),
+                                                  ros::Time(0), ros::Duration(1.0));
+    base_to_world_stamped =
+        tf_buffer.lookupTransform(solver->getBaseFrame(), world_frame, ros::Time(0), ros::Duration(1.0));
+  }
+  catch (tf2::TransformException& ex)
+  {
+    ROS_FATAL("%s", ex.what());
+    abortDueToCriticalFailure();
+    return false;
+  }
+
+  tf::transformMsgToTF(ee_to_tip_stamped.transform, ee_to_tip_);
+  tf::transformMsgToTF(base_to_world_stamped.transform, base_to_world_);
   return true;
 }
 

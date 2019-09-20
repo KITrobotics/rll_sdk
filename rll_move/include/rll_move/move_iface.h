@@ -27,7 +27,9 @@
 #include <rll_msgs/JobEnvAction.h>
 #include <rll_msgs/PickPlace.h>
 #include <rll_msgs/MoveLin.h>
+#include <rll_msgs/MoveLinElb.h>
 #include <rll_msgs/MovePTP.h>
+#include <rll_msgs/MovePTPelb.h>
 #include <rll_msgs/MoveJoints.h>
 #include <rll_msgs/MoveRandom.h>
 #include <rll_msgs/GetPose.h>
@@ -37,6 +39,7 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <actionlib/server/simple_action_server.h>
 #include <rll_move/move_iface_error.h>
+#include <rll_analytical_kinematics/rll_moveit_analytical_kinematics_plugin.h>
 
 class RLLMoveIface
 {
@@ -52,7 +55,9 @@ public:
   static const std::string RUN_JOB_SRV_NAME;
   static const std::string ROBOT_READY_SRV_NAME;
   static const std::string MOVE_PTP_SRV_NAME;
+  static const std::string MOVE_PTP_ELB_SRV_NAME;
   static const std::string MOVE_LIN_SRV_NAME;
+  static const std::string MOVE_LIN_ELB_SRV_NAME;
   static const std::string MOVE_JOINTS_SRV_NAME;
   static const std::string MOVE_RANDOM_SRV_NAME;
   static const std::string PICK_PLACE_SRV_NAME;
@@ -69,7 +74,9 @@ public:
   bool robotReadySrv(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& resp);
   bool pickPlaceSrv(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& resp);
   bool moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& resp);
+  bool moveLinElbSrv(rll_msgs::MoveLinElb::Request& req, rll_msgs::MoveLinElb::Response& resp);
   bool movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp);
+  bool movePTPelbSrv(rll_msgs::MovePTPelb::Request& req, rll_msgs::MovePTPelb::Response& resp);
   bool moveJointsSrv(rll_msgs::MoveJoints::Request& req, rll_msgs::MoveJoints::Response& resp);
   bool moveRandomSrv(rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response& resp);
   bool getCurrentPoseSrv(rll_msgs::GetPose::Request& req, rll_msgs::GetPose::Response& resp);
@@ -90,6 +97,8 @@ protected:
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   bool no_gripper_attached_ = false;
   bool allowed_to_move_;
+  tf::Transform base_to_world_;
+  tf::Transform ee_to_tip_;
 
   virtual RLLErrorCode idle();
   virtual void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result) = 0;
@@ -97,7 +106,9 @@ protected:
 
   RLLErrorCode pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& resp);
   RLLErrorCode moveLin(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& resp);
+  RLLErrorCode moveLinElb(rll_msgs::MoveLinElb::Request& req, rll_msgs::MoveLinElb::Response& resp);
   RLLErrorCode movePTP(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp);
+  RLLErrorCode movePTPelb(rll_msgs::MovePTPelb::Request& req, rll_msgs::MovePTPelb::Response& resp);
   RLLErrorCode moveJoints(rll_msgs::MoveJoints::Request& req, rll_msgs::MoveJoints::Response& resp);
   RLLErrorCode moveRandom(rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response& resp);
 
@@ -118,7 +129,9 @@ protected:
                                    RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&));
 
   RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface& move_group, bool for_gripper = false);
-  RLLErrorCode runLinearTrajectory(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization = true);
+  RLLErrorCode moveToGoalLinear(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization = true);
+  RLLErrorCode runLinearTrajectory(const moveit_msgs::RobotTrajectory& trajectory,
+                                   bool cartesian_time_parametrization = true);
   RLLErrorCode checkTrajectory(moveit_msgs::RobotTrajectory& trajectory);
   bool attachGraspObject(const std::string& object_id);
   bool detachGraspObject(const std::string& object_id);
@@ -127,6 +140,13 @@ protected:
   bool stateInCollision(robot_state::RobotState& state);
   void handleFailureSeverity(const RLLErrorCode& error_code);
   std::vector<double> getJointValuesFromNamedTarget(const std::string& name);
+  void interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
+                              std::vector<geometry_msgs::Pose>& waypoints);
+  void interpolateElbLinear(const double start, const double end, const int dir, const int n, std::vector<double>& elb);
+  void transformPosesForIK(std::vector<geometry_msgs::Pose>& waypoints);
+  bool
+  getKinematicsSolver(std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>&);
+  bool initConstTransforms();  // init members base_to_world_ ee_to_tip_
   float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
 
   // these function depend on whether we run in simulation or on the real robot
