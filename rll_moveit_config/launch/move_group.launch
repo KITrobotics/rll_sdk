@@ -5,6 +5,7 @@
   <arg name="robot_name" default="iiwa"/>
   <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
   <arg name="semantic_description_file" default ="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
+  <arg name="output" default="screen"/>
 
   <include file="$(find rll_moveit_config)/launch/planning_context.launch">
     <arg name="load_robot_description" value="true"/>
@@ -52,7 +53,7 @@
   </include>
 
   <!-- Start the actual move_group node/action server -->
-  <node name="move_group" launch-prefix="$(arg launch_prefix)" pkg="moveit_ros_move_group" type="move_group" respawn="false" output="screen" args="$(arg command_args)">
+  <node name="move_group" launch-prefix="$(arg launch_prefix)" pkg="moveit_ros_move_group" type="move_group" respawn="false" output="$(arg output)" args="$(arg command_args)">
     <!-- Set the display variable, in case OpenGL code is used internally -->
     <env name="DISPLAY" value="$(optenv DISPLAY :0)" />
 

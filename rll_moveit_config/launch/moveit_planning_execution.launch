@@ -8,6 +8,7 @@
   <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
   <arg name="semantic_description_file" default ="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
   <arg name="rviz_config" default ="$(find rll_moveit_config)/launch/moveit.rviz" />
+  <arg name="output" default="screen"/>
 
   <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
          to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
@@ -37,6 +38,7 @@
 
   <!-- Load move_group -->
     <include file="$(find rll_moveit_config)/launch/move_group.launch">
+      <arg name="output" value="$(arg output)"/>
       <arg name="allow_trajectory_execution" value="true"/>
       <arg name="publish_monitored_planning_scene" value="true" />
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
