@@ -114,7 +114,7 @@ protected:
 
   bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
   bool poseGoalTooClose(const geometry_msgs::Pose& start, const geometry_msgs::Pose& goal);
-  bool poseGoalInCollision(const geometry_msgs::Pose& goal);
+  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
   bool jointsGoalInCollision(const std::vector<double>& goal);
   robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);
   void disableCollision(const std::string& link_1, const std::string& link_2);

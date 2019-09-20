@@ -116,14 +116,14 @@ const char* RLLErrorCode::message() const noexcept
       return "OUTSIDE_WORKSPACE";
     case INVALID_TARGET_POSE:
       return "INVALID_TARGET_POSE";
-    case IMPOSSIBLE_MOTION:
-      return "IMPOSSIBLE_MOTION";
     case TOO_FEW_WAYPOINTS:
       return "TOO_FEW_WAYPOINTS";
     case GOAL_TOO_CLOSE_TO_START:
       return "GOAL_TOO_CLOSE_TO_START";
     case GOAL_IN_COLLISION:
       return "GOAL_IN_COLLISION";
+    case NO_IK_SOLUTION_FOUND:
+      return "NO_IK_SOLUTION_FOUND";
     case RECOVERABLE_FAILURE:
       return "RECOVERABLE_FAILURE";
     case MOVEIT_PLANNING_FAILED:

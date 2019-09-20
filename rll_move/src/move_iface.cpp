@@ -216,10 +216,9 @@ void RLLMoveIface::handleFailureSeverity(const RLLErrorCode& error_code)
 {
   // check if a error condition matches, if not assume critical failure
 
-  // TODO(uieai): these checks require testing!!
   if (error_code.isInvalidInput())
   {
-    ROS_WARN("A failure due to invalid user input occurred. error: %s", error_code.message());
+    ROS_WARN("A failure due to invalid input occurred. error: %s", error_code.message());
   }
   else if (error_code.isRecoverableFailure())
   {
@@ -299,8 +298,8 @@ RLLErrorCode RLLMoveIface::moveRandom(rll_msgs::MoveRandom::Request& /*req*/, rl
       ROS_INFO("last random pose too close to start pose, retrying...");
       continue;
     }
-
-    if (poseGoalInCollision(random_pose))
+    RLLErrorCode error_code = poseGoalInCollision(random_pose);
+    if (error_code.failed())
     {
       success = false;
       ROS_INFO("last random pose is in collision, retrying...");
@@ -314,7 +313,7 @@ RLLErrorCode RLLMoveIface::moveRandom(rll_msgs::MoveRandom::Request& /*req*/, rl
       continue;
     }
 
-    RLLErrorCode error_code = runPTPTrajectory(manip_move_group_);
+    error_code = runPTPTrajectory(manip_move_group_);
     // make sure nothing major went wrong. only repeat in case of noncritical errors
     if (error_code.isCriticalFailure())
     {
@@ -406,9 +405,10 @@ bool RLLMoveIface::moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin
 
 RLLErrorCode RLLMoveIface::moveLin(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& /*resp*/)
 {
-  if (poseGoalInCollision(req.pose))
+  RLLErrorCode error_code = poseGoalInCollision(req.pose);
+  if (error_code.failed())
   {
-    return RLLErrorCode::GOAL_IN_COLLISION;
+    return error_code;
   }
 
   // moveLin service calls are disallowed to use cartesian_time_parametrization
@@ -517,6 +517,12 @@ RLLErrorCode RLLMoveIface::movePTP(rll_msgs::MovePTP::Request& req, rll_msgs::Mo
   if (!success)
   {
     return RLLErrorCode::INVALID_TARGET_POSE;
+  }
+
+  RLLErrorCode error_code = poseGoalInCollision(req.pose);
+  if (error_code.failed())
+  {
+    return error_code;
   }
 
   return runPTPTrajectory(manip_move_group_);
@@ -842,22 +848,22 @@ bool RLLMoveIface::jointsGoalInCollision(const std::vector<double>& goal)
   return false;
 }
 
-bool RLLMoveIface::poseGoalInCollision(const geometry_msgs::Pose& goal)
+RLLErrorCode RLLMoveIface::poseGoalInCollision(const geometry_msgs::Pose& goal)
 {
   robot_state::RobotState goal_state = getCurrentRobotState();
   if (!goal_state.setFromIK(manip_joint_model_group_, goal, manip_move_group_.getEndEffectorLink()))
   {
-    ROS_WARN("goal pose not valid");
-    return true;
+    ROS_WARN("no IK solution found for given goal pose");
+    return RLLErrorCode::NO_IK_SOLUTION_FOUND;
   }
 
   if (stateInCollision(goal_state))
   {
-    ROS_WARN("robot would be in collision for goal pose");
-    return true;
+    ROS_WARN("robot would be in collision for given goal pose");
+    return RLLErrorCode::GOAL_IN_COLLISION;
   }
 
-  return false;
+  return RLLErrorCode::SUCCESS;
 }
 
 robot_state::RobotState RLLMoveIface::getCurrentRobotState(bool wait_for_state)
@@ -889,8 +895,7 @@ bool RLLMoveIface::stateInCollision(robot_state::RobotState& state)
   // because the robot may end up being in collision when it
   // moves into the goal pose and ends up in a slightly different
   // position.
-  // TODO(uieai): is it garanteeted, that distance == 0.0 is a collision?
-  return (result.collision || (result.distance > 0.0 && result.distance < 0.001));
+  return (result.collision || (result.distance >= 0.0 && result.distance < 0.001));
 }
 
 void RLLMoveIface::disableCollision(const std::string& link_1, const std::string& link_2)

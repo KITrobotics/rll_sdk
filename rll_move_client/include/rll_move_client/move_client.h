@@ -21,6 +21,7 @@
 #define RLL_MOVE_CLIENT_H_
 
 #include <exception>
+#include <map>
 
 #include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
@@ -49,6 +50,7 @@ struct AnsiCodes
   static const char* BOLD;
   static const char* NAME;
   static const char* OK;
+  static const char* INFO;
   static const char* WARN;
   static const char* FAIL;
 };
@@ -103,6 +105,7 @@ protected:
   template <class SrvMsg>
   bool callServiceWithoutErrorCode(const std::string& srv_name, ros::ServiceClient srv_client, SrvMsg& srv_data);
 
+  void logHint(RLLErrorCode error_code);
   virtual bool handleResponseWithErrorCode(const std::string& srv_name, bool call_success, RLLErrorCode error_code);
   virtual bool handleResponseWithoutErrorCode(const std::string& srv_name, bool call_success);
 

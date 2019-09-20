@@ -30,8 +30,44 @@ const char* AnsiCodes::WHT = "\x1B[97m";
 const char* AnsiCodes::BOLD = "\x1B[1m";
 const char* AnsiCodes::NAME = "\x1B[1m\x1B[94m";
 const char* AnsiCodes::OK = "\x1B[1m\x1B[92m";
+const char* AnsiCodes::INFO = "\x1B[1m\x1B[93m";
 const char* AnsiCodes::WARN = "\x1B[1m\x1B[95m";
 const char* AnsiCodes::FAIL = "\x1B[1m\x1B[91m";
+
+// hints are only visible within this compilation unit
+const static std::map<uint8_t, const std::string> HINTS = {
+
+  { RLLErrorCode::JOINT_VALUES_OUT_OF_RANGE,
+    "One or more of the joint values you specified are outside their allowed limits." },
+  { RLLErrorCode::INVALID_TARGET_POSE, "The pose/joint values you specified cannot be reached i.e. they are outside "
+                                       "their allowed limits, or would move the robot outside the allowed workspace." },
+  { RLLErrorCode::TOO_FEW_WAYPOINTS,
+    "The distance to the requested goal pose is probably too small (e.g. less than 5mm for a linear motion)." },
+  { RLLErrorCode::GOAL_TOO_CLOSE_TO_START,
+    "The robot is already at/too close to the goal and no motion is performed." },
+  { RLLErrorCode::NO_IK_SOLUTION_FOUND,
+    "The inverse kinematics did not yield a solution. Is your goal pose within the workspace?" },
+  { RLLErrorCode::NO_RANDOM_POSITION_FOUND,
+    "Random pose generation may fail e.g. if the generated pose is in collision." },
+  { RLLErrorCode::GOAL_IN_COLLISION,
+    "The request motion would result in a collision either with an obstacle or the robot itself." },
+  { RLLErrorCode::MOVEIT_PLANNING_FAILED, "This is a generic motion planning error and can be caused "
+                                          "e.g. by requesting a pose outside the allowed workspace." },
+  { RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED, "A pose between the start and goal pose of a linear motion causes a "
+                                             "collision, only part of the motion is possible." },
+  { RLLErrorCode::MOVEMENT_NOT_ALLOWED,
+    "The movement interface no longer accepts motion requests, possibly due to a critical failure." },
+};
+
+void RLLMoveClientBase::logHint(RLLErrorCode error_code)
+{
+  auto iter = HINTS.find(error_code.value());
+  if (iter != HINTS.end())
+  {
+    const std::string hint = iter->second;
+    ROS_INFO("%sPossible failure reason:%s %s", AnsiCodes::INFO, AnsiCodes::END, hint.c_str());
+  }
+}
 
 bool RLLMoveClientBase::handleResponseWithoutErrorCode(const std::string& srv_name, bool call_success)
 {
@@ -68,12 +104,17 @@ bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name,
   }
   else
   {
-    ROS_WARN("%s %sfailed: %s%s", name.c_str(), AnsiCodes::WARN, error_code.message(), AnsiCodes::END);
+    ROS_WARN("%s %sfailed: %s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
 
     if (exception_on_any_failure_)
     {
       throw ServiceCallFailure("Service call " + srv_name + "failed: " + error_code.message());
     }
+  }
+
+  if (verbose_)
+  {
+    logHint(error_code);
   }
 
   return false;

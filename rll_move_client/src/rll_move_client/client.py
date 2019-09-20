@@ -25,8 +25,9 @@ from rll_msgs.msg import DefaultMoveIfaceAction
 from rll_msgs.srv import MoveJoints, MovePTP, MoveLin, MoveRandom, \
     GetJointValues, GetPose, PickPlace
 
-from .error import ServiceCallFailure, CriticalServiceCallFailure, ErrorCode
-from .util import apply_ansi_format, C_NAME, C_END, C_OK, C_FAIL, C_WARN
+from .error import ServiceCallFailure, CriticalServiceCallFailure, RLLErrorCode
+from .util import apply_ansi_format, C_NAME, C_END, C_OK, C_FAIL, C_WARN, \
+    C_INFO
 
 
 class RLLMoveClientBase(object):
@@ -34,7 +35,7 @@ class RLLMoveClientBase(object):
     def __init__(self):
         self.verbose = True
         self._exception_on_any_failure = False
-        self._last_error_code = ErrorCode(255)
+        self._last_error_code = RLLErrorCode()
 
     def set_exception_on_any_failure(self, raise_exception=True):
         self._exception_on_any_failure = raise_exception
@@ -67,7 +68,8 @@ class RLLMoveClientBase(object):
                 rospy.loginfo("%s %ssucceeded%s", name, C_OK, C_END)
             return True
 
-        code = ErrorCode(resp.error_code)
+        code = RLLErrorCode(resp.error_code)
+
         if code.is_critical_failure():
             rospy.logerr(
                 "%s %sfailed critically with error: %s%s",
@@ -77,11 +79,16 @@ class RLLMoveClientBase(object):
                 code,
                 "Service call %s failed with error: %s" % (srv_name, code))
         else:
-            rospy.logwarn("%s %sfailed: %s%s", name, C_WARN, C_END, code)
+            rospy.logwarn("%s %sfailed: %s%s", name, C_FAIL, C_END, code)
 
             if self._exception_on_any_failure:
                 raise ServiceCallFailure(
                     code, "Service call %s failed: %s" % (srv_name, code))
+
+        hint = code.get_hint()
+        if hint is not None:
+            rospy.loginfo("%sPossible failure reason:%s %s", C_INFO, C_END,
+                          hint)
 
         return False
 

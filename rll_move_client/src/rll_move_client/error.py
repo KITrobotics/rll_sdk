@@ -17,83 +17,116 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from .util import apply_ansi_format, C_OK, C_FAIL, C_WARN, C_INFO
 
-MOVE_ERRORS = {
-    0: "SUCCESS",
+
+class RLLErrorCode(object):
+    SUCCESS = 0
 
     # user/input error
-    1: "INVALID_INPUT",
-    2: "JOINT_VALUES_OUT_OF_RANGE",
-    3: "OUTSIDE_WORKSPACE",
-    4: "INVALID_TARGET_POSE",
-    5: "IMPOSSIBLE_MOTION",
-    6: "TOO_FEW_WAYPOINTS",
-    7: "GOAL_TOO_CLOSE_TO_START",
-    8: "GOAL_IN_COLLISION",
+    INVALID_INPUT = 1
+    JOINT_VALUES_OUT_OF_RANGE = 2
+    OUTSIDE_WORKSPACE = 3
+    INVALID_TARGET_POSE = 4
+    TOO_FEW_WAYPOINTS = 5
+    GOAL_TOO_CLOSE_TO_START = 6
+    GOAL_IN_COLLISION = 7
+    NO_IK_SOLUTION_FOUND = 8
 
     # non critical failure
-    64: "RECOVERABLE_FAILURE",
-    65: "MOVEIT_PLANNING_FAILED",
-    66: "ONLY_PARTIAL_PATH_PLANNED",
-    67: "TRAJECTORY_MODIFICATION_FAILED",
-    68: "NO_RANDOM_POSITION_FOUND",
+    RECOVERABLE_FAILURE = 64
+    MOVEIT_PLANNING_FAILED = 65
+    ONLY_PARTIAL_PATH_PLANNED = 66
+    TRAJECTORY_MODIFICATION_FAILED = 67
+    NO_RANDOM_POSITION_FOUND = 68
 
     # critical failure
-    128: "CRITICAL_FAILURE",
-    129: "MOVEMENT_NOT_ALLOWED",
-    130: "EXECUTION_FAILED",
-    131: "MANIPULATOR_NOT_AVAILABLE",
-    132: "GRIPPER_OPERATION_FAILED",
-    133: "GRIPPER_DID_NOT_ACKNOWLEDGE",
-    134: "GRIPPER_MOVEMENT_FAILED",
-    135: "RESET_TO_HOME_FAILED",
+    CRITICAL_FAILURE = 128
+    MOVEMENT_NOT_ALLOWED = 129
+    EXECUTION_FAILED = 130
+    MANIPULATOR_NOT_AVAILABLE = 131
+    GRIPPER_OPERATION_FAILED = 132
+    GRIPPER_DID_NOT_ACKNOWLEDGE = 133
+    GRIPPER_MOVEMENT_FAILED = 134
+    RESET_TO_HOME_FAILED = 135
 
-    255: "NOT_SET"
-}
+    # not set (initial value)
+    NOT_SET = 255
 
+    NAMES = {
+        SUCCESS: "SUCCESS",
 
-class ErrorCode(object):
-    OK = 0
-    INVALID_INPUT = 1
-    RECOVERABLE_FAILURE = 64
-    CRITICAL = 128
+        # user/input error
+        INVALID_INPUT: "INVALID_INPUT",
+        JOINT_VALUES_OUT_OF_RANGE: "JOINT_VALUES_OUT_OF_RANGE",
+        OUTSIDE_WORKSPACE: "OUTSIDE_WORKSPACE",
+        INVALID_TARGET_POSE: "INVALID_TARGET_POSE",
+        TOO_FEW_WAYPOINTS: "TOO_FEW_WAYPOINTS",
+        GOAL_TOO_CLOSE_TO_START: "GOAL_TOO_CLOSE_TO_START",
+        GOAL_IN_COLLISION: "GOAL_IN_COLLISION",
+        NO_IK_SOLUTION_FOUND: "NO_IK_SOLUTION_FOUND",
 
-    def __init__(self, code):
+        # non critical failure
+        RECOVERABLE_FAILURE: "RECOVERABLE_FAILURE",
+        MOVEIT_PLANNING_FAILED: "MOVEIT_PLANNING_FAILED",
+        ONLY_PARTIAL_PATH_PLANNED: "ONLY_PARTIAL_PATH_PLANNED",
+        TRAJECTORY_MODIFICATION_FAILED: "TRAJECTORY_MODIFICATION_FAILED",
+        NO_RANDOM_POSITION_FOUND: "NO_RANDOM_POSITION_FOUND",
+
+        # critical failure
+        CRITICAL_FAILURE: "CRITICAL_FAILURE",
+        MOVEMENT_NOT_ALLOWED: "MOVEMENT_NOT_ALLOWED",
+        EXECUTION_FAILED: "EXECUTION_FAILED",
+        MANIPULATOR_NOT_AVAILABLE: "MANIPULATOR_NOT_AVAILABLE",
+        GRIPPER_OPERATION_FAILED: "GRIPPER_OPERATION_FAILED",
+        GRIPPER_DID_NOT_ACKNOWLEDGE: "GRIPPER_DID_NOT_ACKNOWLEDGE",
+        GRIPPER_MOVEMENT_FAILED: "GRIPPER_MOVEMENT_FAILED",
+        RESET_TO_HOME_FAILED: "RESET_TO_HOME_FAILED",
+
+        NOT_SET: "NOT_SET"
+    }
+
+    HINTS = {
+        JOINT_VALUES_OUT_OF_RANGE: "One or more of the joint values you specified are outside their allowed limits.",
+        INVALID_TARGET_POSE: "The pose/joint values you specified cannot be reached i.e. they are outside their allowed limits, or would move the robot outside the allowed workspace.",
+        TOO_FEW_WAYPOINTS: "The distance to the requested goal pose is probably too small (e.g. less than 5mm for a linear motion).",
+        GOAL_TOO_CLOSE_TO_START: "The robot is already at/too close to the goal and no motion is performed.",
+        NO_IK_SOLUTION_FOUND: "The inverse kinematics did not yield a solution. Is your goal pose within the workspace?",
+        NO_RANDOM_POSITION_FOUND: "Random pose generation may fail e.g. if the generated pose is in collision.",
+        GOAL_IN_COLLISION: "The request motion would result in a collision either with an obstacle or the robot itself.",
+        MOVEIT_PLANNING_FAILED: "This is a generic motion planning error and can be caused e.g. by requesting a pose outside the allowed workspace.",
+        ONLY_PARTIAL_PATH_PLANNED: "A pose between the start and goal pose of a linear motion causes a collision, only part of the motion is possible.",
+        MOVEMENT_NOT_ALLOWED: "The movement interface no longer accepts motion requests, possibly due to a critical failure."
+    }
+
+    def __init__(self, code=NOT_SET):
         self.code = code
 
     def is_invalid_input(self):
-        return ErrorCode.INVALID_INPUT <= self.code < ErrorCode.RECOVERABLE_FAILURE
+        return RLLErrorCode.INVALID_INPUT <= self.code < \
+            RLLErrorCode.RECOVERABLE_FAILURE
 
     def is_recoverable_failure(self):
-        return ErrorCode.RECOVERABLE_FAILURE <= self.code < ErrorCode.CRITICAL
+        return RLLErrorCode.RECOVERABLE_FAILURE <= self.code < \
+            RLLErrorCode.CRITICAL_FAILURE
 
     def is_critical_failure(self):
-        return self.code >= ErrorCode.CRITICAL
+        return self.code >= RLLErrorCode.CRITICAL_FAILURE
 
     def __nonzero__(self):
         raise UserWarning("Don't use the implicit conversion to bool. Use the "
                           "provided methods, e.g. succeeded() instead.")
 
     def succeeded(self):
-        return self.code == ErrorCode.OK
+        return self.code == RLLErrorCode.SUCCESS
 
     def failed(self):
-        return self.code == ErrorCode.OK
+        return self.code == RLLErrorCode.SUCCESS
 
     def __repr__(self):
-        if self.code in MOVE_ERRORS:
-            color = C_OK
-            if self.is_critical_failure():
-                color = C_FAIL
-            elif self.is_recoverable_failure():
-                color = C_WARN
-            elif self.is_invalid_input():
-                color = C_INFO
+        return RLLErrorCode.NAMES.get(self.code, "UNKNOWN_ERROR_CODE")
 
-            return apply_ansi_format(MOVE_ERRORS[self.code], color)
-
-        return "Unknown error code"
+    def get_hint(self):
+        return RLLErrorCode.HINTS.get(self.code, None)
 
 
 class ServiceCallFailure(Exception):
@@ -106,7 +139,7 @@ class ServiceCallFailure(Exception):
         return "%s: %s" % (self.__class__.__name__, Exception.__repr__(self))
 
     def __str__(self):
-        return "%s: %s" % (self.__class__.__name__,  Exception.__str__(self))
+        return "%s: %s" % (self.__class__.__name__, Exception.__str__(self))
 
 
 class CriticalServiceCallFailure(ServiceCallFailure):
@@ -116,10 +149,11 @@ class CriticalServiceCallFailure(ServiceCallFailure):
 
 
 if __name__ == "__main__":
-    e_ok = ErrorCode(0)
-    e_user_fail = ErrorCode(1)
-    e_non_critical = ErrorCode(64)
-    e_critical = ErrorCode(128)
+    # TODO(uieai): create actual tests
+    e_ok = RLLErrorCode(RLLErrorCode.SUCCESS)
+    e_user_fail = RLLErrorCode(RLLErrorCode.INVALID_INPUT)
+    e_non_critical = RLLErrorCode(RLLErrorCode.RECOVERABLE_FAILURE)
+    e_critical = RLLErrorCode(RLLErrorCode.CRITICAL_FAILURE)
 
     def code_check(error_code):
         if error_code:
