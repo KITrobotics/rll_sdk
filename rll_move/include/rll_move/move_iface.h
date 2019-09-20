@@ -170,6 +170,11 @@ public:
   }
 };
 
+/**
+ * \brief Waits for the `move_group` action to become available.
+ */
+bool waitForMoveGroupAction();
+
 #endif  // RLL_MOVE_IFACE_H
 
 /*

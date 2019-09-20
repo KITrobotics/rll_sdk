@@ -19,10 +19,11 @@
  */
 
 #include <rll_move/move_iface.h>
-
 #include <tf2_ros/transform_listener.h>
+#include <moveit_msgs/MoveGroupAction.h>
+#include <actionlib/client/simple_action_client.h>
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
-#include <eigen_conversions/eigen_msg.h>  // Msg to Isometry3d
+#include <eigen_conversions/eigen_msg.h>
 
 const std::string RLLMoveIface::MANIP_PLANNING_GROUP = "manipulator";
 const std::string RLLMoveIface::GRIPPER_PLANNING_GROUP = "gripper";
@@ -84,7 +85,7 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
   allowed_to_move_ = false;
 
   // startup checks, shutdown the node if something is wrong
-  if (!isCollisionLinkAvailable())
+  if (!isCollisionLinkAvailable() || !initConstTransforms())
   {
     ROS_FATAL("Startup checks failed, shutting the node down!");
     ros::shutdown();
@@ -1173,6 +1174,23 @@ float RLLMoveIface::distanceToCurrentPosition(const geometry_msgs::Pose& pose)
 
   return sqrt(pow(current_pose.position.x - pose.position.x, 2) + pow(current_pose.position.y - pose.position.y, 2) +
               pow(current_pose.position.z - pose.position.z, 2));
+}
+
+bool waitForMoveGroupAction()
+{
+  // to ensure that the moveit setup is completely loaded wait for move_group action to become available
+  ROS_INFO("Waiting for the 'move_group' action to become available");
+
+  actionlib::SimpleActionClient<moveit_msgs::MoveGroupAction> ac("move_group", true);
+  if (!ac.waitForServer(ros::Duration(10)))
+  {
+    ROS_FATAL("'move_group' action is not available! Did you launch all required nodes?");
+    return false;
+  }
+  ROS_INFO("done waiting");
+
+  ros::Duration(1).sleep();
+  return true;
 }
 
 /*

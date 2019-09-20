@@ -27,11 +27,6 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle& nh)
 
   RLLDefaultMoveIfaceBase* iface_ptr = this;
   RLLMoveIface* move_iface_ptr = iface_ptr;
-  if (!iface_ptr->initConstTransforms())
-  {
-    ROS_ERROR("Constant transforms not available --> shutdown node");
-    return;
-  }
 
   iface_ptr->resetToHome();
 

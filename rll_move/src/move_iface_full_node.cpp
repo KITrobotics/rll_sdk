@@ -24,8 +24,12 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "move_iface");
   ros::NodeHandle nh;
-  RLLDefaultMoveIface iface(nh, "move_client");
-  iface.startServicesAndRunNode(nh);
+
+  if (waitForMoveGroupAction())
+  {
+    RLLDefaultMoveIface iface(nh, "move_client");
+    iface.startServicesAndRunNode(nh);
+  }
 
   return 0;
 }
