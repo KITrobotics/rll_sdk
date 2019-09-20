@@ -39,10 +39,10 @@ public:
     JOINT_VALUES_OUT_OF_RANGE,
     OUTSIDE_WORKSPACE,
     INVALID_TARGET_POSE,
-    IMPOSSIBLE_MOTION,
     TOO_FEW_WAYPOINTS,
     GOAL_TOO_CLOSE_TO_START,
     GOAL_IN_COLLISION,
+    NO_IK_SOLUTION_FOUND,
 
     // recoverable failure
     RECOVERABLE_FAILURE_BEGIN = 64,
@@ -71,11 +71,11 @@ public:
   {
   }
 
-  RLLErrorCode(Code code) noexcept : value_(code)
+  RLLErrorCode(Code code) noexcept : value_(code)  // NOLINT google-explicit-constructor
   {
   }
 
-  RLLErrorCode(int code_value) noexcept : value_(static_cast<Code>(code_value))
+  RLLErrorCode(int code_value) noexcept : value_(static_cast<Code>(code_value))  // NOLINT google-explicit-constructor
   {
   }
 
@@ -96,12 +96,12 @@ public:
 
   operator bool() = delete;
 
-  bool operator==(RLLErrorCode& a) const noexcept
+  bool operator==(const RLLErrorCode& a) const noexcept
   {
     return value_ == a.value_;
   }
 
-  bool operator!=(RLLErrorCode& a) const noexcept
+  bool operator!=(const RLLErrorCode& a) const noexcept
   {
     return value_ != a.value_;
   }
