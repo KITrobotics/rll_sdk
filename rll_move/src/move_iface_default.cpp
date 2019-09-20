@@ -27,6 +27,11 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle& nh)
 
   RLLDefaultMoveIfaceBase* iface_ptr = this;
   RLLMoveIface* move_iface_ptr = iface_ptr;
+  if (!iface_ptr->initConstTransforms())
+  {
+    ROS_ERROR("Constant transforms not available --> shutdown node");
+    return;
+  }
 
   iface_ptr->resetToHome();
 
@@ -45,8 +50,12 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle& nh)
       nh.advertiseService(RLLMoveIface::PICK_PLACE_SRV_NAME, &RLLMoveIface::pickPlaceSrv, move_iface_ptr);
   ros::ServiceServer move_lin =
       nh.advertiseService(RLLMoveIface::MOVE_LIN_SRV_NAME, &RLLMoveIface::moveLinSrv, move_iface_ptr);
+  ros::ServiceServer move_lin_elb =
+      nh.advertiseService(RLLMoveIface::MOVE_LIN_ELB_SRV_NAME, &RLLMoveIface::moveLinElbSrv, move_iface_ptr);
   ros::ServiceServer move_ptp =
       nh.advertiseService(RLLMoveIface::MOVE_PTP_SRV_NAME, &RLLMoveIface::movePTPSrv, move_iface_ptr);
+  ros::ServiceServer move_ptp_elb =
+      nh.advertiseService(RLLMoveIface::MOVE_PTP_ELB_SRV_NAME, &RLLMoveIface::movePTPelbSrv, move_iface_ptr);
   ros::ServiceServer move_joints =
       nh.advertiseService(RLLMoveIface::MOVE_JOINTS_SRV_NAME, &RLLMoveIface::moveJointsSrv, move_iface_ptr);
   ros::ServiceServer get_pose =

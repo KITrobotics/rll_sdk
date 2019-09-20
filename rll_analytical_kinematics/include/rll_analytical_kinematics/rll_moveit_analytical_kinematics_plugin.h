@@ -106,6 +106,14 @@ public:
                         std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
                         const double elbow_angle) const;
 
+  bool getPositionFKelb(const std::vector<std::string>& link_names, const std::vector<double>& joint_angles,
+                        std::vector<geometry_msgs::Pose>& poses, double& elbow_angle) const;
+
+  bool getPathIKelb(const std::vector<geometry_msgs::Pose>& waypoints_pose, const std::vector<double>& waypoints_elb,
+                    const std::vector<double>& ik_seed_state, std::vector<robot_state::RobotStatePtr>& path,
+                    const moveit::core::JointModelGroup* group, moveit_msgs::MoveItErrorCodes& error_code,
+                    double& last_valid_percentage) const;
+
 private:
   InvKin solver;
   bool initialized;  // Indicates if parameters are initialized
@@ -114,7 +122,11 @@ private:
   std::vector<double> joint_max_vector;
   std::vector<double> joint_origin_z_vector;  // necessary to calculate limb lengths
   std::vector<std::string> link_names;
-  const size_t num_joints = 7;  // IK for 7 DOF robots
+  const size_t num_joints = 7;     // IK for 7 DOF robots
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+#else
+  moveit::core::RobotModelConstPtr robot_model_;  // add member for Kinetic
+#endif
 };
 }
 

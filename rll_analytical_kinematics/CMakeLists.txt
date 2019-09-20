@@ -1,6 +1,8 @@
 cmake_minimum_required (VERSION 2.8.12)
 project (rll_analytical_kinematics)
 
+# required for clang-tidy
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-std=c++14)
 
 find_package(catkin REQUIRED COMPONENTS
@@ -15,7 +17,7 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 
 catkin_package(
   INCLUDE_DIRS include
-  LIBRARIES rll_moveit_analytical_kinematics_plugin
+  LIBRARIES rll_moveit_analytical_kinematics_plugin rll_analytical_kinematics
   CATKIN_DEPENDS
     moveit_core
     pluginlib
@@ -39,7 +41,10 @@ target_link_libraries(rll_moveit_analytical_kinematics_plugin rll_analytical_kin
 
 target_compile_options(rll_moveit_analytical_kinematics_plugin PRIVATE -Wno-unused-variable)
 
-install(TARGETS rll_moveit_analytical_kinematics_plugin LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+install(TARGETS rll_moveit_analytical_kinematics_plugin rll_analytical_kinematics LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+install(DIRECTORY include/${PROJECT_NAME}/
+        DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
 install(
   FILES

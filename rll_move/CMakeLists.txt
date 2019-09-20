@@ -12,12 +12,14 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_planning_interface
   rll_msgs
   actionlib
+  rll_analytical_kinematics
+  eigen_conversions
 )
 
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES rll_move
-   CATKIN_DEPENDS message_runtime rll_msgs moveit_ros_planning_interface
+   CATKIN_DEPENDS message_runtime rll_msgs moveit_ros_planning_interface rll_analytical_kinematics
 )
 
 include_directories(include ${catkin_INCLUDE_DIRS})
