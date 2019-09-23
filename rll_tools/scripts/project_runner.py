@@ -43,6 +43,11 @@ def run_project():
     rospy.loginfo("started the project")
     job_env.wait_for_result()
     resp = job_env.get_result()
+
+    if resp is None:
+        rospy.logerr("job env action server did not return a response!")
+        return False
+
     rospy.loginfo("executed project with status '%s'",
                   job_result_codes_to_string(resp.job.status))
     if resp.job_data:

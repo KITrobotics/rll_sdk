@@ -120,7 +120,7 @@ class RLLErrorCode(object):
         return self.code == RLLErrorCode.SUCCESS
 
     def failed(self):
-        return self.code == RLLErrorCode.SUCCESS
+        return self.code != RLLErrorCode.SUCCESS
 
     def __repr__(self):
         return RLLErrorCode.NAMES.get(self.code, "UNKNOWN_ERROR_CODE")
@@ -146,29 +146,3 @@ class CriticalServiceCallFailure(ServiceCallFailure):
 
     def __init__(self, error_code, *args):
         ServiceCallFailure.__init__(self, error_code, *args)
-
-
-if __name__ == "__main__":
-    # TODO(uieai): create actual tests
-    e_ok = RLLErrorCode(RLLErrorCode.SUCCESS)
-    e_user_fail = RLLErrorCode(RLLErrorCode.INVALID_INPUT)
-    e_non_critical = RLLErrorCode(RLLErrorCode.RECOVERABLE_FAILURE)
-    e_critical = RLLErrorCode(RLLErrorCode.CRITICAL_FAILURE)
-
-    def code_check(error_code):
-        if error_code:
-            print ("if e: => True")
-        else:
-            print ("if e: => False")
-
-        print("code: %s, succ: %s, crit: %s, non-crit: %s, inv: %s" % (
-            error_code, error_code.succeeded(),
-            error_code.is_critical_failure(),
-            error_code.is_recoverable_failure(),
-            error_code.is_invalid_input()))
-
-    # basic checks to validate the ErrorCode class
-    code_check(e_ok)
-    code_check(e_user_fail)
-    code_check(e_non_critical)
-    code_check(e_critical)
