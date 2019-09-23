@@ -16,6 +16,17 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
 )
 
+if(CATKIN_ENABLE_TESTING)
+  find_package(rostest REQUIRED COMPONENTS
+  rll_description
+  rll_msgs
+  rll_moveit_config
+  rll_analytical_kinematics
+  rll_tools
+  )
+  add_rostest(tests/launch/move_iface.test)
+endif()
+
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES rll_move

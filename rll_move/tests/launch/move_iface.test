@@ -1,0 +1,13 @@
+<launch>
+	<arg name="robot" default="iiwa" />
+	<arg name="output" default="log" />
+
+	<include
+		file="$(find rll_move)/launch/setup_moveit_and_move_iface.launch">
+		<arg name="use_sim" value="false" />
+		<arg name="output" value="$(arg output)" />
+	</include>
+
+	<test ns="$(arg robot)" test-name="test_move_iface" pkg="rll_move"
+		type="test_main.py" time-limit="90" />
+</launch>
