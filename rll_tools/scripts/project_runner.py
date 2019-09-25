@@ -30,10 +30,10 @@ def job_result_codes_to_string(status):
     return job_codes.get(status, "unknown")
 
 
-def run_project():
+def run_project(timeout):
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
     rospy.sleep(0.5)
-    available = job_env.wait_for_server(rospy.Duration.from_sec(4.0))
+    available = job_env.wait_for_server(rospy.Duration.from_sec(timeout))
     if not available:
         rospy.logerr("job env action server is not available")
         sys.exit(1)
@@ -62,10 +62,10 @@ def run_project():
 
 
 # reset robot and environment
-def idle():
+def idle(timeout):
     job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
     rospy.sleep(0.5)
-    available = job_idle.wait_for_server(rospy.Duration.from_sec(4.0))
+    available = job_idle.wait_for_server(rospy.Duration.from_sec(timeout))
     if not available:
         rospy.logerr("job idle action server is not available")
         sys.exit(1)
@@ -84,14 +84,17 @@ def idle():
 
 if __name__ == '__main__':
     rospy.init_node('project_runner')
+
+    timeout = rospy.get_param("~timeout", 5)
     only_idle = rospy.get_param("~only_idle")
+
     if only_idle:
-        idle()
+        idle(timeout)
         sys.exit(0)
 
-    success = run_project()
+    success = run_project(timeout)
     if not success:
         rospy.logfatal("Internal error when running project")
         sys.exit(1)
 
-    idle()
+    idle(timeout)

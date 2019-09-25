@@ -2,9 +2,11 @@
 <launch>
   <arg name="robot" default="iiwa" />
   <arg name="only_idle" default="false"/>
+  <arg name="timeout" default="5"/>
 
   <node ns="$(arg robot)" name="rll_project_runner" pkg="rll_tools" type="project_runner.py" output="screen">
         <param name="only_idle" value="$(arg only_idle)"/>
+        <param name="timeout" value="$(arg timeout)" />
   </node>
 
 </launch>
