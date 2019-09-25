@@ -24,43 +24,45 @@
 #include <Eigen/Geometry>
 #include <vector>
 #include <cmath>
-#include <iostream>   // for debugging
-using namespace std;  // for debugging
+#include <iostream>
 
 // ros
 #include <ros/ros.h>
 
 #define NR_JOINTS 7
 
-using namespace Eigen;
+// using namespace Eigen;
 
-typedef enum {
-  InvKin_OK = 0,
-  InvKin_WARNING = 1 << 0,
-  InvKin_ERROR = 1 << 1,
-  InvKin_JOINTLIMIT = 1 << 2,
-  InvKin_TARGET_TOO_FAR = 1 << 3,
-  InvKin_TARGET_TOO_CLOSE = 1 << 4,
-  InvKin_CLOSE_TO_SINGULARITY = 1 << 5,
-  InvKin_SINGULARITY = 1 << 6,
-  InvKin_NO_SOLUTION_FOR_ELBOW = 1 << 7
-} InvKinMsg;
+enum InvKinMsg
+{
+  INVKIN_OK = 0,
+  INVKIN_WARNING = 1 << 0,
+  INVKIN_ERROR = 1 << 1,
+  INVKIN_JOINTLIMIT = 1 << 2,
+  INVKIN_TARGET_TOO_FAR = 1 << 3,
+  INVKIN_TARGET_TOO_CLOSE = 1 << 4,
+  INVKIN_CLOSE_TO_SINGULARITY = 1 << 5,
+  INVKIN_SINGULARITY = 1 << 6,
+  INVKIN_NO_SOLUTION_FOR_ELBOW = 1 << 7
+};
 
 class InvKinJoints
 {
 public:
   InvKinJoints()
   {
-    for (int i = 0; i < NR_JOINTS; i++)
+    for (auto& joint_angle : j)
     {
-      j[i] = 0.0;
+      joint_angle = 0.0;
     }
   };
 
   // setters
   bool setJoints(const std::vector<double>& v);
-
   double& operator[](int i);
+
+  // getters
+  const double operator()(int i) const;
 
   double j[NR_JOINTS];
 };
@@ -76,17 +78,17 @@ public:
   InvKinFrame(double d, double theta, double a, double alpha);  // construct frame from DH-parameters
 
   // getters/setters orientation
-  void getQuaternion(double& w, double& x, double& y, double& z) const;
+  void getQuaternion(double* w, double* x, double* y, double* z) const;
   void setQuaternion(double w, double x, double y, double z);
 
   // getters/setters position
   void setPosition(double x, double y, double z);
 
   // operators
-  InvKinFrame operator*(InvKinFrame);
+  InvKinFrame operator*(InvKinFrame t) const;
 
-  Matrix3d ori;
-  Vector3d pos;
+  Eigen::Matrix3d ori;
+  Eigen::Vector3d pos;
 
 private:
 };
@@ -139,27 +141,26 @@ public:
                                    int n);  // merge intervals that are already sorted by quickSort_lower()
 
   static void determineBlockedIntervalsPivot(InvKinElbowInterval interval_limits[],
-                                             InvKinElbowInterval blocked_intervals[], double& an, double& bn,
-                                             double& cn, double& ad, double& bd, double& cd, int size);
+                                             InvKinElbowInterval blocked_intervals[], double an, double bn, double cn,
+                                             double ad, double bd, double cd, int size);
   static void determineBlockedIntervalsHinge(InvKinElbowInterval interval_limits[],
-                                             InvKinElbowInterval blocked_intervals[], double& a, double& b, double& c,
-                                             double& gc_h, int size);
+                                             InvKinElbowInterval blocked_intervals[], double a, double b, double c,
+                                             double gc_h, int size);
 
-  static void mapLimitsToElbowAnglePivot(InvKinElbowInterval interval_limits[], double& lower_joint_limit,
-                                         double& upper_joint_limit, double& an, double& bn, double& cn, double& ad,
-                                         double& bd, double& cd, double& gc_p, int& size_init);
-  static void mapLimitsToElbowAngleHinge(InvKinElbowInterval interval_limits[], double& lower_joint_limit,
-                                         double& upper_joint_limit, double& a, double& b, double& c, double& gc_h,
-                                         int& size_init);
+  static void mapLimitsToElbowAnglePivot(InvKinElbowInterval interval_limits[], double lower_joint_limit,
+                                         double upper_joint_limit, double an, double bn, double cn, double ad,
+                                         double bd, double cd, double gc_p, int* size_init);
+  static void mapLimitsToElbowAngleHinge(InvKinElbowInterval interval_limits[], double lower_joint_limit,
+                                         double upper_joint_limit, double a, double b, double c, double gc_h,
+                                         int* size_init);
 
-  double derivativePivot(const double& an, const double& bn, const double& cn, const double& ad, const double& bd,
-                         const double& cd);  // calculate derivative of joint-angle w.r.t elbow-angle
-  double jointAnglePivot(const double& an, const double& bn, const double& cn, const double& ad, const double& bd,
-                         const double& cd,
-                         const double& gc);  // calculate joint-angle with elbow-angle set to lower_limit
+  double derivativePivot(double an, double bn, double cn, double ad, double bd,
+                         double cd);  // calculate derivative of joint-angle w.r.t elbow-angle
+  double jointAnglePivot(double an, double bn, double cn, double ad, double bd, double cd,
+                         double gc);  // calculate joint-angle with elbow-angle set to lower_limit
 
-  double derivativeHinge(const double& a, const double& b, const double& c, const double& gc);
-  double jointAngleHinge(const double& a, const double& b, const double& c, const double& gc);
+  double derivativeHinge(double a, double b, double c, double gc);
+  double jointAngleHinge(double a, double b, double c, double gc);
 
   bool operator<(const InvKinElbowInterval& rhs) const;  // compares lower_limit
 
@@ -182,48 +183,51 @@ public:
   // methods:
 
   // Compute FK:
-  static InvKinMsg forwardKinematics(InvKinXCart& cart_pose, InvKinJoints& joint_angles);
+  static InvKinMsg forwardKinematics(InvKinXCart* cart_pose, const InvKinJoints& joint_angles);
 
   // Compute IK:
-  static InvKinMsg inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose);
+  static InvKinMsg inverseKinematics(InvKinJoints* joint_angles, const InvKinXCart& cart_pose);
   // Compute IK and return helper matrices
-  static InvKinMsg inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose, Matrix3d& as, Matrix3d& bs,
-                                     Matrix3d& cs, Matrix3d& aw, Matrix3d& bw, Matrix3d& cw, bool check_limits = false);
+  static InvKinMsg inverseKinematics(InvKinJoints* joint_angles, const InvKinXCart& cart_pose, Eigen::Matrix3d* as,
+                                     Eigen::Matrix3d* bs, Eigen::Matrix3d* cs, Eigen::Matrix3d* aw, Eigen::Matrix3d* bw,
+                                     Eigen::Matrix3d* cw, bool check_limits = false);
 
   // Initialize:
   bool initialize(const std::vector<double>& joint_distances, const std::vector<double>& lower_joint_limits,
                   const std::vector<double>& upper_joint_limits);
 
   // Compute feasible intervals in nullspace
-  static InvKinMsg computeFeasibleIntervals(InvKinElbowInterval feasible_intervals[], InvKinXCart& cart_pose,
-                                            Matrix3d& as, Matrix3d& bs, Matrix3d& cs, Matrix3d& aw, Matrix3d& bw,
-                                            Matrix3d& cw, int& n);
+  static InvKinMsg computeFeasibleIntervals(InvKinElbowInterval feasible_intervals[], const InvKinXCart& cart_pose,
+                                            const Eigen::Matrix3d& as, const Eigen::Matrix3d& bs,
+                                            const Eigen::Matrix3d& cs, const Eigen::Matrix3d& aw,
+                                            const Eigen::Matrix3d& bw, const Eigen::Matrix3d& cw, int* n);
 
   // get closest solution to seed-state using optimization defined in optimize()
-  static InvKinMsg getClosestPositionIK(InvKinJoints sol[], int& index_sol, InvKinJoints& seed_state,
-                                        InvKinXCart& seed_state_x, InvKinXCart& cart_pose, int configs[], int n_configs,
-                                        InvKinMsg (*optimize)(InvKinElbowInterval[], int&, InvKinXCart&, InvKinXCart&));
+  static InvKinMsg getClosestPositionIK(InvKinJoints sol[], int* index_sol, const InvKinJoints& seed_state,
+                                        const InvKinXCart& seed_state_x, InvKinXCart* cart_pose, const int configs[],
+                                        int n_configs, InvKinMsg (*optimize)(InvKinElbowInterval[], int,
+                                                                             const InvKinXCart&, InvKinXCart*));
 
   // redundancy resolution using exponential function
-  static InvKinMsg redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], int& n, InvKinXCart& seed_state,
-                                           InvKinXCart& cart_pose);
+  static InvKinMsg redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], int n,
+                                           const InvKinXCart& seed_state, InvKinXCart* cart_pose);
 
   // wrapper-methods for KinematicsBase-Plugin
   // redundancy resolution using e-function and hard coded config in ik_pose.config
-  static InvKinMsg getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
+  static InvKinMsg getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution);
   // redundancy resolution using fixed nsparam
-  static InvKinMsg getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
+  static InvKinMsg getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution);
   // redundancy resolution using e-function and hard coded config and nsparam in ik_pose
   static InvKinMsg getIKefuncFixedConfigFixedNs(InvKinXCart ik_pose, InvKinJoints seed_state,
-                                                std::vector<double>& solution);
+                                                std::vector<double>* solution);
   // redundancy-resolution using e-function
-  static InvKinMsg getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution);
+  static InvKinMsg getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution);
 
-  static void determineClosestConfigs(int configs[], int& counter, InvKinJoints& joint_angles);
+  static void determineClosestConfigs(int configs[], int* counter, const InvKinJoints& joint_angles);
 
 private:
 };
 
-ostream& operator<<(ostream& stream, InvKinMsg const& val);
+std::ostream& operator<<(std::ostream& stream, InvKinMsg const& val);
 
 #endif /* INCLUDE_INVKINLIBRARY_H_ */
