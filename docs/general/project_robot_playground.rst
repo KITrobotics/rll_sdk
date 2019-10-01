@@ -11,7 +11,7 @@ Installation
 
 If you haven't already setup your ROS workspace and installed the
 robot playground project do so now by following the instructions outlined in
-:ref:`setting-up-ros`.
+:doc:`manual_installation` or use the :doc:`vm_setup`.
 
 
 .. _playground-build:
@@ -40,48 +40,42 @@ the path in the above command accordingly.
 Run the project
 ---------------
 
-Setting up the RLL simulation environment and running your code contains four
+Setting up the RLL simulation environment and running your code contains two
 steps. Execute each command in a **new** terminal tab or window.
 
-1. Start `rviz` and load the robot environment:
+1. Start the simulation environment:
 
    .. code-block:: bash
 
-      roslaunch rll_robot_playground_project moveit_planning_execution.launch
+      roslaunch rll_robot_playground_project setup_simulation.launch
+
+   This will open RViz showing the robot visualization and the log output
+   of the `playground_iface`. You should be able to see the robot moving
+   into the *home* position.
 
 
-2. Start the `playground_iface`, which controls the robot:
-
-   .. code-block:: bash
-
-      roslaunch rll_robot_playground_project playground_iface.launch
-
-
-3. Load the project code, but don't execute it just yet. Depending on whether
-   you want to write your code in Python or C++ run **one** of the following
-   commands:
+2. Execute your project code. Depending on whether you want to use Python or
+   C++ run **one** of the following commands:
 
    - Python version (the default):
 
      .. code-block:: bash
 
-        roslaunch rll_robot_playground_project move_sender.launch
+        roslaunch rll_robot_playground_project run_your_code.launch
 
    - C++ version:
 
      .. code-block:: bash
 
-        roslaunch rll_robot_playground_project move_sender.launch use_python:=false
+        roslaunch rll_robot_playground_project run_your_code.launch use_python:=false
+
+   The robot should now begin to move and the log output of the program
+   is printed to the terminal.
 
 
-4. Trigger the execution of your project code:
-
-   .. code-block:: bash
-
-      roslaunch rll_tools run_project.launch
-
-
-To execute the project code again, simply repeat step 4.
+To execute the project code again, interrupt the second command you executed
+and simply re-run it. To interrupt the running command press :code:`Ctrl + C`
+in the corresponding terminal.
 
 .. hint:: If something goes wrong or you close a terminal by accident, it is best to close all terminals that are still open. Once all windows are closed repeat all the steps above.
 
@@ -128,13 +122,13 @@ Run your code
 
 You can run your own code by following the steps from *"Run the project"* as
 shown above.
-To run your modified code you need to restart the command from step 3. To do
+To run your modified code you need to restart the command from step 2. To do
 this, interrupt the running command by pressing :code:`Ctrl + C` in the
-terminal in which you executed the command from step 3. Once the command
+terminal in which you executed the command from step 2. Once the command
 has stopped simply execute the command again.
 
 .. hint:: If you are unsure about this it is best to close all terminal windows
-   and repeat the steps 1 to 4.
+   and repeat the steps 1 and 2.
 
 
 .. _make-c++-default:
@@ -142,19 +136,24 @@ has stopped simply execute the command again.
 Use C++ by default
 ^^^^^^^^^^^^^^^^^^
 
-If you are programming in C++ you can and should adjust the launch file to use
-C++ by default. Open the file `launch/move_sender.launch` and change the
-following line, while keeping the remaining lines as they are, from:
+If you are programming in C++ you can and should adjust the launch files to use
+C++ by default.
 
-.. code-block:: xml
+1. Open the file :code:`launch/move_sender.launch` and change the
+   following line, while keeping the remaining lines as they are, from:
 
-   <arg name="use_python" default="true" />
+   .. code-block:: xml
 
-to:
+      <arg name="use_python" default="true" />
 
-.. code-block:: xml
+   to:
 
-   <arg name="use_python" default="false" />
+   .. code-block:: xml
+
+      <arg name="use_python" default="false" />
+
+2. Repeat step 1 but this time modify the file
+   :code:`launch/run_your_code.launch`
 
 If you run your code now as described in :ref:`playground-run`, the file
 :code:`playground.cpp` is executed by default.
