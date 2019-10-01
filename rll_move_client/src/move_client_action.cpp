@@ -47,7 +47,7 @@ void RLLActionMoveClient::executeCallback(const rll_msgs::DefaultMoveIfaceGoalCo
   }
   catch (ServiceCallFailure& e)
   {
-    ROS_ERROR("The action routine was interrupted by an uncaught exception %s", e.what());
+    ROS_ERROR("The action routine was interrupted by an uncaught exception: %s", e.what());
     server_.setAborted();
   }
 

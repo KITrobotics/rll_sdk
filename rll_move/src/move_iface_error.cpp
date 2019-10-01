@@ -134,16 +134,25 @@ const char* RLLErrorCode::message() const noexcept
       return "TRAJECTORY_MODIFICATION_FAILED";
     case NO_RANDOM_POSITION_FOUND:
       return "NO_RANDOM_POSITION_FOUND";
+    case CONCURRENT_SERVICE_CALL:
+      return "CONCURRENT_SERVICE_CALL";
+    case INSUFFICIENT_PERMISSION:
+      return "INSUFFICIENT_PERMISSION";
+    case JOB_EXECUTION_TIMED_OUT:
+      return "JOB_EXECUTION_TIMED_OUT";
     case CRITICAL_FAILURE:
       return "CRITICAL_FAILURE";
-    case MOVEMENT_NOT_ALLOWED:
-      return "MOVEMENT_NOT_ALLOWED";
+    case SERVICE_CALL_NOT_ALLOWED:
+      return "SERVICE_CALL_NOT_ALLOWED";
     case EXECUTION_FAILED:
       return "EXECUTION_FAILED";
     case MANIPULATOR_NOT_AVAILABLE:
       return "MANIPULATOR_NOT_AVAILABLE";
     case GRIPPER_OPERATION_FAILED:
       return "GRIPPER_OPERATION_FAILED";
+    case INTERNAL_ERROR:
+      return "INTERNAL_ERROR";
+
     default:
       return "UNKNOWN_ERROR";
   }

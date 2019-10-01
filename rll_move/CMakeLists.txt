@@ -16,17 +16,6 @@ find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
 )
 
-if(CATKIN_ENABLE_TESTING)
-  find_package(rostest REQUIRED COMPONENTS
-  rll_description
-  rll_msgs
-  rll_moveit_config
-  rll_analytical_kinematics
-  rll_tools
-  )
-  add_rostest(tests/launch/move_iface.test)
-endif()
-
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES rll_move
@@ -40,6 +29,7 @@ add_library(${PROJECT_NAME}
   src/move_iface_error.cpp
   src/move_iface_default.cpp
   src/move_iface_simulation.cpp
+  src/move_iface_state_machine.cpp
 )
 
 install(TARGETS ${PROJECT_NAME}
@@ -58,3 +48,16 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(move_iface_full src/move_iface_full_node.cpp)
 target_link_libraries(move_iface_full rll_move ${catkin_LIBRARIES})
+
+
+if(CATKIN_ENABLE_TESTING)
+  find_package(catkin REQUIRED COMPONENTS rostest)
+  add_rostest(tests/launch/move_iface_movement.test)
+
+  add_rostest_gtest(unit_test tests/launch/move_iface_unit.test tests/src/test_permissions.cpp tests/src/test_state_machine.cpp)
+  
+  target_link_libraries(unit_test rll_move ${catkin_LIBRARIES})
+endif()
+
+
+

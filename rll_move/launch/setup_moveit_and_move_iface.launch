@@ -1,11 +1,13 @@
 <?xml version="1.0"?>
 <launch>
   <arg name="use_sim" default="true"/>
+  <arg name="headless" default="false" />
   <arg name="output" default="log"/>
 
 
   <include file="$(find rll_moveit_config)/launch/moveit_planning_execution.launch">
     <arg name="use_sim" value="$(arg use_sim)"/>
+    <arg name="headless" value="$(arg headless)"/>
     <arg name="output" value="$(arg output)"/>
   </include>
   <include file="$(find rll_move)/launch/move_iface.launch"></include>

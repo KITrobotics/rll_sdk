@@ -86,7 +86,7 @@ void RLLMoveIfaceBase<Action, Goal>::runJob(const rll_msgs::JobEnvGoalConstPtr& 
   bool success = action_client_ptr_->waitForResult(ros::Duration(job_execution_timeout_seconds_));
   ROS_INFO("interface client completed or timed out");
 
-  if (!allowed_to_move_)
+  if (iface_state_.isInInternalErrorState())
   {
     // This is the default job runner and should only be used for demos or testing
     // Assume an internal error if something fails
