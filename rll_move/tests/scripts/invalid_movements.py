@@ -21,9 +21,12 @@
 from math import pi
 from geometry_msgs.msg import Pose, Point
 from rll_move_client.util import orientation_from_rpy
+from rll_move_client.error import CriticalServiceCallFailure
 
-from rll_move_client.test import TestCaseWithRLLMoveClient
+from test_util import TestCaseWithRLLMoveClient, concurrent_call, idle
 from rll_move_client.error import RLLErrorCode
+import rospy
+import rll_msgs
 
 
 class TestInvalidMovements(TestCaseWithRLLMoveClient):
@@ -31,46 +34,65 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
     def __init__(self, *args, **kwargs):
         super(TestInvalidMovements, self).__init__(*args, **kwargs)
 
-    def test_1_pose_outside_workspace(self):
+    def test_0_pose_outside_workspace(self):
         goal_pose = Pose()
         goal_pose.position = Point(1, 1, 1)
         resp = self.client.move_ptp(goal_pose)
-        self.assertServiceCallFailedWith(resp, RLLErrorCode.NO_IK_SOLUTION_FOUND)
-
-    def parallel_move_calls(self, client):
-        import threading
-
-        def try_move_random():
-            resp = client.move_random()
-            assert resp
-
-        threads = [threading.Thread(target=try_move_random) for _ in range(5)]
-        for thread in threads:
-            thread.start()
-
-        for thread in threads:
-            thread.join()
+        self.assertLastServiceCallFailedWith(
+            resp, RLLErrorCode.NO_IK_SOLUTION_FOUND)
 
     def test_1_move_ptp(self):
         goal_pose = Pose()
         goal_pose.position = Point(.4, .4, .5)
 
-        # move to starting position
         goal_pose.orientation = orientation_from_rpy(pi / 2, -pi / 4, pi)
         resp = self.client.move_ptp(goal_pose)
-        self.assertTrue(resp, "failed to move_ptp")
+        self.assertLastServiceCallSucceeded(resp)
 
     def test_2_move_lin_sole_rotation(self):
+        # move into position
+        resp = self.client.move_joints(0, 0, 0, -pi / 2, 0, -pi / 2, 0)
+        self.assertLastServiceCallSucceeded(resp)
+
         goal_pose = Pose()
-        goal_pose.position = Point(.4, .4, .5)
+        goal_pose.position = Point(.3, .41, .63)
+        goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
+        resp = self.client.move_ptp(goal_pose)
 
         # only change the orientation no motion -> should fail
-        goal_pose.orientation = orientation_from_rpy(pi / 2, -pi / 2, pi)
+        goal_pose.orientation = orientation_from_rpy(0, 0, 0)
         success = self.client.move_lin(goal_pose)
-        self.assertServiceCallFailedWith(success, RLLErrorCode.TOO_FEW_WAYPOINTS)
+        self.assertLastServiceCallFailedWith(
+            success, RLLErrorCode.TOO_FEW_WAYPOINTS)
 
         # only change the position -> should succeed
-        goal_pose.position = Point(.4, .2, .5)
-        goal_pose.orientation = orientation_from_rpy(pi / 2, -pi / 4, pi)
+        goal_pose.position = Point(.2, .41, .63)
+        goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
         success = self.client.move_lin(goal_pose)
-        self.assertServiceCallSuccess(success)
+        self.assertLastServiceCallSucceeded(success)
+
+    def test_3_parallel_move_calls(self):
+        def do_move_random(index):
+            # construct a new service proxy, using the same proxy results in
+            # tcp connection issues
+            srv = rospy.ServiceProxy('move_random', rll_msgs.srv.MoveRandom)
+            resp = srv.call()
+            return resp
+
+        results = concurrent_call(do_move_random, n=4,
+                                  delay_between_starts=.1)
+
+        # first should have succeeded (it is an recoverable failure)
+        self.assertErrorCodeEquals(results[0].error_code, RLLErrorCode.SUCCESS)
+
+        for result in results[1:]:
+            self.assertErrorCodeEquals(result.error_code,
+                                       RLLErrorCode.CONCURRENT_SERVICE_CALL)
+
+    def test_4_idle_during_job_run(self):
+        # this should result in an internal error, it will also crash
+        # the current run_job action
+        idle_success, _ = idle()
+        self.assertFalse(idle_success)
+
+        self.assertRaises(CriticalServiceCallFailure, self.client.move_random)

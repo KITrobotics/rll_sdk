@@ -20,7 +20,7 @@
 
 from geometry_msgs.msg import Pose, Point
 
-from rll_move_client.test import TestCaseWithRLLMoveClient
+from test_util import TestCaseWithRLLMoveClient
 from rll_move_client.error import RLLErrorCode
 
 
@@ -52,18 +52,18 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         goal_pose = Pose()
         goal_pose.position = Point(1, 1, 1)
         resp = self.client.move_ptp(goal_pose)
-        self.assertServiceCallFailedWith(resp,
-                                         RLLErrorCode.NO_IK_SOLUTION_FOUND)
+        self.assertLastServiceCallFailedWith(resp,
+                                             RLLErrorCode.NO_IK_SOLUTION_FOUND)
 
     def test_2_move_joints(self):
         resp = self.client.move_joints(0, 0, 0, 0, 0, 0, 0)
-        self.assertServiceCallSuccess(resp)
+        self.assertLastServiceCallSucceeded(resp)
 
         resp = self.client.move_joints([1, 0, 0, 0, 0, 0, 0])
-        self.assertServiceCallSuccess(resp)
+        self.assertLastServiceCallSucceeded(resp)
 
         resp = self.client.move_joints((0, 0, 1, 0, 0, 0, 0))
-        self.assertServiceCallSuccess(resp)
+        self.assertLastServiceCallSucceeded(resp)
 
         # should be seven values
         resp = self.client.move_joints(0, 0, 1, 0, 0, 0, )

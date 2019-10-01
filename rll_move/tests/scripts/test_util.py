@@ -18,14 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import time
 import rospy
 import unittest
 import rosunit
 import actionlib
 from rll_msgs.msg import JobStatus, JobEnvAction, JobEnvGoal
 
-from .util import compare_joint_values
-from .error import RLLErrorCode
+from rll_move_client.util import compare_joint_values
+from rll_move_client.error import RLLErrorCode
 
 
 class TestCaseWithRLLMoveClient(unittest.TestCase):
@@ -43,24 +44,72 @@ class TestCaseWithRLLMoveClient(unittest.TestCase):
                         "Mismatching joint values: %s vs %s" % (
                             joints1, joints2))
 
-    def assertServiceCallSuccess(self, resp):
+    def assertLastServiceCallSucceeded(self, resp):
         self.assertLastErrorCode(RLLErrorCode.SUCCESS)
         self.assertTrue(resp, "Service call should have succeeded")
 
-    def assertServiceCallFailedWith(self, resp, error_code):
+    def assertLastServiceCallFailedWith(self, resp, error_code):
         self.assertLastErrorCode(error_code)
         self.assertFalse(resp, "Service call should have failed.")
 
     def assertLastErrorCode(self, error_code):
         last_error_code = self.client.get_last_error_code()
-        self.assertEqual(last_error_code, error_code,
-                         "Error codes do not match: '%s' vs '%s'! " % (
-                             RLLErrorCode(last_error_code),
-                             RLLErrorCode(error_code)))
+        self.assertErrorCodeEquals(error_code, last_error_code)
+
+    def assertErrorCodeEquals(self, code1, code2):
+        self.assertEquals(code1, code2,
+                          "Error codes do not match: '%s' vs '%s'! " % (
+                              RLLErrorCode(code1), RLLErrorCode(code2)))
 
     def test_0_client_available(self):
         self.assertIsNotNone(TestCaseWithRLLMoveClient.client,
                              "The static client object is not set!")
+
+
+def concurrent_call(thread_func, n=10, delay_between_starts=0):
+    """
+    Run the given function n times concurrently. The function receives the
+    index (the i-th invocation) as an argument. The first thread gets a
+    head start in case you try to call the same service, etc.
+
+    Returns a ordered list of the return values.
+
+    :param thread_func:
+    :param n:
+    :param delay_between_starts:
+    :return:
+    """
+    import threading
+    lock = threading.Lock()
+    results = [None for _ in range(n)]
+
+    def collect(index):
+        result = None
+        try:
+            result = thread_func(index)
+        except Exception as e:
+            rospy.logerr("Exception in thread execution: %s", e)
+
+        lock.acquire()
+        try:
+            rospy.loginfo("collected thread #%d" % index)
+            results[index] = result
+        finally:
+            lock.release()
+
+    threads = [threading.Thread(target=collect, args=(i,)) for i in range(n)]
+
+    threads[0].start()
+    time.sleep(.5)  # give it a bit of an head start to make sure it is running
+
+    for thread in threads[1:]:
+        thread.start()
+        time.sleep(delay_between_starts)
+
+    for thread in threads:
+        thread.join()
+
+    return results
 
 
 def shutdown():
@@ -93,18 +142,25 @@ def generate_test_callback(package, tests, shutdown_timeout=10):
 
 
 def run_project_in(timeout):
-    rospy.Timer(rospy.Duration(timeout), lambda ev: run_project(),
+    rospy.Timer(rospy.Duration(timeout), lambda ev: run_project_or_shutdown(),
                 oneshot=True)
+
+
+def run_project_or_shutdown():
+    job_success, _ = run_project()
+    # on failure shutdown
+    if not not job_success:
+        shutdown()
 
 
 def run_project():
     # based on rll_tools run_project.py
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
-    rospy.sleep(0.5)
+
     available = job_env.wait_for_server(rospy.Duration.from_sec(4.0))
     if not available:
         rospy.logerr("job env action server is not available")
-        shutdown()
+        return False, -1
 
     job_env_goal = JobEnvGoal()
     job_env.send_goal(job_env_goal)
@@ -112,7 +168,38 @@ def run_project():
     job_env.wait_for_result()
     resp = job_env.get_result()
 
+    state = job_env.get_state()
+    rospy.loginfo("Goal state: %s", state)
+
     if resp is None or resp.job.status == JobStatus.INTERNAL_ERROR:
         rospy.logerr("job env action server did not return a response or an "
                      "internal error occurred!")
-        shutdown()
+        return False, state
+
+    rospy.loginfo("Job completed")
+    return True, state
+
+
+def idle():
+    # based on rll_tools run_project.py
+    job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
+    available = job_idle.wait_for_server(rospy.Duration.from_sec(4.0))
+    if not available:
+        rospy.logerr("job idle action server is not available")
+        return False, -1
+
+    job_idle_goal = JobEnvGoal()
+    job_idle.send_goal(job_idle_goal)
+    rospy.loginfo("resetting environment back to start")
+    job_idle.wait_for_result()
+    resp = job_idle.get_result()
+
+    state = job_idle.get_state()
+    rospy.loginfo("Goal state: %s", state)
+
+    if resp.job.status == JobStatus.INTERNAL_ERROR:
+        rospy.logfatal("environment reset failed")
+        return False, state
+
+    rospy.loginfo("Idle completed")
+    return True, state

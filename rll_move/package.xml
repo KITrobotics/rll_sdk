@@ -15,11 +15,7 @@
   <depend>moveit_ros_planning</depend>
   <depend>moveit_ros_planning_interface</depend>
   <build_depend>rostest</build_depend>
-  <test_depend>rll_moveit_config</test_depend>
-  <test_depend>rll_description</test_depend>
-  <test_depend>rll_msgs</test_depend>
-  <test_depend>rll_analytical_kinematics</test_depend>
-  <test_depend>rll_tools</test_depend>
+  <test_depend>rosunit</test_depend>
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
   <depend>rll_analytical_kinematics</depend>

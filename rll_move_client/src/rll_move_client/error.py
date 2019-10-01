@@ -38,16 +38,20 @@ class RLLErrorCode(object):
     ONLY_PARTIAL_PATH_PLANNED = 66
     TRAJECTORY_MODIFICATION_FAILED = 67
     NO_RANDOM_POSITION_FOUND = 68
+    CONCURRENT_SERVICE_CALL = 69
+    INSUFFICIENT_PERMISSION = 70
+    JOB_EXECUTION_TIMED_OUT = 71
+    SERVICE_CALL_NOT_ALLOWED = 72
 
     # critical failure
     CRITICAL_FAILURE = 128
-    MOVEMENT_NOT_ALLOWED = 129
-    EXECUTION_FAILED = 130
-    MANIPULATOR_NOT_AVAILABLE = 131
-    GRIPPER_OPERATION_FAILED = 132
-    GRIPPER_DID_NOT_ACKNOWLEDGE = 133
-    GRIPPER_MOVEMENT_FAILED = 134
-    RESET_TO_HOME_FAILED = 135
+    EXECUTION_FAILED = 129
+    MANIPULATOR_NOT_AVAILABLE = 130
+    GRIPPER_OPERATION_FAILED = 131
+    GRIPPER_DID_NOT_ACKNOWLEDGE = 132
+    GRIPPER_MOVEMENT_FAILED = 133
+    RESET_TO_HOME_FAILED = 134
+    INTERNAL_ERROR = 135
 
     # not set (initial value)
     NOT_SET = 255
@@ -71,16 +75,20 @@ class RLLErrorCode(object):
         ONLY_PARTIAL_PATH_PLANNED: "ONLY_PARTIAL_PATH_PLANNED",
         TRAJECTORY_MODIFICATION_FAILED: "TRAJECTORY_MODIFICATION_FAILED",
         NO_RANDOM_POSITION_FOUND: "NO_RANDOM_POSITION_FOUND",
+        CONCURRENT_SERVICE_CALL: "CONCURRENT_SERVICE_CALL",
+        INSUFFICIENT_PERMISSION: "INSUFFICIENT_PERMISSION",
+        JOB_EXECUTION_TIMED_OUT: "JOB_EXECUTION_TIMED_OUT",
 
         # critical failure
         CRITICAL_FAILURE: "CRITICAL_FAILURE",
-        MOVEMENT_NOT_ALLOWED: "MOVEMENT_NOT_ALLOWED",
+        SERVICE_CALL_NOT_ALLOWED: "SERVICE_CALL_NOT_ALLOWED",
         EXECUTION_FAILED: "EXECUTION_FAILED",
         MANIPULATOR_NOT_AVAILABLE: "MANIPULATOR_NOT_AVAILABLE",
         GRIPPER_OPERATION_FAILED: "GRIPPER_OPERATION_FAILED",
         GRIPPER_DID_NOT_ACKNOWLEDGE: "GRIPPER_DID_NOT_ACKNOWLEDGE",
         GRIPPER_MOVEMENT_FAILED: "GRIPPER_MOVEMENT_FAILED",
         RESET_TO_HOME_FAILED: "RESET_TO_HOME_FAILED",
+        INTERNAL_ERROR: "INTERNAL_ERROR",
 
         NOT_SET: "NOT_SET"
     }
@@ -95,7 +103,7 @@ class RLLErrorCode(object):
         GOAL_IN_COLLISION: "The request motion would result in a collision either with an obstacle or the robot itself.",
         MOVEIT_PLANNING_FAILED: "This is a generic motion planning error and can be caused e.g. by requesting a pose outside the allowed workspace.",
         ONLY_PARTIAL_PATH_PLANNED: "A pose between the start and goal pose of a linear motion causes a collision, only part of the motion is possible.",
-        MOVEMENT_NOT_ALLOWED: "The movement interface no longer accepts motion requests, possibly due to a critical failure."
+        SERVICE_CALL_NOT_ALLOWED: "The movement interface currently does not accept service calls, possibly due to a critical failure."
     }
 
     def __init__(self, code=NOT_SET):
@@ -123,7 +131,8 @@ class RLLErrorCode(object):
         return self.code != RLLErrorCode.SUCCESS
 
     def __repr__(self):
-        return RLLErrorCode.NAMES.get(self.code, "UNKNOWN_ERROR_CODE")
+        return RLLErrorCode.NAMES.get(self.code,
+                                      "UNKNOWN_ERROR_CODE(%s)" % self.code)
 
     def get_hint(self):
         return RLLErrorCode.HINTS.get(self.code, None)

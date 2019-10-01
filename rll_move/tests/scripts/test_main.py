@@ -19,14 +19,18 @@
 #
 
 import rospy
-from rll_move_client.test import generate_test_callback, run_project_in
+from test_util import generate_test_callback, run_project_in
+from rll_move_client.client import RLLDefaultMoveClient
+
 from invalid_movements import TestInvalidMovements
 from basic_movements import TestBasicMovements
-from rll_move_client.client import RLLDefaultMoveClient
+from repeat_movements import TestRepeatedMovements
 
 if __name__ == "__main__":
     tests = [('move_basic', TestBasicMovements),
-             ('move_invalid', TestInvalidMovements)]
+             ('move_repetition', TestRepeatedMovements),
+             ('move_invalid', TestInvalidMovements),
+             ]
 
     execute = generate_test_callback("rll_move", tests)
 

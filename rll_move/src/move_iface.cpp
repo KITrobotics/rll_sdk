@@ -82,7 +82,7 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
   planning_scene_ = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor_);
   acm_ = planning_scene_->getAllowedCollisionMatrix();
 
-  allowed_to_move_ = false;
+  setupPermissions();
 
   // startup checks, shutdown the node if something is wrong
   if (!isCollisionLinkAvailable() || !initConstTransforms())
@@ -92,24 +92,77 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
   }
 }
 
+void RLLMoveIface::setupPermissions()
+{
+  move_permission_ = permissions_.registerPermission("allowed_to_move", false);
+  pick_place_permission_ = permissions_.registerPermission("pick_place", false);
+  // by default every service requires the move permission unless explicitly changed
+  permissions_.setDefaultRequiredPermissions(move_permission_);
+  // the pick_and_place service requires an additional permission
+  permissions_.setRequiredPermissionsFor(RLLMoveIface::PICK_PLACE_SRV_NAME, pick_place_permission_ | move_permission_);
+}
+
+bool RLLMoveIface::beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result)
+{
+  // before an action is executed we need to ensure that the caller is authorized to invoke an action
+  // TODO(uieai) add authentication check
+
+  // try to enter the corresponding state
+  if (!iface_state_.enterState(state))
+  {
+    result->job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    return false;
+  }
+
+  return true;
+}
+
+bool RLLMoveIface::afterActionExecution(rll_msgs::JobEnvResult* result)
+{
+  if (!iface_state_.leaveState())
+  {
+    result->job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    return false;
+  }
+
+  return true;
+}
+
 void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as)
 {
   rll_msgs::JobEnvResult result;
-  // TODO(uieai): add some checks here. E.g:
-  // - is a job currently running?
-  // - validate if the caller is authenticated to run a job
-  allowed_to_move_ = true;
 
+  if (!beforeActionExecution(RLLMoveIfaceState::RUNNING_JOB, &result))
+  {
+    // don't attempt to perform an action if we are in the INTERNAL_ERROR state
+    as->setSucceeded(result);
+    return;
+  }
+
+  // run the actual job processing and set the result accordingly
+  // set the general movement permission for the duration of the job execution
+  permissions_.updatePermission(move_permission_, true);
   runJob(goal, result);
+  permissions_.clearAllPermissions();
+
+  // It is possible that a service call might still be in execution
+  // therefore wait for the service call to end before completing the runJob action
+  if (iface_state_.setCurrentServiceCallResult(RLLErrorCode::JOB_EXECUTION_TIMED_OUT))
+  {
+    while (iface_state_.isServiceCallInExecution())
+    {
+      ros::Duration(.01).sleep();
+    }
+  }
 
   // sanity check: if a job fails with an internal error than further operations should have been aborted
-  if (result.job.status == rll_msgs::JobStatus::INTERNAL_ERROR && allowed_to_move_)
+  if (result.job.status == rll_msgs::JobStatus::INTERNAL_ERROR && !iface_state_.isInInternalErrorState())
   {
-    ROS_FATAL("Job resulted in an INTERNAL_ERROR, but movement is still allowed. This should not happen!");
+    ROS_FATAL("Job resulted in an INTERNAL_ERROR, but the state is not set accordingly. This should NOT happen!");
     abortDueToCriticalFailure();
   }
 
-  allowed_to_move_ = false;
+  afterActionExecution(&result);
   as->setSucceeded(result);
 }
 
@@ -117,6 +170,14 @@ void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& /*goal*/, JobS
 {
   rll_msgs::JobEnvResult result;
 
+  if (!beforeActionExecution(RLLMoveIfaceState::IDLING, &result))
+  {
+    // don't attempt to perform the action we are in the INTERNAL_ERROR state
+    as->setSucceeded(result);
+    return;
+  }
+
+  ROS_INFO("got idle request");
   RLLErrorCode error_code = idle();
 
   if (error_code.succeeded())
@@ -126,24 +187,18 @@ void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& /*goal*/, JobS
   }
   else
   {
-    if (error_code.isRecoverableFailure())
-    {
-      ROS_FATAL("Idle resulted in a recoverable failure!");
-    }
-    else
-    {
-      ROS_FATAL("Idle resulted in a critical failure!");
-    }
-
+    ROS_FATAL("Idle resulted in a %s failure!", error_code.isCriticalFailure() ? "critical" : "recoverable");
+    // idle should not fail, so its better to abort further operations
+    abortDueToCriticalFailure();
     result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
   }
 
+  afterActionExecution(&result);
   as->setSucceeded(result);
 }
 
 RLLErrorCode RLLMoveIface::idle()
 {
-  ROS_INFO("got idle request");
   RLLErrorCode error_code = resetToHome();
 
   if (error_code.failed())
@@ -159,8 +214,14 @@ RLLErrorCode RLLMoveIface::idle()
 
 bool RLLMoveIface::robotReadySrv(std_srvs::Trigger::Request& /*req*/, std_srvs::Trigger::Response& resp)
 {
-  RLLErrorCode error_code = resetToHome();
+  RLLErrorCode error_code = beforeMovementServiceCall(RLLMoveIface::ROBOT_READY_SRV_NAME);
+  if (error_code.succeeded())
+  {
+    error_code = resetToHome();
+  }
   resp.success = error_code.succeeded();  // NOLINT
+
+  afterMovementServiceCall(RLLMoveIface::ROBOT_READY_SRV_NAME, error_code);
   return true;
 }
 
@@ -210,7 +271,7 @@ bool RLLMoveIface::manipCurrentStateAvailable()
 
 void RLLMoveIface::abortDueToCriticalFailure()
 {
-  allowed_to_move_ = false;
+  iface_state_.enterErrorState();
 }
 
 void RLLMoveIface::handleFailureSeverity(const RLLErrorCode& error_code)
@@ -233,14 +294,39 @@ void RLLMoveIface::handleFailureSeverity(const RLLErrorCode& error_code)
   }
 }
 
-RLLErrorCode RLLMoveIface::beforeMovementSrvChecks(const std::string& srv_name)
+RLLErrorCode RLLMoveIface::beforeNonMovementServiceCall(const std::string& srv_name)
 {
   ROS_INFO("service '%s' requested", srv_name.c_str());
-
-  if (!allowed_to_move_)
+  RLLErrorCode error_code = iface_state_.beginServiceCall(srv_name);
+  if (error_code.failed())
   {
-    ROS_WARN("Not allowed to send '%s' commands", srv_name.c_str());
-    return RLLErrorCode::MOVEMENT_NOT_ALLOWED;
+    return error_code;
+  }
+
+  // check if this service call is permitted
+  if (!permissions_.areAllRequirementsMetFor(srv_name))
+  {
+    return RLLErrorCode::INSUFFICIENT_PERMISSION;
+  }
+
+  return RLLErrorCode::SUCCESS;
+}
+
+RLLErrorCode RLLMoveIface::afterNonMovementServiceCall(const std::string& srv_name, RLLErrorCode previous_error_code)
+{
+  RLLErrorCode error_code = iface_state_.endServiceCall();
+  ROS_INFO("service '%s' ended", srv_name.c_str());
+
+  // a previous error code is probably more specific and takes precedence
+  return previous_error_code.failed() ? previous_error_code : error_code;
+}
+
+RLLErrorCode RLLMoveIface::beforeMovementServiceCall(const std::string& srv_name)
+{
+  RLLErrorCode error_code = beforeNonMovementServiceCall(srv_name);
+  if (error_code.failed())
+  {
+    return error_code;
   }
 
   if (!manipCurrentStateAvailable())
@@ -251,27 +337,37 @@ RLLErrorCode RLLMoveIface::beforeMovementSrvChecks(const std::string& srv_name)
   return RLLErrorCode::SUCCESS;
 }
 
-template <class Request, class Response>
-bool RLLMoveIface::controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
-                                               RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&))
+RLLErrorCode RLLMoveIface::afterMovementServiceCall(const std::string& srv_name,
+                                                    const RLLErrorCode& previous_error_code)
 {
-  RLLErrorCode error_code = beforeMovementSrvChecks(srv_name);
-  if (error_code.failed())
-  {
-    resp.success = false;
-    resp.error_code = error_code.value();
-    return true;
-  }
-
-  error_code = (this->*move_func)(req, resp);
-  resp.error_code = error_code.value();
-  resp.success = error_code.succeeded();
+  // pass a possible previous error_code, it will be returned if it is more specific
+  RLLErrorCode error_code = afterNonMovementServiceCall(srv_name, previous_error_code);
 
   if (error_code.failed())
   {
     ROS_WARN("'%s' service call failed!", srv_name.c_str());
     handleFailureSeverity(error_code);
   }
+
+  return error_code;
+}
+
+template <class Request, class Response>
+bool RLLMoveIface::controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
+                                               RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&))
+{
+  RLLErrorCode error_code = beforeMovementServiceCall(srv_name);
+
+  if (error_code.succeeded())
+  {
+    // run only if the prior checks succeeded
+    error_code = (this->*move_func)(req, resp);
+  }
+
+  error_code = afterMovementServiceCall(srv_name, error_code);
+
+  resp.error_code = error_code.value();
+  resp.success = error_code.succeeded();
 
   return true;
 }
@@ -315,7 +411,7 @@ RLLErrorCode RLLMoveIface::moveRandom(rll_msgs::MoveRandom::Request& /*req*/, rl
     }
 
     error_code = runPTPTrajectory(manip_move_group_);
-    // make sure nothing major went wrong. only repeat in case of noncritical errors
+    // make sure nothing major went wrong. only repeat in case of non critical errors
     if (error_code.isCriticalFailure())
     {
       return error_code;
@@ -618,20 +714,38 @@ RLLErrorCode RLLMoveIface::moveJoints(rll_msgs::MoveJoints::Request& req, rll_ms
 bool RLLMoveIface::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Request& /*req*/,
                                             rll_msgs::GetJointValues::Response& resp)
 {
-  std::vector<double> joints = manip_move_group_.getCurrentJointValues();
-  resp.joint_1 = joints[0];
-  resp.joint_2 = joints[1];
-  resp.joint_3 = joints[2];
-  resp.joint_4 = joints[3];
-  resp.joint_5 = joints[4];
-  resp.joint_6 = joints[5];
-  resp.joint_7 = joints[6];
+  RLLErrorCode error_code = beforeNonMovementServiceCall(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME);
+
+  if (error_code.succeeded())
+  {
+    std::vector<double> joints = manip_move_group_.getCurrentJointValues();
+    resp.joint_1 = joints[0];
+    resp.joint_2 = joints[1];
+    resp.joint_3 = joints[2];
+    resp.joint_4 = joints[3];
+    resp.joint_5 = joints[4];
+    resp.joint_6 = joints[5];
+    resp.joint_7 = joints[6];
+  }
+
+  error_code = afterNonMovementServiceCall(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME, error_code).value();
+  resp.error_code = error_code.value();
+  resp.success = error_code.succeeded();
   return true;
 }
 
 bool RLLMoveIface::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/, rll_msgs::GetPose::Response& resp)
 {
-  resp.pose = manip_move_group_.getCurrentPose().pose;
+  RLLErrorCode error_code = beforeNonMovementServiceCall(RLLMoveIface::GET_POSE_SRV_NAME);
+
+  if (error_code.succeeded())
+  {
+    resp.pose = manip_move_group_.getCurrentPose().pose;
+  }
+
+  error_code = afterNonMovementServiceCall(RLLMoveIface::GET_POSE_SRV_NAME, error_code);
+  resp.error_code = error_code.value();
+  resp.success = error_code.succeeded();
   return true;
 }
 

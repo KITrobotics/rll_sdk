@@ -61,10 +61,6 @@ public:
   explicit ServiceCallFailure(const std::string& message) : std::runtime_error(message)
   {
   }
-  const char* what() const throw() override
-  {
-    return "Service call failed!";
-  }
 };
 
 class CriticalServiceCallFailure : public ServiceCallFailure

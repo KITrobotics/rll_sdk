@@ -39,6 +39,8 @@
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 #include <actionlib/server/simple_action_server.h>
 #include <rll_move/move_iface_error.h>
+#include <rll_move/move_iface_state_machine.h>
+#include <rll_move/permissions.h>
 #include <rll_analytical_kinematics/rll_moveit_analytical_kinematics_plugin.h>
 
 class RLLMoveIface
@@ -64,9 +66,9 @@ public:
   static const std::string GET_POSE_SRV_NAME;
   static const std::string GET_JOINT_VALUES_SRV_NAME;
 
-  // the public interface exposes only action, service entpoints and resetToHome
   RLLErrorCode resetToHome();
 
+  // the public interface exposes only action and service end points
   using JobServer = actionlib::SimpleActionServer<rll_msgs::JobEnvAction>;
   void runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
   void idleAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
@@ -90,15 +92,22 @@ protected:
 
   std::string ns_;
   std::string node_name_;
+  RLLMoveIfaceStateMachine iface_state_;
   moveit::planning_interface::MoveGroupInterface manip_move_group_;
   moveit::planning_interface::MoveGroupInterface gripper_move_group_;
   moveit::core::RobotModelConstPtr manip_model_;
   const robot_state::JointModelGroup* manip_joint_model_group_;
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   bool no_gripper_attached_ = false;
-  bool allowed_to_move_;
   tf::Transform base_to_world_;
   tf::Transform ee_to_tip_;
+  Permissions permissions_;
+  Permissions::Index move_permission_;
+  Permissions::Index pick_place_permission_;
+
+  virtual void setupPermissions();
+  bool beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result);
+  bool afterActionExecution(rll_msgs::JobEnvResult* result);
 
   virtual RLLErrorCode idle();
   virtual void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result) = 0;
@@ -123,7 +132,12 @@ protected:
   planning_scene::PlanningSceneConstPtr planning_scene_;
   collision_detection::AllowedCollisionMatrix acm_;
 
-  virtual RLLErrorCode beforeMovementSrvChecks(const std::string& srv_name);
+  virtual RLLErrorCode beforeNonMovementServiceCall(const std::string& srv_name);
+  virtual RLLErrorCode afterNonMovementServiceCall(const std::string& srv_name, RLLErrorCode previous_error_code);
+
+  virtual RLLErrorCode beforeMovementServiceCall(const std::string& srv_name);
+  virtual RLLErrorCode afterMovementServiceCall(const std::string& srv_name, const RLLErrorCode& previous_error_code);
+
   template <class Request, class Response>
   bool controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
                                    RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&));

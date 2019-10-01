@@ -68,24 +68,30 @@ class RLLMoveClientBase(object):
                 rospy.loginfo("%s %ssucceeded%s", name, C_OK, C_END)
             return True
 
-        code = RLLErrorCode(resp.error_code)
+        error_code = RLLErrorCode(resp.error_code)
 
-        if code.is_critical_failure():
+        if error_code.is_critical_failure():
             rospy.logerr(
                 "%s %sfailed critically with error: %s%s",
-                name, C_FAIL, C_END, code)
+                name, C_FAIL, C_END, error_code)
 
             raise CriticalServiceCallFailure(
-                code,
-                "Service call %s failed with error: %s" % (srv_name, code))
+                error_code,
+                "Service call %s failed with error: %s" % (
+                    srv_name, error_code))
         else:
-            rospy.logwarn("%s %sfailed: %s%s", name, C_FAIL, C_END, code)
+            rospy.logwarn("%s %sfailed: %s%s", name, C_FAIL, C_END, error_code)
 
             if self._exception_on_any_failure:
                 raise ServiceCallFailure(
-                    code, "Service call %s failed: %s" % (srv_name, code))
+                    error_code,
+                    "Service call %s failed: %s" % (srv_name, error_code))
+            elif error_code.code == RLLErrorCode.JOB_EXECUTION_TIMED_OUT:
+                raise ServiceCallFailure(
+                    error_code,
+                    "You exceeded the maximum job execution duration.")
 
-        hint = code.get_hint()
+        hint = error_code.get_hint()
         if hint is not None:
             rospy.loginfo("%sPossible failure reason:%s %s", C_INFO, C_END,
                           hint)
@@ -185,21 +191,26 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             "%s requested with: %s", self._handle_response_error_code,
             *args)
 
-    def move_random(self):
-
-        def handle_random_resp(name, resp):
+    def _handle_resp_with_values(self, resp_handler_func):
+        def handle(name, resp):
             success = self._handle_response_error_code(name, resp)
 
-            # move_random is special, because it returns the chosen pose
-            # therefore, swap the result, can be evaluated as truthy/falsey
+            # some service calls can return additional values
+            # therefore, swap the result, in such a fashion that the still
+            # can be evaluated as truthy/falsey
             if success:
-                return resp.pose
+                return resp_handler_func(resp)
 
             return None
 
+        return handle
+
+    def move_random(self):
+
         return self._call_service_with_error_check(
             self.move_random_service, self.MOVE_RANDOM_SRV_NAME,
-            "%s requested", handle_random_resp)
+            "%s requested",
+            self._handle_resp_with_values(lambda resp: resp.pose))
 
     def move_lin(self, pose):
 
@@ -209,20 +220,20 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             pose)
 
     def get_current_joint_values(self):
-        self._log_service_call(self.GET_JOINT_VALUES_SRV_NAME)
+        def handle_joint_values(resp):
+            return [resp.joint_1, resp.joint_2, resp.joint_3, resp.joint_4,
+                    resp.joint_5, resp.joint_6, resp.joint_7]
 
-        resp_joint_values = self.get_current_joint_values_service()
-        return [resp_joint_values.joint_1,
-                resp_joint_values.joint_2,
-                resp_joint_values.joint_3,
-                resp_joint_values.joint_4,
-                resp_joint_values.joint_5,
-                resp_joint_values.joint_6,
-                resp_joint_values.joint_7]
+        return self._call_service_with_error_check(
+            self.get_current_joint_values_service,
+            self.GET_JOINT_VALUES_SRV_NAME,
+            "%s requested", self._handle_resp_with_values(handle_joint_values))
 
     def get_current_pose(self):
-        self._log_service_call(self.GET_POSE_SRV_NAME)
-        return self.get_current_pose_service()
+        return self._call_service_with_error_check(
+            self.get_current_pose_service, self.GET_POSE_SRV_NAME,
+            "%s requested",
+            self._handle_resp_with_values(lambda resp: resp.pose))
 
 
 class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place
@@ -235,7 +246,8 @@ class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place
         self.pick_place_service = rospy.ServiceProxy(
             self.PICK_PLACE_SRV_NAME, PickPlace)
 
-    def pick_place(self, pose_above, pose_grip, gripper_close, grasp_object):
+    def pick_place(self, pose_above, pose_grip, gripper_close,
+                   grasp_object):
         return self._call_service_with_error_check(
             self.pick_place_service, self.PICK_PLACE_SRV_NAME,
             "%s requested with: %s", self._handle_response_error_code,

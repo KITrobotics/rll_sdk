@@ -55,8 +55,8 @@ const static std::map<uint8_t, const std::string> HINTS = {
                                           "e.g. by requesting a pose outside the allowed workspace." },
   { RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED, "A pose between the start and goal pose of a linear motion causes a "
                                              "collision, only part of the motion is possible." },
-  { RLLErrorCode::MOVEMENT_NOT_ALLOWED,
-    "The movement interface no longer accepts motion requests, possibly due to a critical failure." },
+  { RLLErrorCode::SERVICE_CALL_NOT_ALLOWED,
+    "The movement interface currently does not accept service calls, possibly due to a critical failure." },
 };
 
 void RLLMoveClientBase::logHint(RLLErrorCode error_code)
@@ -109,6 +109,10 @@ bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name,
     if (exception_on_any_failure_)
     {
       throw ServiceCallFailure("Service call " + srv_name + "failed: " + error_code.message());
+    }
+    else if (error_code.value() == RLLErrorCode::JOB_EXECUTION_TIMED_OUT)
+    {
+      throw ServiceCallFailure("You exceeded the maximum job execution duration.");
     }
   }
 
@@ -186,7 +190,7 @@ bool RLLBasicMoveClient::moveJoints(double a1, double a2, double a3, double a4, 
 bool RLLGetPoseMoveClient::getCurrentPose(geometry_msgs::Pose* const pose)
 {
   rll_msgs::GetPose get_pose_msg;
-  bool success = callServiceWithoutErrorCode(RLLMoveIface::GET_POSE_SRV_NAME, get_pose_, get_pose_msg);
+  bool success = callServiceWithErrorCode(RLLMoveIface::GET_POSE_SRV_NAME, get_pose_, get_pose_msg);
   if (success)
   {
     *pose = get_pose_msg.response.pose;
@@ -198,7 +202,7 @@ bool RLLGetPoseMoveClient::getCurrentJointValues(std::vector<double>* const join
 {
   rll_msgs::GetJointValues get_joint_values_msg;
   bool success =
-      callServiceWithoutErrorCode(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME, get_joint_values_, get_joint_values_msg);
+      callServiceWithErrorCode(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME, get_joint_values_, get_joint_values_msg);
   if (success)
   {
     joint_values->push_back(get_joint_values_msg.response.joint_1);
