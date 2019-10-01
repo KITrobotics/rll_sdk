@@ -1,5 +1,6 @@
 controller_list:
   - name: fake_manipulator_controller
+    type: via points
     joints:
       - $(arg robot_name)_joint_1
       - $(arg robot_name)_joint_2
