@@ -23,12 +23,17 @@ and what the different job states mean.
 Making your first submission
 ----------------------------
 
-1. Set up your :doc:`development environment <manual_installation>`.
+1. First you need to set up your development environment. You can either do a
+   :doc:`manual installation <manual_installation>` of all required packages or start with our
+   :doc:`ready-to-use virtual machine image <vm_setup>`.
+
+   We recommend the manual installation if you already have an Ubuntu or Debian system on your machine or if you are
+   interested in setting up an Ubuntu installation by yourself. Otherwise the VM image is easier to get started
+   and it works on Windows and macOS.
 
 .. hint::
-   Only instructions for a manual installation on a Ubuntu/Debian system are currently available.
-   Ready-to-use virtual machine images and a web-based development environment are currently in development
-   and will be offered as alternatives once they are ready.
+   Additonally to these installation options, a web-based development environment is currently in development
+   and will be offered as an alternative once it is ready.
 
 2. Download the API access config from the `settings page <https://rll.ipr.kit.edu/settings>`_
    and save it to the config folder of the ``rll_tools`` package in your workspace:

@@ -1,4 +1,4 @@
-RLL Virtual Machine
+RLL virtual machine
 ===================
 
 If you don't want to install the RLL environment manually you can use the provided `VirtualBox <https://virtualbox.org>`_ VM. The VM contains a preconfigured development environment
@@ -8,10 +8,7 @@ and is based on Lubuntu 18.04 with ROS Melodic Morenia.
 Installation
 --------------
 
-1. Download the RLL VM packaged as an `.ova` file `here <todo.de>`_.
-
-.. todo::
-   Download link
+1. Download the RLL VM packaged as an `.ova` file `here <https://rll-dl.ipr.kit.edu/vm/rll-vm-lubuntu-18.04.ova>`_.
 
 2. Start VirtualBox and import the VM by choosing `File->Import Appliance`.
 
@@ -36,7 +33,7 @@ Installation
 Using the VM
 ------------
 
-The WM contains an already initialized catkin workspace in
+The VM contains an already initialized catkin workspace in
 :code:`~/rll_ws` with the :doc:`Robot Playground project <project_robot_playground>`
 set up and ready to run. The VM comes with some handy desktop shortcuts
 to make launching and editing the robot playground project more convenient.

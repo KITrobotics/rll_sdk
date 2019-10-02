@@ -9,10 +9,8 @@ run and finally submit your first project!
 Installation
 ------------
 
-If you haven't already setup your ROS workspace and installed the
-robot playground project do so now by following the instructions outlined in
-:doc:`manual_installation` or use the :doc:`vm_setup`.
-
+If you haven't already setup your RLL workspace with the robot playground project,
+do so now by following the instructions outlined in :ref:`making-your-first-submission`.
 
 .. _playground-build:
 
