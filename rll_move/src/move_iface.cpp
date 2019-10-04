@@ -142,6 +142,7 @@ void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobSer
   // run the actual job processing and set the result accordingly
   // set the general movement permission for the duration of the job execution
   permissions_.updatePermission(move_permission_, true);
+  permissions_.updatePermission(pick_place_permission_, true);
   runJob(goal, result);
   permissions_.clearAllPermissions();
 
@@ -771,12 +772,12 @@ RLLErrorCode RLLMoveIface::runPTPTrajectory(moveit::planning_interface::MoveGrou
     {
       return error_code;
     }
-  }
 
-  success = modifyPtpTrajectory(my_plan.trajectory_);
-  if (!success)
-  {
-    return RLLErrorCode::TRAJECTORY_MODIFICATION_FAILED;
+    success = modifyPtpTrajectory(my_plan.trajectory_);
+    if (!success)
+    {
+      return RLLErrorCode::TRAJECTORY_MODIFICATION_FAILED;
+    }
   }
 
   moveit_error_code = move_group.execute(my_plan);
