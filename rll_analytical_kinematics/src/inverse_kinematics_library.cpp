@@ -17,7 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_analytical_kinematics/inverse_kinematics_library.h>
+#include "rll_analytical_kinematics/inverse_kinematics_library.h"
 
 // InvKin properties
 double InvKin::LIMBS[4];
@@ -26,9 +26,9 @@ InvKinJoints InvKin::UPPER_JOINT_LIMITS;
 bool InvKin::INITIALIZED = false;
 
 // Function to generate Cross product matrix:
-inline Eigen::Matrix3d crossMatrix(const Eigen::Vector3d& mat)
+inline Matrix3d crossMatrix(const Vector3d& mat)
 {
-  Eigen::Matrix3d result;
+  Matrix3d result;
   result << 0, -mat(2), mat(1), mat(2), 0, -mat(0), -mat(1), mat(0), 0;
   return result;
 }
@@ -48,12 +48,7 @@ double& InvKinJoints::operator[](int i)
   return this->j[i];
 }
 
-const double InvKinJoints::operator()(int i) const
-{
-  return this->j[i];
-}
-
-InvKinFrame::InvKinFrame(const double d, const double theta, const double a, const double alpha)
+InvKinFrame::InvKinFrame(double d, double theta, double a, double alpha)
 {
   double ca = cos(alpha);
   double sa = sin(alpha);
@@ -65,26 +60,26 @@ InvKinFrame::InvKinFrame(const double d, const double theta, const double a, con
   pos << a * ct, a * st, d;
 }
 
-void InvKinFrame::setQuaternion(const double w, const double x, const double y, const double z)
+void InvKinFrame::setQuaternion(double w, double x, double y, double z)
 {
-  ori = static_cast<Eigen::Matrix3d>(Eigen::Quaterniond(w, x, y, z));
+  ori = static_cast<Matrix3d>(Quaterniond(w, x, y, z));
 }
 
-void InvKinFrame::getQuaternion(double* w, double* x, double* y, double* z) const
+void InvKinFrame::getQuaternion(double& w, double& x, double& y, double& z) const
 {
-  Eigen::Quaterniond q = static_cast<Eigen::Quaterniond>(ori);
-  *w = q.w();
-  *x = q.x();
-  *y = q.y();
-  *z = q.z();
+  Quaterniond q = static_cast<Quaterniond>(ori);
+  w = q.w();
+  x = q.x();
+  y = q.y();
+  z = q.z();
 }
 
-void InvKinFrame::setPosition(const double x, const double y, const double z)
+void InvKinFrame::setPosition(double x, double y, double z)
 {
   pos << x, y, z;
 }
 
-InvKinFrame InvKinFrame::operator*(const InvKinFrame t) const
+InvKinFrame InvKinFrame::operator*(InvKinFrame t)
 {
   InvKinFrame result;
   result.ori = this->ori * t.ori;
@@ -110,7 +105,7 @@ bool InvKinElbowInterval::operator<(const InvKinElbowInterval& rhs) const
   return false;
 }
 
-void InvKinElbowInterval::mergeSortedIntervals(InvKinElbowInterval intervals[], const int n)
+void InvKinElbowInterval::mergeSortedIntervals(InvKinElbowInterval intervals[], int n)
 {
   std::vector<InvKinElbowInterval> stack;
 
@@ -148,9 +143,9 @@ void InvKinElbowInterval::mergeSortedIntervals(InvKinElbowInterval intervals[], 
 }
 
 void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval interval_limits[],
-                                                         InvKinElbowInterval blocked_intervals[], const double an,
-                                                         const double bn, const double cn, const double ad,
-                                                         const double bd, const double cd, const int size)
+                                                         InvKinElbowInterval blocked_intervals[], double& an,
+                                                         double& bn, double& cn, double& ad, double& bd, double& cd,
+                                                         int size)
 {
   // classification if blocked or feasible interval depends on derivative of joint angle w.r.t elbow-angle (sign)
 
@@ -163,8 +158,7 @@ void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval int
 
     if (j != (size - 1) && interval_limits[j + 1].init)
     {
-      if (std::signbit(interval_limits[j].add) ==
-          std::signbit(interval_limits[j].derivativePivot(an, bn, cn, ad, bd, cd)))
+      if (signbit(interval_limits[j].add) == signbit(interval_limits[j].derivativePivot(an, bn, cn, ad, bd, cd)))
       {  // compare if signs differ
         blocked_intervals[j].setLimits(interval_limits[j].lower_limit, interval_limits[j + 1].lower_limit);
 
@@ -172,8 +166,8 @@ void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval int
       }
       else
       {
-        if (std::signbit(interval_limits[j + 1].add) !=
-            std::signbit(interval_limits[j + 1].derivativePivot(an, bn, cn, ad, bd, cd)))
+        if (signbit(interval_limits[j + 1].add) !=
+            signbit(interval_limits[j + 1].derivativePivot(an, bn, cn, ad, bd, cd)))
         {
           blocked_intervals[j].setLimits(interval_limits[j].lower_limit, interval_limits[j + 1].lower_limit);
 
@@ -183,8 +177,7 @@ void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval int
     }
     else
     {
-      if (std::signbit(interval_limits[j].add) ==
-          std::signbit(interval_limits[j].derivativePivot(an, bn, cn, ad, bd, cd)))
+      if (signbit(interval_limits[j].add) == signbit(interval_limits[j].derivativePivot(an, bn, cn, ad, bd, cd)))
       {  // compare if signs differ
         blocked_intervals[j].setLimits(interval_limits[j].lower_limit, M_PI);
         blocked_intervals[j + 1].setLimits(-M_PI, interval_limits[0].lower_limit);
@@ -193,8 +186,7 @@ void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval int
       }
       else
       {
-        if (std::signbit(interval_limits[0].add) !=
-            std::signbit(interval_limits[0].derivativePivot(an, bn, cn, ad, bd, cd)))
+        if (signbit(interval_limits[0].add) != signbit(interval_limits[0].derivativePivot(an, bn, cn, ad, bd, cd)))
         {
           blocked_intervals[j].setLimits(interval_limits[j].lower_limit, M_PI);
           blocked_intervals[j + 1].setLimits(-M_PI, interval_limits[0].lower_limit);
@@ -207,9 +199,8 @@ void InvKinElbowInterval::determineBlockedIntervalsPivot(InvKinElbowInterval int
 }
 
 void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval interval_limits[],
-                                                         InvKinElbowInterval blocked_intervals[], const double a,
-                                                         const double b, const double c, const double gc_h,
-                                                         const int size)
+                                                         InvKinElbowInterval blocked_intervals[], double& a, double& b,
+                                                         double& c, double& gc_h, int size)
 {
   // classification if blocked or feasible interval depends on derivative of joint angle w.r.t elbow-angle (sign)
 
@@ -222,7 +213,7 @@ void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval int
 
     if (j != (size - 1) && interval_limits[j + 1].init)
     {
-      if (std::signbit(interval_limits[j].add) == std::signbit(interval_limits[j].derivativeHinge(a, b, c, gc_h)))
+      if (signbit(interval_limits[j].add) == signbit(interval_limits[j].derivativeHinge(a, b, c, gc_h)))
       {  // compare if signs differ
         blocked_intervals[j].setLimits(interval_limits[j].lower_limit, interval_limits[j + 1].lower_limit);
 
@@ -230,8 +221,7 @@ void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval int
       }
       else
       {
-        if (std::signbit(interval_limits[j + 1].add) !=
-            std::signbit(interval_limits[j + 1].derivativeHinge(a, b, c, gc_h)))
+        if (signbit(interval_limits[j + 1].add) != signbit(interval_limits[j + 1].derivativeHinge(a, b, c, gc_h)))
         {
           blocked_intervals[j].setLimits(interval_limits[j].lower_limit, interval_limits[j + 1].lower_limit);
 
@@ -241,7 +231,7 @@ void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval int
     }
     else
     {
-      if (std::signbit(interval_limits[j].add) == std::signbit(interval_limits[j].derivativeHinge(a, b, c, gc_h)))
+      if (signbit(interval_limits[j].add) == signbit(interval_limits[j].derivativeHinge(a, b, c, gc_h)))
       {  // compare if signs differ
         blocked_intervals[j].setLimits(interval_limits[j].lower_limit, M_PI);
         blocked_intervals[j + 1].setLimits(-M_PI, interval_limits[0].lower_limit);
@@ -250,7 +240,7 @@ void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval int
       }
       else
       {
-        if (std::signbit(interval_limits[0].add) != std::signbit(interval_limits[0].derivativeHinge(a, b, c, gc_h)))
+        if (signbit(interval_limits[0].add) != signbit(interval_limits[0].derivativeHinge(a, b, c, gc_h)))
         {
           blocked_intervals[j].setLimits(interval_limits[j].lower_limit, M_PI);
           blocked_intervals[j + 1].setLimits(-M_PI, interval_limits[0].lower_limit);
@@ -262,11 +252,9 @@ void InvKinElbowInterval::determineBlockedIntervalsHinge(InvKinElbowInterval int
   }
 }
 
-void InvKinElbowInterval::mapLimitsToElbowAnglePivot(InvKinElbowInterval interval_limits[],
-                                                     const double lower_joint_limit, const double upper_joint_limit,
-                                                     const double an, const double bn, const double cn, const double ad,
-                                                     const double bd, const double cd, const double gc_p,
-                                                     int* size_init)
+void InvKinElbowInterval::mapLimitsToElbowAnglePivot(InvKinElbowInterval interval_limits[], double& lower_joint_limit,
+                                                     double& upper_joint_limit, double& an, double& bn, double& cn,
+                                                     double& ad, double& bd, double& cd, double& gc_p, int& size_init)
 {
   double ap, bp, cp;
 
@@ -295,7 +283,7 @@ void InvKinElbowInterval::mapLimitsToElbowAnglePivot(InvKinElbowInterval interva
     interval_limits[3].setAdd(upper_joint_limit);
   }
 
-  *size_init = 0;
+  size_init = 0;
   for (size_t j = 0; j < 4; j++)
   {  // check if calculated elbow-limit is matching to limit in joint-space
     if (abs(interval_limits[j].add - interval_limits[j].jointAnglePivot(an, bn, cn, ad, bd, cd, gc_p)) >= 1E-06)
@@ -304,15 +292,14 @@ void InvKinElbowInterval::mapLimitsToElbowAnglePivot(InvKinElbowInterval interva
     }
     if (interval_limits[j].init)
     {
-      (*size_init)++;
+      size_init++;
     }
   }
 }
 
-void InvKinElbowInterval::mapLimitsToElbowAngleHinge(InvKinElbowInterval interval_limits[],
-                                                     const double lower_joint_limit, const double upper_joint_limit,
-                                                     const double a, const double b, const double c, const double gc_h,
-                                                     int* size_init)
+void InvKinElbowInterval::mapLimitsToElbowAngleHinge(InvKinElbowInterval interval_limits[], double& lower_joint_limit,
+                                                     double& upper_joint_limit, double& a, double& b, double& c,
+                                                     double& gc_h, int& size_init)
 {
   // joint angle limits mapped to elbow angle
   if (a * a + b * b - pow(c - cos(lower_joint_limit), 2) >= 0.0)
@@ -339,7 +326,7 @@ void InvKinElbowInterval::mapLimitsToElbowAngleHinge(InvKinElbowInterval interva
     interval_limits[3].setAdd(upper_joint_limit);
   }
 
-  *size_init = 0;
+  size_init = 0;
   for (size_t j = 0; j < 4; j++)
   {  // check if calculated elbow-limit is matching to limit in joint-space
     if (abs(interval_limits[j].add - interval_limits[j].jointAngleHinge(a, b, c, gc_h)) >= 1E-06)
@@ -348,13 +335,13 @@ void InvKinElbowInterval::mapLimitsToElbowAngleHinge(InvKinElbowInterval interva
     }
     if (interval_limits[j].init)
     {
-      (*size_init)++;
+      size_init++;
     }
   }
 }
 
-inline double InvKinElbowInterval::derivativePivot(const double an, const double bn, const double cn, const double ad,
-                                                   const double bd, const double cd)
+inline double InvKinElbowInterval::derivativePivot(const double& an, const double& bn, const double& cn,
+                                                   const double& ad, const double& bd, const double& cd)
 {
   // helper coefficients
   double at = (cn * bd - bn * cd);  // not linear in gc (failure in paper)
@@ -368,50 +355,52 @@ inline double InvKinElbowInterval::derivativePivot(const double an, const double
   return (at * sin(lower_limit) + bt * cos(lower_limit) + ct) / (u * u + v * v);
 }
 
-inline double InvKinElbowInterval::jointAnglePivot(const double an, const double bn, const double cn, const double ad,
-                                                   const double bd, const double cd, const double gc)
+inline double InvKinElbowInterval::jointAnglePivot(const double& an, const double& bn, const double& cn,
+                                                   const double& ad, const double& bd, const double& cd,
+                                                   const double& gc)
 {
   return atan2(gc * (an * sin(lower_limit) + bn * cos(lower_limit) + cn),
                gc * (ad * sin(lower_limit) + bd * cos(lower_limit) + cd));
 }
 
-inline double InvKinElbowInterval::derivativeHinge(const double a, const double b, const double /*c*/, const double gc)
+inline double InvKinElbowInterval::derivativeHinge(const double& a, const double& b, const double& /*c*/,
+                                                   const double& gc)
 {
   return -gc * ((a * cos(lower_limit) - b * sin(lower_limit)) /
                 (abs(sin(add))));  // division by zero impossible, function is only called in joint limit != 0 or Pi.
 }
 
-inline double InvKinElbowInterval::jointAngleHinge(const double a, const double b, const double c, const double gc)
+inline double InvKinElbowInterval::jointAngleHinge(const double& a, const double& b, const double& c, const double& gc)
 {
   return gc * acos(a * sin(lower_limit) + b * cos(lower_limit) + c);
 }
 
-InvKinMsg InvKin::forwardKinematics(InvKinXCart* cart_pose, const InvKinJoints& joint_angles)
+InvKinMsg InvKin::forwardKinematics(InvKinXCart& cart_pose, InvKinJoints& joint_angles)
 {
-  InvKinMsg result = INVKIN_OK;
+  InvKinMsg result = InvKin_OK;
 
   InvKinFrame mbs;  // shoulder pose
   InvKinFrame mbe;  // elbow pose
   InvKinFrame mbw;  // wrist pose
   InvKinFrame mbf;  // flange pose
 
-  mbs = InvKinFrame(LIMBS[0], joint_angles(0), 0.0, -M_PI / 2.0) * InvKinFrame(0.0, joint_angles(1), 0.0, M_PI / 2.0);
-  mbe = mbs * InvKinFrame(LIMBS[1], joint_angles(2), 0.0, M_PI / 2.0) *
-        InvKinFrame(0.0, joint_angles(3), 0.0, -M_PI / 2.0);
-  mbw = mbe * InvKinFrame(LIMBS[2], joint_angles(4), 0.0, -M_PI / 2.0) *
-        InvKinFrame(0.0, joint_angles(5), 0.0, M_PI / 2.0);
-  mbf = mbw * InvKinFrame(LIMBS[3], joint_angles(6), 0.0, 0.0);
+  mbs = InvKinFrame(LIMBS[0], joint_angles[0], 0.0, -M_PI / 2.0) * InvKinFrame(0.0, joint_angles[1], 0.0, M_PI / 2.0);
+  mbe = mbs * InvKinFrame(LIMBS[1], joint_angles[2], 0.0, M_PI / 2.0) *
+        InvKinFrame(0.0, joint_angles[3], 0.0, -M_PI / 2.0);
+  mbw = mbe * InvKinFrame(LIMBS[2], joint_angles[4], 0.0, -M_PI / 2.0) *
+        InvKinFrame(0.0, joint_angles[5], 0.0, M_PI / 2.0);
+  mbf = mbw * InvKinFrame(LIMBS[3], joint_angles[6], 0.0, 0.0);
 
-  cart_pose->pose = mbf;
+  cart_pose.pose = mbf;
 
   // determine configuration
-  cart_pose->config = (static_cast<int>(joint_angles(1) < 0) << 0) | (static_cast<int>(joint_angles(3) < 0) << 1) |
-                      (static_cast<int>(joint_angles(5) < 0) << 2);
+  cart_pose.config = (static_cast<int>(joint_angles[1] < 0) << 0) | (static_cast<int>(joint_angles[3] < 0) << 1) |
+                     (static_cast<int>(joint_angles[5] < 0) << 2);
 
   // determine reference plane and null-space-parameter (elbow-redundancy)
 
-  Eigen::Vector3d xsw = mbw.pos - mbs.pos;  // Vector shoulder to wrist
-  Eigen::Vector3d xsw_n = xsw;              // normalized
+  Vector3d xsw = mbw.pos - mbs.pos;  // Vector shoulder to wrist
+  Vector3d xsw_n = xsw;              // normalized
   xsw_n.normalize();
   double lsw = xsw.norm();
 
@@ -429,7 +418,7 @@ InvKinMsg InvKin::forwardKinematics(InvKinXCart* cart_pose, const InvKinJoints& 
   double joint_angle_2_v = acos(((LIMBS[1] * LIMBS[1]) + (lsw * lsw) - (LIMBS[2] * LIMBS[2])) /
                                 (2 * LIMBS[1] * lsw));  // virtual shoulder joint angle, only intermediate step
 
-  if ((cart_pose->config & 2) == 0)
+  if ((cart_pose.config & 2) == 0)
   {  // elbow joint angle zero/positive if second bit is not set
     joint_angle_2_v = atan2(sqrt(xsw(0) * xsw(0) + xsw(1) * xsw(1)), xsw(2)) + joint_angle_2_v;
   }
@@ -440,19 +429,19 @@ InvKinMsg InvKin::forwardKinematics(InvKinXCart* cart_pose, const InvKinJoints& 
 
   InvKinFrame mbs_v;  // virtual elbow pose
   mbs_v = InvKinFrame(LIMBS[0], joint_angle_1_v, 0.0, -M_PI / 2.0) * InvKinFrame(0.0, joint_angle_2_v, 0.0, M_PI / 2.0);
-  Eigen::Vector3d xse_v;  // virtual shoulder to elbow vector
+  Vector3d xse_v;  // virtual shoulder to elbow vector
   xse_v << 0.0, 0.0, LIMBS[1];
-  Eigen::Vector3d xseb_v;  // virtual shoulder to elbow vector in base coordinates
+  Vector3d xseb_v;  // virtual shoulder to elbow vector in base coordinates
   xseb_v = mbs_v.ori * xse_v;
-  Eigen::Vector3d xseb_n_v = xseb_v;  // normalized
+  Vector3d xseb_n_v = xseb_v;  // normalized
   xseb_n_v.normalize();
 
-  Eigen::Vector3d v_sew_v;  // virtual reference plane (shoulder, elbow, wrist) normal vector
+  Vector3d v_sew_v;  // virtual reference plane (shoulder, elbow, wrist) normal vector
   v_sew_v = xseb_n_v.cross(xsw_n);
   v_sew_v.normalize();
 
-  Eigen::Vector3d v_sew;   // real reference plane (shoulder, elbow, wrist) normal vector
-  Eigen::Vector3d xseb_n;  // real normalized shoulder to elbow vector in base coordinates
+  Vector3d v_sew;   // real reference plane (shoulder, elbow, wrist) normal vector
+  Vector3d xseb_n;  // real normalized shoulder to elbow vector in base coordinates
   xseb_n = mbe.pos - mbs.pos;
   xseb_n.normalize();  // TODO(updim): nomalize necessary in this context??
   v_sew = xseb_n.cross(xsw_n);
@@ -467,75 +456,74 @@ InvKinMsg InvKin::forwardKinematics(InvKinXCart* cart_pose, const InvKinJoints& 
   {
     if (nsparam_temp >= 1.0)
     {  // nsparam_temp could be greater than 1.0 due to numerical deviations
-      cart_pose->nsparam = 0.0;
+      cart_pose.nsparam = 0.0;
     }
     else if (nsparam_temp <= -1.0)
     {
-      cart_pose->nsparam = M_PI;
+      cart_pose.nsparam = M_PI;
     }
     else
     {
-      cart_pose->nsparam = acos(nsparam_temp);
+      cart_pose.nsparam = acos(nsparam_temp);
     }
   }
   else
   {
     if (nsparam_temp >= 1.0)
     {
-      cart_pose->nsparam = -0.0;
+      cart_pose.nsparam = -0.0;
     }
     else if (nsparam_temp <= -1.0)
     {
-      cart_pose->nsparam = -M_PI;
+      cart_pose.nsparam = -M_PI;
     }
     else
     {
-      cart_pose->nsparam = -acos(nsparam_temp);
+      cart_pose.nsparam = -acos(nsparam_temp);
     }
   }
 
   return result;
 }
 
-InvKinMsg InvKin::inverseKinematics(InvKinJoints* joint_angles, const InvKinXCart& cart_pose)
+InvKinMsg InvKin::inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose)
 {
-  Eigen::Matrix3d as, bs, cs;  // helper matrix As, Bs, Cs
-  Eigen::Matrix3d aw, bw, cw;  // helper matrix Aw, Bw, Cw
+  Matrix3d as, bs, cs;  // helper matrix As, Bs, Cs
+  Matrix3d aw, bw, cw;  // helper matrix Aw, Bw, Cw
 
-  return InvKin::inverseKinematics(joint_angles, cart_pose, &as, &bs, &cs, &aw, &bw, &cw, true);
+  return InvKin::inverseKinematics(joint_angles, cart_pose, as, bs, cs, aw, bw, cw, true);
 }
 
-InvKinMsg InvKin::inverseKinematics(InvKinJoints* joint_angles, const InvKinXCart& cart_pose, Eigen::Matrix3d* as,
-                                    Eigen::Matrix3d* bs, Eigen::Matrix3d* cs, Eigen::Matrix3d* aw, Eigen::Matrix3d* bw,
-                                    Eigen::Matrix3d* cw, const bool check_limits)
+InvKinMsg InvKin::inverseKinematics(InvKinJoints& joint_angles, InvKinXCart& cart_pose, Matrix3d& as, Matrix3d& bs,
+                                    Matrix3d& cs, Matrix3d& aw, Matrix3d& bw, Matrix3d& cw, bool check_limits)
 {
-  InvKinMsg result = INVKIN_OK;
+  InvKinMsg result = InvKin_OK;
 
   InvKinFrame mfw;  // wrist pose in flange coordinates
   mfw.pos[2] = -LIMBS[3];
 
-  Eigen::Vector3d xw = (cart_pose.pose * mfw).pos;  // wrist position in base coordinates
-  Eigen::Vector3d xs(0, 0, LIMBS[0]);               // shoulder pos
+  Vector3d xw = (cart_pose.pose * mfw).pos;  // wrist position in base coordinates
+  Vector3d xs(0, 0, LIMBS[0]);               // shoulder pos
 
-  Eigen::Vector3d xsw = xw - xs;  // vector from shoulder to wrist
+  Vector3d xsw = xw - xs;  // vector from shoulder to wrist
   double lsw = xsw.norm();
 
   // check if target is too close/far
   if (lsw > LIMBS[1] + LIMBS[2])
   {
-    result = static_cast<InvKinMsg>(INVKIN_ERROR | INVKIN_TARGET_TOO_FAR);
+    result = static_cast<InvKinMsg>(InvKin_ERROR | InvKin_TARGET_TOO_FAR);
     return result;
   }
 
   if (lsw < std::abs(LIMBS[1] - LIMBS[2]))
   {
-    result = static_cast<InvKinMsg>(INVKIN_ERROR | INVKIN_TARGET_TOO_CLOSE);
+    result = static_cast<InvKinMsg>(InvKin_ERROR | InvKin_TARGET_TOO_CLOSE);
     return result;
   }
 
-  Eigen::Vector3d xsw_n = xsw;  // normalized shoulder to wrist vector
+  Vector3d xsw_n = xsw;  // normalized shoulder to wrist vector
   xsw_n.normalize();
-  Eigen::Matrix3d xsw_n_cross = crossMatrix(xsw_n);  // cross product matrix of xsw_n
+  Matrix3d xsw_n_cross = crossMatrix(xsw_n);  // cross product matrix of xsw_n
 
   // determine virtual elbow / upper arm pose
 
@@ -556,14 +544,12 @@ InvKinMsg InvKin::inverseKinematics(InvKinJoints* joint_angles, const InvKinXCar
   // determine elbow angle using the law of cosines and virtual shoulder joint angle, depending on configuration
   if ((cart_pose.config & 2) == 0)
   {  // elbow joint angle zero/positive if second bit is not set
-    (*joint_angles)[3] =
-        acos(((lsw * lsw) - (LIMBS[1] * LIMBS[1]) - (LIMBS[2] * LIMBS[2])) / (2 * LIMBS[1] * LIMBS[2]));
+    joint_angles[3] = acos(((lsw * lsw) - (LIMBS[1] * LIMBS[1]) - (LIMBS[2] * LIMBS[2])) / (2 * LIMBS[1] * LIMBS[2]));
     joint_angle_2_v = atan2(sqrt((xsw(0) * xsw(0)) + (xsw(1) * xsw(1))), xsw(2)) + joint_angle_2_v;
   }
   else
   {
-    (*joint_angles)[3] =
-        -acos(((lsw * lsw) - (LIMBS[1] * LIMBS[1]) - (LIMBS[2] * LIMBS[2])) / (2 * LIMBS[1] * LIMBS[2]));
+    joint_angles[3] = -acos(((lsw * lsw) - (LIMBS[1] * LIMBS[1]) - (LIMBS[2] * LIMBS[2])) / (2 * LIMBS[1] * LIMBS[2]));
     joint_angle_2_v = atan2(sqrt((xsw(0) * xsw(0)) + (xsw(1) * xsw(1))), xsw(2)) - joint_angle_2_v;
   }
 
@@ -574,99 +560,87 @@ InvKinMsg InvKin::inverseKinematics(InvKinJoints* joint_angles, const InvKinXCar
   // determine real pose as rotation of virtual pose
 
   // helper matrix As, Bs, Cs to rotate mbu_v
-  *as = xsw_n_cross * mbu_v.ori;
-  *bs = -xsw_n_cross * (*as);
-  *cs = (xsw_n * xsw_n.transpose()) * mbu_v.ori;
+  as = xsw_n_cross * mbu_v.ori;
+  bs = -xsw_n_cross * as;
+  cs = (xsw_n * xsw_n.transpose()) * mbu_v.ori;
 
   // real joint angles, depending on configuration:
 
   if ((cart_pose.config & 1) == 0)
   {  // shoulder joint angle zero/positive if first bit is not set
-    (*joint_angles)[0] =
-        atan2(((*as)(1, 1) * sin(cart_pose.nsparam) + (*bs)(1, 1) * cos(cart_pose.nsparam) + (*cs)(1, 1)),
-              ((*as)(0, 1) * sin(cart_pose.nsparam) + (*bs)(0, 1) * cos(cart_pose.nsparam) + (*cs)(0, 1)));
+    joint_angles[0] = atan2((as(1, 1) * sin(cart_pose.nsparam) + bs(1, 1) * cos(cart_pose.nsparam) + cs(1, 1)),
+                            (as(0, 1) * sin(cart_pose.nsparam) + bs(0, 1) * cos(cart_pose.nsparam) + cs(0, 1)));
 
-    (*joint_angles)[1] =
-        acos((*as)(2, 1) * sin(cart_pose.nsparam) + (*bs)(2, 1) * cos(cart_pose.nsparam) + (*cs)(2, 1));
+    joint_angles[1] = acos(as(2, 1) * sin(cart_pose.nsparam) + bs(2, 1) * cos(cart_pose.nsparam) + cs(2, 1));
 
-    (*joint_angles)[2] =
-        atan2(-((*as)(2, 2) * sin(cart_pose.nsparam) + (*bs)(2, 2) * cos(cart_pose.nsparam) + (*cs)(2, 2)),
-              -((*as)(2, 0) * sin(cart_pose.nsparam) + (*bs)(2, 0) * cos(cart_pose.nsparam) + (*cs)(2, 0)));
+    joint_angles[2] = atan2(-(as(2, 2) * sin(cart_pose.nsparam) + bs(2, 2) * cos(cart_pose.nsparam) + cs(2, 2)),
+                            -(as(2, 0) * sin(cart_pose.nsparam) + bs(2, 0) * cos(cart_pose.nsparam) + cs(2, 0)));
   }
   else
   {
-    (*joint_angles)[0] =
-        atan2(-((*as)(1, 1) * sin(cart_pose.nsparam) + (*bs)(1, 1) * cos(cart_pose.nsparam) + (*cs)(1, 1)),
-              -((*as)(0, 1) * sin(cart_pose.nsparam) + (*bs)(0, 1) * cos(cart_pose.nsparam) + (*cs)(0, 1)));
+    joint_angles[0] = atan2(-(as(1, 1) * sin(cart_pose.nsparam) + bs(1, 1) * cos(cart_pose.nsparam) + cs(1, 1)),
+                            -(as(0, 1) * sin(cart_pose.nsparam) + bs(0, 1) * cos(cart_pose.nsparam) + cs(0, 1)));
 
-    (*joint_angles)[1] =
-        -acos((*as)(2, 1) * sin(cart_pose.nsparam) + (*bs)(2, 1) * cos(cart_pose.nsparam) + (*cs)(2, 1));
+    joint_angles[1] = -acos(as(2, 1) * sin(cart_pose.nsparam) + bs(2, 1) * cos(cart_pose.nsparam) + cs(2, 1));
 
-    (*joint_angles)[2] =
-        atan2(((*as)(2, 2) * sin(cart_pose.nsparam) + (*bs)(2, 2) * cos(cart_pose.nsparam) + (*cs)(2, 2)),
-              ((*as)(2, 0) * sin(cart_pose.nsparam) + (*bs)(2, 0) * cos(cart_pose.nsparam) + (*cs)(2, 0)));
+    joint_angles[2] = atan2((as(2, 2) * sin(cart_pose.nsparam) + bs(2, 2) * cos(cart_pose.nsparam) + cs(2, 2)),
+                            (as(2, 0) * sin(cart_pose.nsparam) + bs(2, 0) * cos(cart_pose.nsparam) + cs(2, 0)));
   }
 
   InvKinFrame mue;  // elbow pose in upper arm coordinates, same as virtual elbow pose
-  mue = InvKinFrame(0.0, (*joint_angles)[3], 0.0, -M_PI / 2.0);
+  mue = InvKinFrame(0.0, joint_angles[3], 0.0, -M_PI / 2.0);
 
   // helper matrix Aw, Bw, Cw
 
-  *aw = mue.ori.transpose() * (as->transpose()) * cart_pose.pose.ori;
-  *bw = mue.ori.transpose() * (bs->transpose()) * cart_pose.pose.ori;
-  *cw = mue.ori.transpose() * (cs->transpose()) * cart_pose.pose.ori;
+  aw = mue.ori.transpose() * as.transpose() * cart_pose.pose.ori;
+  bw = mue.ori.transpose() * bs.transpose() * cart_pose.pose.ori;
+  cw = mue.ori.transpose() * cs.transpose() * cart_pose.pose.ori;
 
   if ((cart_pose.config & 4) == 0)
   {  // wrist joint angle zero/positive if third bit is not set
-    (*joint_angles)[4] =
-        atan2((*aw)(1, 2) * sin(cart_pose.nsparam) + (*bw)(1, 2) * cos(cart_pose.nsparam) + (*cw)(1, 2),
-              (*aw)(0, 2) * sin(cart_pose.nsparam) + (*bw)(0, 2) * cos(cart_pose.nsparam) + (*cw)(0, 2));
-    (*joint_angles)[5] =
-        acos((*aw)(2, 2) * sin(cart_pose.nsparam) + (*bw)(2, 2) * cos(cart_pose.nsparam) + (*cw)(2, 2));
-    (*joint_angles)[6] =
-        atan2(((*aw)(2, 1) * sin(cart_pose.nsparam) + (*bw)(2, 1) * cos(cart_pose.nsparam) + (*cw)(2, 1)),
-              -((*aw)(2, 0) * sin(cart_pose.nsparam) + (*bw)(2, 0) * cos(cart_pose.nsparam) + (*cw)(2, 0)));
+    joint_angles[4] = atan2(aw(1, 2) * sin(cart_pose.nsparam) + bw(1, 2) * cos(cart_pose.nsparam) + cw(1, 2),
+                            aw(0, 2) * sin(cart_pose.nsparam) + bw(0, 2) * cos(cart_pose.nsparam) + cw(0, 2));
+    joint_angles[5] = acos(aw(2, 2) * sin(cart_pose.nsparam) + bw(2, 2) * cos(cart_pose.nsparam) + cw(2, 2));
+    joint_angles[6] = atan2((aw(2, 1) * sin(cart_pose.nsparam) + bw(2, 1) * cos(cart_pose.nsparam) + cw(2, 1)),
+                            -(aw(2, 0) * sin(cart_pose.nsparam) + bw(2, 0) * cos(cart_pose.nsparam) + cw(2, 0)));
   }
   else
   {
-    (*joint_angles)[4] =
-        atan2(-((*aw)(1, 2) * sin(cart_pose.nsparam) + (*bw)(1, 2) * cos(cart_pose.nsparam) + (*cw)(1, 2)),
-              -((*aw)(0, 2) * sin(cart_pose.nsparam) + (*bw)(0, 2) * cos(cart_pose.nsparam) + (*cw)(0, 2)));
-    (*joint_angles)[5] =
-        -acos((*aw)(2, 2) * sin(cart_pose.nsparam) + (*bw)(2, 2) * cos(cart_pose.nsparam) + (*cw)(2, 2));
-    (*joint_angles)[6] =
-        atan2(-((*aw)(2, 1) * sin(cart_pose.nsparam) + (*bw)(2, 1) * cos(cart_pose.nsparam) + (*cw)(2, 1)),
-              ((*aw)(2, 0) * sin(cart_pose.nsparam) + (*bw)(2, 0) * cos(cart_pose.nsparam) + (*cw)(2, 0)));
+    joint_angles[4] = atan2(-(aw(1, 2) * sin(cart_pose.nsparam) + bw(1, 2) * cos(cart_pose.nsparam) + cw(1, 2)),
+                            -(aw(0, 2) * sin(cart_pose.nsparam) + bw(0, 2) * cos(cart_pose.nsparam) + cw(0, 2)));
+    joint_angles[5] = -acos(aw(2, 2) * sin(cart_pose.nsparam) + bw(2, 2) * cos(cart_pose.nsparam) + cw(2, 2));
+    joint_angles[6] = atan2(-(aw(2, 1) * sin(cart_pose.nsparam) + bw(2, 1) * cos(cart_pose.nsparam) + cw(2, 1)),
+                            (aw(2, 0) * sin(cart_pose.nsparam) + bw(2, 0) * cos(cart_pose.nsparam) + cw(2, 0)));
   }
 
   // check for joint limits and singularities depending on check_limits
   if (check_limits)
   {
-    result = INVKIN_OK;
+    result = InvKin_OK;
 
     for (int j = 0; j < 7; j++)
     {
-      if (((*joint_angles)[j] < LOWER_JOINT_LIMITS[j]) || ((*joint_angles)[j] > UPPER_JOINT_LIMITS[j]))
+      if ((joint_angles[j] < LOWER_JOINT_LIMITS[j]) || (joint_angles[j] > UPPER_JOINT_LIMITS[j]))
       {
-        result = static_cast<InvKinMsg>(result | INVKIN_WARNING | INVKIN_JOINTLIMIT);
+        result = static_cast<InvKinMsg>(result | InvKin_WARNING | InvKin_JOINTLIMIT);
       }
     }
 
     for (int j = 1; j <= 5; j += 2)
     {
-      if (std::abs((*joint_angles)[j]) < 15.0 / 180.0 * M_PI)
+      if (std::abs(joint_angles[j]) < 15.0 / 180.0 * M_PI)
       {
-        result = static_cast<InvKinMsg>(result | INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY);
+        result = static_cast<InvKinMsg>(result | InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY);
       }
     }
 
-    Eigen::Vector3d z;
+    Vector3d z;
     z << 0, 0, 1;
 
     double overhead = acos(xsw.dot(z) / lsw);
     if (overhead < 15.0 / 180.0 * M_PI || overhead > 165.0 / 180.0 * M_PI)
     {
-      result = static_cast<InvKinMsg>(result | INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY);
+      result = static_cast<InvKinMsg>(result | InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY);
     }
   }
 
@@ -689,12 +663,11 @@ bool InvKin::initialize(const std::vector<double>& joint_distances, const std::v
   return true;
 }
 
-InvKinMsg InvKin::computeFeasibleIntervals(InvKinElbowInterval feasible_intervals[], const InvKinXCart& cart_pose,
-                                           const Eigen::Matrix3d& as, const Eigen::Matrix3d& bs,
-                                           const Eigen::Matrix3d& cs, const Eigen::Matrix3d& aw,
-                                           const Eigen::Matrix3d& bw, const Eigen::Matrix3d& cw, int* n)
+InvKinMsg InvKin::computeFeasibleIntervals(InvKinElbowInterval feasible_intervals[], InvKinXCart& cart_pose,
+                                           Matrix3d& as, Matrix3d& bs, Matrix3d& cs, Matrix3d& aw, Matrix3d& bw,
+                                           Matrix3d& cw, int& n)
 {
-  InvKinMsg result = INVKIN_OK;
+  InvKinMsg result = InvKin_OK;
   double margin = 0.05;  // blocked margin around singular elbow-angle
   int counter;
 
@@ -804,7 +777,7 @@ InvKinMsg InvKin::computeFeasibleIntervals(InvKinElbowInterval feasible_interval
     // add of InvKinElbowInterval is used here to remember the corresponding joint angle limit
     InvKinElbowInterval::mapLimitsToElbowAnglePivot(blocked_intervals_limit_p[i], LOWER_JOINT_LIMITS[2 * i],
                                                     UPPER_JOINT_LIMITS[2 * i], an[i], bn[i], cn[i], ad[i], bd[i], cd[i],
-                                                    gc_p[i], &counter);
+                                                    gc_p[i], counter);
 
     // sort the lower_limits of InvKinElbowInterval[] --> uninitialized InvKinElbowIntervals move to end
     std::sort(blocked_intervals_limit_p[i], blocked_intervals_limit_p[i] + 4);
@@ -837,7 +810,7 @@ InvKinMsg InvKin::computeFeasibleIntervals(InvKinElbowInterval feasible_interval
   {
     // joint angle limits mapped to elbow angle
     InvKinElbowInterval::mapLimitsToElbowAngleHinge(blocked_intervals_limit_h[i], LOWER_JOINT_LIMITS[4 * i + 1],
-                                                    UPPER_JOINT_LIMITS[4 * i + 1], a[i], b[i], c[i], gc_h[i], &counter);
+                                                    UPPER_JOINT_LIMITS[4 * i + 1], a[i], b[i], c[i], gc_h[i], counter);
 
     std::sort(blocked_intervals_limit_h[i], blocked_intervals_limit_h[i] + 4);
 
@@ -916,25 +889,24 @@ InvKinMsg InvKin::computeFeasibleIntervals(InvKinElbowInterval feasible_interval
     }
   }
 
-  *n = ir;
+  n = ir;
 
   return result;
 }
 
-InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int* index_sol, const InvKinJoints& seed_state,
-                                       const InvKinXCart& seed_state_x, InvKinXCart* cart_pose, const int configs[],
-                                       const int n_configs, InvKinMsg (*optimize)(InvKinElbowInterval[], int,
-                                                                                  const InvKinXCart&, InvKinXCart*))
+InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int& index_sol, InvKinJoints& seed_state,
+                                       InvKinXCart& seed_state_x, InvKinXCart& cart_pose, int configs[], int n_configs,
+                                       InvKinMsg (*optimize)(InvKinElbowInterval[], int&, InvKinXCart&, InvKinXCart&))
 {
   InvKinMsg result[n_configs];
   InvKinMsg kinematics_return;
 
   bool init_0 = false;  // calculate helper matrices only one time, only dependent on elbow configuration.
   bool init_1 = false;
-  Eigen::Matrix3d as_0, bs_0, cs_0;  // helper matrices for elbow angle >= 0
-  Eigen::Matrix3d aw_0, bw_0, cw_0;
-  Eigen::Matrix3d as_1, bs_1, cs_1;  // helper matrices for elbow angle < 0
-  Eigen::Matrix3d aw_1, bw_1, cw_1;
+  Matrix3d as_0, bs_0, cs_0;  // helper matrices for elbow angle >= 0
+  Matrix3d aw_0, bw_0, cw_0;
+  Matrix3d as_1, bs_1, cs_1;  // helper matrices for elbow angle < 0
+  Matrix3d aw_1, bw_1, cw_1;
 
   bool gc_4_seed;                             // elbow configuration parameter (GC) in seed_state
   gc_4_seed = (seed_state_x.config & 2) > 0;  // true for negative angle
@@ -943,7 +915,7 @@ InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int* index_sol, const
   InvKinElbowInterval feasible_intervals[34];
   int n;
   double dist_from_seed[n_configs];
-  *index_sol = 0;
+  index_sol = 0;
 
   for (size_t i = 0; i < n_configs; i++)
   {
@@ -951,11 +923,11 @@ InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int* index_sol, const
     {  // elbow joint angle zero/positive if second bit is not set
 
       seed_state_loc.config = configs[i];
-      cart_pose->config = configs[i];
+      cart_pose.config = configs[i];
 
       if (!init_0)
       {
-        inverseKinematics(&sol[i], *cart_pose, &as_0, &bs_0, &cs_0, &aw_0, &bw_0, &cw_0);
+        inverseKinematics(sol[i], cart_pose, as_0, bs_0, cs_0, aw_0, bw_0, cw_0);
         init_0 = true;
       }
 
@@ -974,32 +946,32 @@ InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int* index_sol, const
         seed_state_loc.nsparam = seed_state_x.nsparam;
       }
 
-      computeFeasibleIntervals(feasible_intervals, *cart_pose, as_0, bs_0, cs_0, aw_0, bw_0, cw_0, &n);
+      computeFeasibleIntervals(feasible_intervals, cart_pose, as_0, bs_0, cs_0, aw_0, bw_0, cw_0, n);
 
-      if (optimize(feasible_intervals, n, seed_state_loc, cart_pose) == INVKIN_NO_SOLUTION_FOR_ELBOW)
+      if (optimize(feasible_intervals, n, seed_state_loc, cart_pose) == InvKin_NO_SOLUTION_FOR_ELBOW)
       {
-        result[i] = static_cast<InvKinMsg>(INVKIN_WARNING | INVKIN_NO_SOLUTION_FOR_ELBOW);
+        result[i] = static_cast<InvKinMsg>(InvKin_WARNING | InvKin_NO_SOLUTION_FOR_ELBOW);
         dist_from_seed[i] = 1000.0;
       }
       else
       {
-        result[i] = inverseKinematics(&sol[i], *cart_pose);
+        result[i] = inverseKinematics(sol[i], cart_pose);
 
         dist_from_seed[i] = 0.0;
         for (size_t j = 0; j < NR_JOINTS; j++)
         {
-          dist_from_seed[i] = dist_from_seed[i] + fabs(sol[i][j] - seed_state(j));
+          dist_from_seed[i] = dist_from_seed[i] + fabs(sol[i][j] - seed_state[j]);
         }
       }
     }
     else
     {
       seed_state_loc.config = configs[i];
-      cart_pose->config = configs[i];
+      cart_pose.config = configs[i];
 
       if (!init_1)
       {
-        inverseKinematics(&sol[i], *cart_pose, &as_1, &bs_1, &cs_1, &aw_1, &bw_1, &cw_1);
+        inverseKinematics(sol[i], cart_pose, as_1, bs_1, cs_1, aw_1, bw_1, cw_1);
         init_1 = true;
       }
 
@@ -1018,38 +990,38 @@ InvKinMsg InvKin::getClosestPositionIK(InvKinJoints sol[], int* index_sol, const
         seed_state_loc.nsparam = seed_state_x.nsparam;
       }
 
-      computeFeasibleIntervals(feasible_intervals, *cart_pose, as_1, bs_1, cs_1, aw_1, bw_1, cw_1, &n);
+      computeFeasibleIntervals(feasible_intervals, cart_pose, as_1, bs_1, cs_1, aw_1, bw_1, cw_1, n);
 
-      if (optimize(feasible_intervals, n, seed_state_loc, cart_pose) == INVKIN_NO_SOLUTION_FOR_ELBOW)
+      if (optimize(feasible_intervals, n, seed_state_loc, cart_pose) == InvKin_NO_SOLUTION_FOR_ELBOW)
       {
-        result[i] = static_cast<InvKinMsg>(INVKIN_WARNING | INVKIN_NO_SOLUTION_FOR_ELBOW);
+        result[i] = static_cast<InvKinMsg>(InvKin_WARNING | InvKin_NO_SOLUTION_FOR_ELBOW);
         dist_from_seed[i] = 1000.0;
       }
       else
       {
-        result[i] = inverseKinematics(&sol[i], *cart_pose);
+        result[i] = inverseKinematics(sol[i], cart_pose);
 
         dist_from_seed[i] = 0.0;
         for (size_t j = 0; j < NR_JOINTS; j++)
         {
-          dist_from_seed[i] = dist_from_seed[i] + fabs(sol[i][j] - seed_state(j));
+          dist_from_seed[i] = dist_from_seed[i] + fabs(sol[i][j] - seed_state[j]);
         }
       }
     }
 
-    if (dist_from_seed[*index_sol] >= dist_from_seed[i])
+    if (dist_from_seed[index_sol] >= dist_from_seed[i])
     {  // choose solution with lowest distance from seed
-      *index_sol = i;
+      index_sol = i;
     }
   }
 
-  return result[*index_sol];
+  return result[index_sol];
 }
 
-InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], const int n,
-                                          const InvKinXCart& seed_state, InvKinXCart* cart_pose)
+InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], int& n, InvKinXCart& seed_state,
+                                          InvKinXCart& cart_pose)
 {
-  InvKinMsg result = INVKIN_OK;
+  InvKinMsg result = InvKin_OK;
 
   // choose "optimal" nullspace parameter
 
@@ -1095,7 +1067,7 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
   {
     if (!feasible_intervals[current_interval].overlap)
     {
-      cart_pose->nsparam =
+      cart_pose.nsparam =
           seed_state.nsparam +
           k * (feasible_intervals[current_interval].upper_limit - feasible_intervals[current_interval].lower_limit) /
               2.0 * (exp(-a * (seed_state.nsparam - feasible_intervals[current_interval].lower_limit) /
@@ -1111,7 +1083,7 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
       {  // nsparam in feasible interval starting from -Pi
         if (n == 0)
         {  // only one feasible interval with overlap --> all nsparams feasible, keep current one.
-          cart_pose->nsparam = seed_state.nsparam;
+          cart_pose.nsparam = seed_state.nsparam;
         }
         else
         {
@@ -1119,15 +1091,15 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
           tmp_upper_limit = M_PI + (feasible_intervals[0].upper_limit + M_PI);
           tmp_current = M_PI + (seed_state.nsparam + M_PI);
 
-          cart_pose->nsparam = tmp_current +
-                               k * (tmp_upper_limit - tmp_lower_limit) / 2.0 *
-                                   (exp(-a * (tmp_current - tmp_lower_limit) / ((tmp_upper_limit - tmp_lower_limit))) -
-                                    (exp(-a * (tmp_upper_limit - tmp_current) / (tmp_upper_limit - tmp_lower_limit))));
+          cart_pose.nsparam = tmp_current +
+                              k * (tmp_upper_limit - tmp_lower_limit) / 2.0 *
+                                  (exp(-a * (tmp_current - tmp_lower_limit) / ((tmp_upper_limit - tmp_lower_limit))) -
+                                   (exp(-a * (tmp_upper_limit - tmp_current) / (tmp_upper_limit - tmp_lower_limit))));
 
           // map temporal nsparam to interval -Pi..Pi
-          if (cart_pose->nsparam >= M_PI)
+          if (cart_pose.nsparam >= M_PI)
           {
-            cart_pose->nsparam = -M_PI + fmod(cart_pose->nsparam, M_PI);
+            cart_pose.nsparam = -M_PI + fmod(cart_pose.nsparam, M_PI);
           }
         }
       }
@@ -1137,15 +1109,15 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
         tmp_upper_limit = M_PI + (feasible_intervals[0].upper_limit + M_PI);
         tmp_current = seed_state.nsparam;
 
-        cart_pose->nsparam = tmp_current +
-                             k * (tmp_upper_limit - tmp_lower_limit) / 2.0 *
-                                 (exp(-a * (tmp_current - tmp_lower_limit) / ((tmp_upper_limit - tmp_lower_limit))) -
-                                  (exp(-a * (tmp_upper_limit - tmp_current) / (tmp_upper_limit - tmp_lower_limit))));
+        cart_pose.nsparam = tmp_current +
+                            k * (tmp_upper_limit - tmp_lower_limit) / 2.0 *
+                                (exp(-a * (tmp_current - tmp_lower_limit) / ((tmp_upper_limit - tmp_lower_limit))) -
+                                 (exp(-a * (tmp_upper_limit - tmp_current) / (tmp_upper_limit - tmp_lower_limit))));
 
         // map temporal nsparam to interval -Pi..Pi
-        if (cart_pose->nsparam >= M_PI)
+        if (cart_pose.nsparam >= M_PI)
         {
-          cart_pose->nsparam = -M_PI + fmod(cart_pose->nsparam, M_PI);
+          cart_pose.nsparam = -M_PI + fmod(cart_pose.nsparam, M_PI);
         }
       }
     }
@@ -1162,11 +1134,11 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
           if (abs(seed_state.nsparam - feasible_intervals[i].lower_limit) <=
               abs(seed_state.nsparam - feasible_intervals[i - 1].upper_limit))
           {
-            cart_pose->nsparam = feasible_intervals[i].lower_limit;
+            cart_pose.nsparam = feasible_intervals[i].lower_limit;
           }
           else
           {
-            cart_pose->nsparam = feasible_intervals[i - 1].upper_limit;
+            cart_pose.nsparam = feasible_intervals[i - 1].upper_limit;
           }
         }
         else  // nsparam in overlap region from M_PI to -M_PI
@@ -1174,11 +1146,11 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
           if (abs(feasible_intervals[0].lower_limit - seed_state.nsparam) <=
               (abs(feasible_intervals[0].lower_limit + M_PI) + (M_PI - feasible_intervals[n].upper_limit)))
           {
-            cart_pose->nsparam = feasible_intervals[0].lower_limit;
+            cart_pose.nsparam = feasible_intervals[0].lower_limit;
           }
           else
           {
-            cart_pose->nsparam = feasible_intervals[n].upper_limit;
+            cart_pose.nsparam = feasible_intervals[n].upper_limit;
           }
         }
       }
@@ -1187,29 +1159,29 @@ InvKinMsg InvKin::redundancyResolutionExp(InvKinElbowInterval feasible_intervals
         if (abs(seed_state.nsparam - feasible_intervals[i].upper_limit) <=
             (abs(feasible_intervals[0].lower_limit + M_PI) + (M_PI - feasible_intervals[i].upper_limit)))
         {
-          cart_pose->nsparam = feasible_intervals[i].upper_limit;
+          cart_pose.nsparam = feasible_intervals[i].upper_limit;
         }
         else
         {
-          cart_pose->nsparam = feasible_intervals[0].lower_limit;
+          cart_pose.nsparam = feasible_intervals[0].lower_limit;
         }
       }
     }
     else
     {  // no solution
-      return INVKIN_NO_SOLUTION_FOR_ELBOW;
+      return InvKin_NO_SOLUTION_FOR_ELBOW;
     }
   }
 
   return result;
 }
 
-InvKinMsg InvKin::getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution)
+InvKinMsg InvKin::getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution)
 {
   // fixed config is determined in ik_pose
 
   InvKinXCart seed_state_x;
-  forwardKinematics(&seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
+  forwardKinematics(seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
 
   // solve inverse kinematics first for nsparam=0.0 to get provisional solution and helper matrices As, ... .
   ik_pose.nsparam = 0.0;
@@ -1217,30 +1189,30 @@ InvKinMsg InvKin::getIKefuncFixedConfig(InvKinXCart ik_pose, InvKinJoints seed_s
   InvKinJoints joints;
   InvKinMsg kinematics_return;
 
-  Eigen::Matrix3d as, bs, cs;
-  Eigen::Matrix3d aw, bw, cw;  // helper matrices
+  Matrix3d as, bs, cs;
+  Matrix3d aw, bw, cw;  // helper matrices
 
-  inverseKinematics(&joints, ik_pose, &as, &bs, &cs, &aw, &bw, &cw);
+  inverseKinematics(joints, ik_pose, as, bs, cs, aw, bw, cw);
 
   // determine feasible intervals for nullspace parameter
   InvKinElbowInterval feasible_intervals[34];
   int n;  // array index of last initialized feasible interval
-  computeFeasibleIntervals(feasible_intervals, ik_pose, as, bs, cs, aw, bw, cw, &n);
+  computeFeasibleIntervals(feasible_intervals, ik_pose, as, bs, cs, aw, bw, cw, n);
 
   // choose "optimal" nullspace parameter
-  redundancyResolutionExp(feasible_intervals, n, seed_state_x, &ik_pose);
+  redundancyResolutionExp(feasible_intervals, n, seed_state_x, ik_pose);
 
   // solution
-  kinematics_return = inverseKinematics(&joints, ik_pose);
-  *solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
+  kinematics_return = inverseKinematics(joints, ik_pose);
+  solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
 
   return kinematics_return;
 }
 
-InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution)
+InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution)
 {
   InvKinXCart seed_state_x;
-  forwardKinematics(&seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
+  forwardKinematics(seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
 
   InvKinJoints joints;
   InvKinMsg kinematics_return[8];
@@ -1263,7 +1235,7 @@ InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std
 
   configs[counter] = seed_state_x.config;  // keep in current config (preferred)
   counter++;
-  determineClosestConfigs(configs, &counter, seed_state);
+  determineClosestConfigs(configs, counter, seed_state);
 
   for (int i = 0; i < 2; i++)
   {
@@ -1284,7 +1256,7 @@ InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std
         }
       }
 
-      kinematics_return[j] = inverseKinematics(&joints_arr[j], ik_pose);
+      kinematics_return[j] = inverseKinematics(joints_arr[j], ik_pose);
       dist_from_seed[j] = 0.0;
 
       for (size_t k = 0; k < NR_JOINTS; k++)
@@ -1297,8 +1269,8 @@ InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std
       }
     }
 
-    if (kinematics_return[index_sol] != INVKIN_OK &&
-        kinematics_return[index_sol] != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
+    if (kinematics_return[index_sol] != InvKin_OK &&
+        kinematics_return[index_sol] != (InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY))
     {  // check all configurations if no solution was found
       configs[0] = 0;
       configs[1] = 1;
@@ -1315,13 +1287,13 @@ InvKinMsg InvKin::getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std
   }
 
   joints = joints_arr[index_sol];
-  *solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
+  solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
 
   return kinematics_return[index_sol];
 }
 
 InvKinMsg InvKin::getIKefuncFixedConfigFixedNs(InvKinXCart ik_pose, InvKinJoints /*seed_state*/,
-                                               std::vector<double>* solution)
+                                               std::vector<double>& solution)
 {
   // fixed config and nsparam are determined in ik_pose
 
@@ -1329,16 +1301,16 @@ InvKinMsg InvKin::getIKefuncFixedConfigFixedNs(InvKinXCart ik_pose, InvKinJoints
   InvKinMsg kinematics_return;
 
   // solution
-  kinematics_return = inverseKinematics(&joints, ik_pose);
-  *solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
+  kinematics_return = inverseKinematics(joints, ik_pose);
+  solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
 
   return kinematics_return;
 }
 
-InvKinMsg InvKin::getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution)
+InvKinMsg InvKin::getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>& solution)
 {
   InvKinXCart seed_state_x;
-  forwardKinematics(&seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
+  forwardKinematics(seed_state_x, seed_state);  // determine nsparam for current pose/seed_state
 
   InvKinJoints joints;
   InvKinMsg kinematics_return;
@@ -1350,12 +1322,12 @@ InvKinMsg InvKin::getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::
 
   configs[counter] = seed_state_x.config;  // keep in current config (preferred)
   counter++;
-  determineClosestConfigs(configs, &counter, seed_state);
+  determineClosestConfigs(configs, counter, seed_state);
 
-  kinematics_return = getClosestPositionIK(joints_arr, &index_sol, seed_state, seed_state_x, &ik_pose, configs, counter,
+  kinematics_return = getClosestPositionIK(joints_arr, index_sol, seed_state, seed_state_x, ik_pose, configs, counter,
                                            redundancyResolutionExp);
 
-  if (kinematics_return != INVKIN_OK && kinematics_return != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
+  if (kinematics_return != InvKin_OK && kinematics_return != (InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY))
   {  // check all configurations if no solution was found
 
     configs[0] = 0;
@@ -1366,88 +1338,88 @@ InvKinMsg InvKin::getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::
     configs[5] = 5;
     configs[6] = 6;
     configs[7] = 7;
-    kinematics_return = getClosestPositionIK(joints_arr, &index_sol, seed_state, seed_state_x, &ik_pose, configs, 8,
+    kinematics_return = getClosestPositionIK(joints_arr, index_sol, seed_state, seed_state_x, ik_pose, configs, 8,
                                              redundancyResolutionExp);
   }
 
   joints = joints_arr[index_sol];
-  *solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
+  solution = std::vector<double>(&joints.j[0], &joints.j[0] + NR_JOINTS);
 
   return kinematics_return;
 }
 
-void InvKin::determineClosestConfigs(int configs[], int* counter, const InvKinJoints& joint_angles)
+void InvKin::determineClosestConfigs(int configs[], int& counter, InvKinJoints& joint_angles)
 {
-  if ((*counter) == 1)
+  if (counter == 1)
   {  // method needs the seed config
     int counter_tmp = 0;
     // only check for different configurations if respective joint angle is close to zero
-    if (abs(joint_angles(1)) <= 0.1)
+    if (abs(joint_angles[1]) <= 0.1)
     {
-      configs[(*counter)] = configs[0] ^ (1 << 0);  // toggle first bit
-      (*counter)++;
+      configs[counter] = configs[0] ^ (1 << 0);  // toggle first bit
+      counter++;
     }
-    if (abs(joint_angles(3)) <= 0.1)
+    if (abs(joint_angles[3]) <= 0.1)
     {
-      counter_tmp = (*counter);
+      counter_tmp = counter;
       for (int i = 0; i < counter_tmp; i++)
       {
-        configs[(*counter)] = configs[i] ^ (1 << 1);  // toggle second bit
-        (*counter)++;
+        configs[counter] = configs[i] ^ (1 << 1);  // toggle second bit
+        counter++;
       }
     }
-    if (abs(joint_angles(5)) <= 0.5)
+    if (abs(joint_angles[5]) <= 0.5)
     {
-      counter_tmp = (*counter);
+      counter_tmp = counter;
       for (int i = 0; i < counter_tmp; i++)
       {
-        configs[(*counter)] = configs[i] ^ (1 << 2);  // toggle third bit
-        (*counter)++;
+        configs[counter] = configs[i] ^ (1 << 2);  // toggle third bit
+        counter++;
       }
     }
   }
 }
 
-std::ostream& operator<<(std::ostream& stream, InvKinMsg const& val)
+ostream& operator<<(ostream& stream, InvKinMsg const& val)
 {
   stream << "InvKinError: ";
 
-  if ((val & INVKIN_WARNING) != 0)
+  if (val & InvKin_WARNING)
   {
     stream << "WARN ";
   }
 
-  if ((val & INVKIN_ERROR) != 0)
+  if (val & InvKin_ERROR)
   {
     stream << "ERROR ";
   }
 
-  if ((val & INVKIN_JOINTLIMIT) != 0)
+  if (val & InvKin_JOINTLIMIT)
   {
     stream << "jointlimit ";
   }
 
-  if ((val & INVKIN_TARGET_TOO_FAR) != 0)
+  if (val & InvKin_TARGET_TOO_FAR)
   {
     stream << "target_too_far ";
   }
 
-  if ((val & INVKIN_TARGET_TOO_CLOSE) != 0)
+  if (val & InvKin_TARGET_TOO_CLOSE)
   {
     stream << "target_too_close ";
   }
 
-  if ((val & INVKIN_CLOSE_TO_SINGULARITY) != 0)
+  if (val & InvKin_CLOSE_TO_SINGULARITY)
   {
     stream << "close_to_singularity ";
   }
 
-  if ((val & INVKIN_SINGULARITY) != 0)
+  if (val & InvKin_SINGULARITY)
   {
     stream << "singularity ";
   }
 
-  if ((val & INVKIN_NO_SOLUTION_FOR_ELBOW) != 0)
+  if (val & InvKin_NO_SOLUTION_FOR_ELBOW)
   {
     stream << "no_solution_for_elbow ";
   }

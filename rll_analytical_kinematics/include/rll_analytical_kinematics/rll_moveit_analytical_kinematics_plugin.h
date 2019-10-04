@@ -49,6 +49,8 @@ namespace rll_moveit_analytical_kinematics
 class RLLMoveItAnalyticalKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
+  static bool first_call_IK_;
+
   RLLMoveItAnalyticalKinematicsPlugin();
 
   bool getPositionIK(
@@ -92,17 +94,17 @@ public:
 
   const std::vector<std::string>& getJointNames() const override
   {
-    return joint_names_;
+    return joint_names;
   };
 
   const std::vector<std::string>& getLinkNames() const override
   {
-    return link_names_;
+    return link_names;
   };
 
   bool getPositionIKelb(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
                         std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                        double elbow_angle) const;
+                        const double elbow_angle) const;
 
   bool getPositionFKelb(const std::vector<std::string>& link_names, const std::vector<double>& joint_angles,
                         std::vector<geometry_msgs::Pose>& poses, double& elbow_angle) const;
@@ -113,19 +115,19 @@ public:
                     double& last_valid_percentage) const;
 
 private:
-  InvKin solver_;
-  bool initialized_;  // Indicates if parameters are initialized
-  std::vector<std::string> joint_names_;
-  std::vector<double> joint_min_vector_;
-  std::vector<double> joint_max_vector_;
-  std::vector<double> joint_origin_z_vector_;  // necessary to calculate limb lengths
-  std::vector<std::string> link_names_;
-  const size_t NUM_JOINTS = 7;     // IK for 7 DOF robots
+  InvKin solver;
+  bool initialized;  // Indicates if parameters are initialized
+  std::vector<std::string> joint_names;
+  std::vector<double> joint_min_vector;
+  std::vector<double> joint_max_vector;
+  std::vector<double> joint_origin_z_vector;  // necessary to calculate limb lengths
+  std::vector<std::string> link_names;
+  const size_t num_joints = 7;     // IK for 7 DOF robots
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
 #else
   moveit::core::RobotModelConstPtr robot_model_;  // add member for Kinetic
 #endif
 };
-}  // namespace rll_moveit_analytical_kinematics
+}
 
 #endif /* INCLUDE_RLL_MOVEIT_ANALYTICAL_KINEMATICS_PLUGIN_H_ */

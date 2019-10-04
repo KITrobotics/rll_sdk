@@ -1242,7 +1242,7 @@ bool RLLMoveIface::getKinematicsSolver(
   // Load instance of solver and kinematics plugin
   const kinematics::KinematicsBaseConstPtr& solver = manip_joint_model_group_->getSolverInstance();
   kinematics_plugin =
-      std::dynamic_pointer_cast<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>(solver);
+      dynamic_pointer_cast<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>(solver);
   if (!kinematics_plugin)
   {
     ROS_ERROR("service only available using RLLMoveItAnalyticalKinematicsPlugin");

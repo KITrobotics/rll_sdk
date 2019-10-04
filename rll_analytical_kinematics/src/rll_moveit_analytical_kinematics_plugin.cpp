@@ -22,7 +22,7 @@
 
 namespace rll_moveit_analytical_kinematics
 {
-RLLMoveItAnalyticalKinematicsPlugin::RLLMoveItAnalyticalKinematicsPlugin() : initialized_(false)
+RLLMoveItAnalyticalKinematicsPlugin::RLLMoveItAnalyticalKinematicsPlugin() : initialized(false)
 {
 }
 
@@ -88,38 +88,37 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   while (link != nullptr && link != base_link)
   {
     ROS_DEBUG_STREAM("Link " << link->getName());
-    link_names_.push_back(link->getName());
+    link_names.push_back(link->getName());
     const moveit::core::JointModel* joint = link->getParentJointModel();
     if (joint->getType() != joint->UNKNOWN && joint->getType() != joint->FIXED && joint->getVariableCount() == 1)
     {
       ROS_DEBUG_STREAM("Adding joint " << joint->getName());
 
-      joint_names_.push_back(joint->getName());
+      joint_names.push_back(joint->getName());
       const moveit::core::VariableBounds& bounds = joint->getVariableBounds()[0];
-      joint_min_vector_.push_back(bounds.min_position_);
-      joint_max_vector_.push_back(bounds.max_position_);
+      joint_min_vector.push_back(bounds.min_position_);
+      joint_max_vector.push_back(bounds.max_position_);
     }
     link = link->getParentLinkModel();
   }
 
-  if (joint_names_.size() != NUM_JOINTS)
+  if (joint_names.size() != num_joints)
   {
-    ROS_ERROR_STREAM("Joint numbers of RobotModel (" << joint_names_.size() << ") and IK-solver (" << NUM_JOINTS
+    ROS_ERROR_STREAM("Joint numbers of RobotModel (" << joint_names.size() << ") and IK-solver (" << num_joints
                                                      << ") do not match");
 
     return false;
   }
 
-  std::reverse(link_names_.begin(), link_names_.end());
-  std::reverse(joint_names_.begin(), joint_names_.end());
-  std::reverse(joint_min_vector_.begin(), joint_min_vector_.end());
-  std::reverse(joint_max_vector_.begin(), joint_max_vector_.end());
+  std::reverse(link_names.begin(), link_names.end());
+  std::reverse(joint_names.begin(), joint_names.end());
+  std::reverse(joint_min_vector.begin(), joint_min_vector.end());
+  std::reverse(joint_max_vector.begin(), joint_max_vector.end());
 
   ROS_DEBUG("joint limits:");
-  for (size_t joint_id = 0; joint_id < NUM_JOINTS; ++joint_id)
+  for (size_t joint_id = 0; joint_id < num_joints; ++joint_id)
   {
-    ROS_DEBUG_STREAM(joint_names_[joint_id] << " " << joint_min_vector_[joint_id] << " "
-                                            << joint_max_vector_[joint_id]);
+    ROS_DEBUG_STREAM(joint_names[joint_id] << " " << joint_min_vector[joint_id] << " " << joint_max_vector[joint_id]);
   }
 
 // get parent_to_joint_origin_transform.position.z for all joints from urdf to calculate limb lengths:
@@ -132,23 +131,23 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   urdf::JointConstSharedPtr urdf_joint;
 #endif
 
-  for (auto& joint_name : joint_names_)
+  for (auto& joint_name : joint_names)
   {
     urdf_joint = robot_model_urdf->getJoint(joint_name);
-    joint_origin_z_vector_.push_back(urdf_joint->parent_to_joint_origin_transform.position.z);
+    joint_origin_z_vector.push_back(urdf_joint->parent_to_joint_origin_transform.position.z);
   }
 
   // for end effector joint (fixed)
   link = robot_model_->getLinkModel(tip_frames_[0]);
   const moveit::core::JointModel* joint = link->getParentJointModel();
   urdf_joint = robot_model_urdf->getJoint(joint->getName());
-  joint_origin_z_vector_.push_back(urdf_joint->parent_to_joint_origin_transform.position.z);
-  ROS_DEBUG_STREAM(joint->getName() << " " << joint_origin_z_vector_[NUM_JOINTS]);
+  joint_origin_z_vector.push_back(urdf_joint->parent_to_joint_origin_transform.position.z);
+  ROS_DEBUG_STREAM(joint->getName() << " " << joint_origin_z_vector[num_joints]);
 
   // initialize inverse kinematics solver
-  solver_.initialize(joint_origin_z_vector_, joint_min_vector_, joint_max_vector_);
+  solver.initialize(joint_origin_z_vector, joint_min_vector, joint_max_vector);
 
-  initialized_ = true;
+  initialized = true;
 
   return true;
 }
@@ -174,21 +173,21 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIK(const geometry_msgs::Pos
 // calculation depending on INV_KIN_MODE
 #if INV_KIN_MODE == 0    // redundancy resolution using e-function and hard coded config
   cart_pose.config = 2;  // set fixed config
-  kinematics_return = solver_.getIKefuncFixedConfig(cart_pose, seed_state, solution);
+  kinematics_return = solver.getIKefuncFixedConfig(cart_pose, seed_state, solution);
 #endif  // INV_KIN_MODE==0
 
 #if INV_KIN_MODE == 1                    // solve for hard coded nsparam and config
   cart_pose.config = 2;                  // set fixed config
   cart_pose.nsparam = 0.0 * M_PI / 2.0;  // set fixed nsparam
-  kinematics_return = solver_.getIKefuncFixedConfigFixedNs(cart_pose, seed_state, solution);
+  kinematics_return = solver.getIKefuncFixedConfigFixedNs(cart_pose, seed_state, solution);
 #endif  // INV_KIN_MODE==1
 
 #if INV_KIN_MODE == 2  // redundancy-resolution using e-function
-  kinematics_return = solver_.getIKefunc(cart_pose, seed_state, &solution);
+  kinematics_return = solver.getIKefunc(cart_pose, seed_state, solution);
 #endif  // INV_KIN_MODE==2
 
   // convert error-types
-  if (kinematics_return != INVKIN_OK && kinematics_return != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
+  if (kinematics_return != InvKin_OK && kinematics_return != (InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY))
   {
     ROS_DEBUG_STREAM("Inverse kinematics failed: " << kinematics_return);
     error_code.val = error_code.NO_IK_SOLUTION;
@@ -302,9 +301,9 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFK(const std::vector<std::s
   InvKinXCart cart_pose;
 
   InvKinMsg kinematics_return;
-  kinematics_return = solver_.forwardKinematics(&cart_pose, angles);
+  kinematics_return = solver.forwardKinematics(cart_pose, angles);
 
-  if (kinematics_return == INVKIN_OK)
+  if (kinematics_return == InvKin_OK)
   {
     poses.resize(1);
 
@@ -312,8 +311,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFK(const std::vector<std::s
     poses[0].position.y = cart_pose.pose.pos[1];
     poses[0].position.z = cart_pose.pose.pos[2];
 
-    cart_pose.pose.getQuaternion(&poses[0].orientation.w, &poses[0].orientation.x, &poses[0].orientation.y,
-                                 &poses[0].orientation.z);
+    cart_pose.pose.getQuaternion(poses[0].orientation.w, poses[0].orientation.x, poses[0].orientation.y,
+                                 poses[0].orientation.z);
 
     return true;
   }
@@ -337,8 +336,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIKelb(const geometry_msgs::
   joints.setJoints(ik_seed_state);
   InvKinMsg kinematicsReturn;
 
-  kinematicsReturn = solver_.getIKfixedNs(cart_pose, joints, &solution);
-  if (kinematicsReturn != INVKIN_OK && kinematicsReturn != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
+  kinematicsReturn = solver.getIKfixedNs(cart_pose, joints, solution);
+  if (kinematicsReturn != InvKin_OK && kinematicsReturn != (InvKin_WARNING | InvKin_CLOSE_TO_SINGULARITY))
   {
     ROS_DEBUG_STREAM("inverseKinematics() failed: " << kinematicsReturn);
     error_code.val = error_code.NO_IK_SOLUTION;
@@ -361,9 +360,9 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFKelb(const std::vector<std
   InvKinXCart cart_pose;
 
   InvKinMsg kinematics_return;
-  kinematics_return = solver_.forwardKinematics(&cart_pose, angles);
+  kinematics_return = solver.forwardKinematics(cart_pose, angles);
 
-  if (kinematics_return == INVKIN_OK)
+  if (kinematics_return == InvKin_OK)
   {
     poses.resize(1);
 
@@ -371,8 +370,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFKelb(const std::vector<std
     poses[0].position.y = cart_pose.pose.pos[1];
     poses[0].position.z = cart_pose.pose.pos[2];
 
-    cart_pose.pose.getQuaternion(&poses[0].orientation.w, &poses[0].orientation.x, &poses[0].orientation.y,
-                                 &poses[0].orientation.z);
+    cart_pose.pose.getQuaternion(poses[0].orientation.w, poses[0].orientation.x, poses[0].orientation.y,
+                                 poses[0].orientation.z);
 
     elbow_angle = cart_pose.nsparam;
 
