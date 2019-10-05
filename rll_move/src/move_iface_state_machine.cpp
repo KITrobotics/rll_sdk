@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <rll_move/move_iface.h>
 #include <rll_move/move_iface_state_machine.h>
 #include <ros/ros.h>
 #include <string>
@@ -93,7 +94,7 @@ bool RLLMoveIfaceStateMachine::setState(RLLMoveIfaceState new_state)
   return true;
 }
 
-RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(std::string /*srv_name*/)
+RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(std::string srv_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -107,7 +108,8 @@ RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(std::string /*srv_name*/
     return RLLErrorCode::INTERNAL_ERROR;
   }
 
-  if (state_ != RLLMoveIfaceState::RUNNING_JOB)
+  // only robot_ready service is allowed outside a job run
+  if (state_ != RLLMoveIfaceState::RUNNING_JOB && srv_name != RLLMoveIface::ROBOT_READY_SRV_NAME)
   {
     ROS_ERROR("Invalid state: service calls are only allowed if a job is running!");
     return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;
@@ -135,7 +137,7 @@ bool RLLMoveIfaceStateMachine::setCurrentServiceCallResult(RLLErrorCode error_co
   return false;
 }
 
-RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall()
+RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(std::string srv_name)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -155,7 +157,7 @@ RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall()
     return RLLErrorCode::INTERNAL_ERROR;
   }
 
-  if (state_ != RLLMoveIfaceState::RUNNING_JOB)
+  if (state_ != RLLMoveIfaceState::RUNNING_JOB && srv_name != RLLMoveIface::ROBOT_READY_SRV_NAME)
   {
     ROS_ERROR("Invalid state: service calls can only be ended while a job is running!");
     return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;

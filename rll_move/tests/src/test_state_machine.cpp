@@ -9,7 +9,7 @@ TEST(PermissionsTest, testBeginServiceCall)
   auto resp = s.beginServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SERVICE_CALL_NOT_ALLOWED);
 
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SERVICE_CALL_NOT_ALLOWED);
 
   bool success = s.enterState(RLLMoveIfaceState::RUNNING_JOB);
@@ -20,10 +20,10 @@ TEST(PermissionsTest, testBeginServiceCall)
 
   resp = s.beginServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::CONCURRENT_SERVICE_CALL);
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 }
 
@@ -70,22 +70,22 @@ TEST(PermissionsTest, testFullDemoRun)
 
   auto resp = s.beginServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
   resp = s.beginServiceCall("test1");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
   resp = s.beginServiceCall("test2");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
   resp = s.beginServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall();
+  resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
   success = s.leaveState();

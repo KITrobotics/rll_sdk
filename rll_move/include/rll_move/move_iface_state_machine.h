@@ -83,7 +83,7 @@ public:
   /**
    * \brief Notify the state machine that an service call has ended.
    */
-  virtual RLLErrorCode endServiceCall();
+  virtual RLLErrorCode endServiceCall(std::string srv_name);
 
   /**
    * \brief Indicates if a service call is currently in execution.

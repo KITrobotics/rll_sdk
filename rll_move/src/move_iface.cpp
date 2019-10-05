@@ -96,10 +96,13 @@ void RLLMoveIface::setupPermissions()
 {
   move_permission_ = permissions_.registerPermission("allowed_to_move", false);
   pick_place_permission_ = permissions_.registerPermission("pick_place", false);
+  // robot_ready service calls are always allowed
+  robot_ready_check_permission_ = permissions_.registerPermission("robot_ready", true);
   // by default every service requires the move permission unless explicitly changed
   permissions_.setDefaultRequiredPermissions(move_permission_);
   // the pick_and_place service requires an additional permission
   permissions_.setRequiredPermissionsFor(RLLMoveIface::PICK_PLACE_SRV_NAME, pick_place_permission_ | move_permission_);
+  permissions_.setRequiredPermissionsFor(RLLMoveIface::ROBOT_READY_SRV_NAME, robot_ready_check_permission_);
 }
 
 bool RLLMoveIface::beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result)
@@ -193,6 +196,9 @@ void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& /*goal*/, JobS
     abortDueToCriticalFailure();
     result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
   }
+
+  // robot_ready checks are allowed outside idle runs
+  permissions_.updatePermission(robot_ready_check_permission_, true);
 
   afterActionExecution(&result);
   as->setSucceeded(result);
@@ -315,7 +321,7 @@ RLLErrorCode RLLMoveIface::beforeNonMovementServiceCall(const std::string& srv_n
 
 RLLErrorCode RLLMoveIface::afterNonMovementServiceCall(const std::string& srv_name, RLLErrorCode previous_error_code)
 {
-  RLLErrorCode error_code = iface_state_.endServiceCall();
+  RLLErrorCode error_code = iface_state_.endServiceCall(srv_name);
   ROS_INFO("service '%s' ended", srv_name.c_str());
 
   // a previous error code is probably more specific and takes precedence
