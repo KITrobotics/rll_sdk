@@ -103,7 +103,7 @@ protected:
   tf::Transform ee_to_tip_;
   Permissions permissions_;
   Permissions::Index move_permission_;
-  Permissions::Index robot_ready_check_permission_;
+  Permissions::Index only_during_job_run_permission_;
   Permissions::Index pick_place_permission_;
 
   virtual void setupPermissions();

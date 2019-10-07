@@ -78,12 +78,12 @@ public:
   /**
    * \brief Notify the state machine that an service call is now in execution.
    */
-  virtual RLLErrorCode beginServiceCall(std::string srv_name);
+  virtual RLLErrorCode beginServiceCall(const std::string& srv_name, bool allowed_only_during_job_run = true);
 
   /**
    * \brief Notify the state machine that an service call has ended.
    */
-  virtual RLLErrorCode endServiceCall(std::string srv_name);
+  virtual RLLErrorCode endServiceCall(std::string srv_name, bool allowed_only_during_job_run = true);
 
   /**
    * \brief Indicates if a service call is currently in execution.

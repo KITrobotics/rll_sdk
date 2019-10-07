@@ -19,12 +19,14 @@
 #
 
 import rospy
+import time
 from test_util import generate_test_callback, run_project_in
 from rll_move_client.client import RLLDefaultMoveClient
 
 from invalid_movements import TestInvalidMovements
 from basic_movements import TestBasicMovements
 from repeat_movements import TestRepeatedMovements
+from before_project_run import TestBeforeProjectRun
 
 if __name__ == "__main__":
     tests = [('move_basic', TestBasicMovements),
@@ -32,10 +34,17 @@ if __name__ == "__main__":
              ('move_invalid', TestInvalidMovements),
              ]
 
+    tests_before = [('move_before', TestBeforeProjectRun)]
+
     execute = generate_test_callback("rll_move", tests)
+    execute_before = generate_test_callback("rll_move_before", tests_before, -1)
+
 
     # setup a regular move client and run the tests in the execute callback
     rospy.init_node("test_move_iface_client")
     client = RLLDefaultMoveClient(execute)
-    run_project_in(10)
+    # wait for the move_iface to start
+    time.sleep(8)
+    execute_before(client)
+    run_project_in(2)
     rospy.spin()

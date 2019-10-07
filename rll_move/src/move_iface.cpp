@@ -94,15 +94,19 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
 
 void RLLMoveIface::setupPermissions()
 {
+  only_during_job_run_permission_ = permissions_.registerPermission("only_during_job_run", false);
   move_permission_ = permissions_.registerPermission("allowed_to_move", false);
   pick_place_permission_ = permissions_.registerPermission("pick_place", false);
-  // robot_ready service calls are always allowed
-  robot_ready_check_permission_ = permissions_.registerPermission("robot_ready", true);
+
   // by default every service requires the move permission unless explicitly changed
-  permissions_.setDefaultRequiredPermissions(move_permission_);
+  auto default_permissions = only_during_job_run_permission_ | move_permission_;
+  permissions_.setDefaultRequiredPermissions(default_permissions);
+
   // the pick_and_place service requires an additional permission
-  permissions_.setRequiredPermissionsFor(RLLMoveIface::PICK_PLACE_SRV_NAME, pick_place_permission_ | move_permission_);
-  permissions_.setRequiredPermissionsFor(RLLMoveIface::ROBOT_READY_SRV_NAME, robot_ready_check_permission_);
+  permissions_.setRequiredPermissionsFor(RLLMoveIface::PICK_PLACE_SRV_NAME,
+                                         pick_place_permission_ | default_permissions);
+  // robot ready service check is always allowed
+  permissions_.setRequiredPermissionsFor(RLLMoveIface::ROBOT_READY_SRV_NAME, Permissions::NO_PERMISSION_REQUIRED);
 }
 
 bool RLLMoveIface::beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result)
@@ -144,10 +148,10 @@ void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobSer
 
   // run the actual job processing and set the result accordingly
   // set the general movement permission for the duration of the job execution
-  permissions_.updatePermission(move_permission_, true);
-  permissions_.updatePermission(pick_place_permission_, true);
+  permissions_.storeCurrentPermissions();
+  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_, true);
   runJob(goal, result);
-  permissions_.clearAllPermissions();
+  permissions_.restorePreviousPermissions();
 
   // It is possible that a service call might still be in execution
   // therefore wait for the service call to end before completing the runJob action
@@ -196,9 +200,6 @@ void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& /*goal*/, JobS
     abortDueToCriticalFailure();
     result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
   }
-
-  // robot_ready checks are allowed outside idle runs
-  permissions_.updatePermission(robot_ready_check_permission_, true);
 
   afterActionExecution(&result);
   as->setSucceeded(result);
@@ -304,14 +305,16 @@ void RLLMoveIface::handleFailureSeverity(const RLLErrorCode& error_code)
 RLLErrorCode RLLMoveIface::beforeNonMovementServiceCall(const std::string& srv_name)
 {
   ROS_INFO("service '%s' requested", srv_name.c_str());
-  RLLErrorCode error_code = iface_state_.beginServiceCall(srv_name);
+
+  bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
+  RLLErrorCode error_code = iface_state_.beginServiceCall(srv_name, only_during_job_run);
   if (error_code.failed())
   {
     return error_code;
   }
 
   // check if this service call is permitted
-  if (!permissions_.areAllRequirementsMetFor(srv_name))
+  if (!permissions_.areAllRequiredPermissionsSetFor(srv_name))
   {
     return RLLErrorCode::INSUFFICIENT_PERMISSION;
   }
@@ -321,7 +324,8 @@ RLLErrorCode RLLMoveIface::beforeNonMovementServiceCall(const std::string& srv_n
 
 RLLErrorCode RLLMoveIface::afterNonMovementServiceCall(const std::string& srv_name, RLLErrorCode previous_error_code)
 {
-  RLLErrorCode error_code = iface_state_.endServiceCall(srv_name);
+  bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
+  RLLErrorCode error_code = iface_state_.endServiceCall(srv_name, only_during_job_run);
   ROS_INFO("service '%s' ended", srv_name.c_str());
 
   // a previous error code is probably more specific and takes precedence
