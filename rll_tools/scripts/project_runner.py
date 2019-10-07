@@ -30,7 +30,7 @@ def job_result_codes_to_string(status):
     return job_codes.get(status, "unknown")
 
 
-def run_project(timeout):
+def run_project(timeout, secret):
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
     rospy.sleep(0.5)
     available = job_env.wait_for_server(rospy.Duration.from_sec(timeout))
@@ -39,6 +39,7 @@ def run_project(timeout):
         sys.exit(1)
 
     job_env_goal = JobEnvGoal()
+    job_env_goal.authentication_secret = secret
     job_env.send_goal(job_env_goal)
     rospy.loginfo("started the project")
     job_env.wait_for_result()
@@ -62,7 +63,7 @@ def run_project(timeout):
 
 
 # reset robot and environment
-def idle(timeout):
+def idle(timeout, secret):
     job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
     rospy.sleep(0.5)
     available = job_idle.wait_for_server(rospy.Duration.from_sec(timeout))
@@ -71,6 +72,7 @@ def idle(timeout):
         sys.exit(1)
 
     job_idle_goal = JobEnvGoal()
+    job_idle_goal.authentication_secret = secret
     job_idle.send_goal(job_idle_goal)
     rospy.loginfo("resetting environment back to start")
     job_idle.wait_for_result()
@@ -86,15 +88,16 @@ if __name__ == '__main__':
     rospy.init_node('project_runner')
 
     timeout = rospy.get_param("~timeout", 5)
+    secret = rospy.get_param("~authentication_secret", "")
     only_idle = rospy.get_param("~only_idle")
 
     if only_idle:
-        idle(timeout)
+        idle(timeout, secret)
         sys.exit(0)
 
-    success = run_project(timeout)
+    success = run_project(timeout, secret)
     if not success:
         rospy.logfatal("Internal error when running project")
         sys.exit(1)
 
-    idle(timeout)
+    idle(timeout, secret)

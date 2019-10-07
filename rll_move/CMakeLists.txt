@@ -30,6 +30,7 @@ add_library(${PROJECT_NAME}
   src/move_iface_default.cpp
   src/move_iface_simulation.cpp
   src/move_iface_state_machine.cpp
+  src/authentication.cpp
 )
 
 install(TARGETS ${PROJECT_NAME}
