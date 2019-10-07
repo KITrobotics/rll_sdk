@@ -36,8 +36,9 @@ old code version will not be used anymore.
 Execution environment
 ---------------------
 
-Your submitted code is executed in `Docker containers <https://www.docker.com/resources/what-container>`_.
-The containers has the same ROS installation as your :doc:`local setup <manual_installation>`.
+Your submitted code is executed in `a Docker container <https://www.docker.com/resources/what-container>`_.
+The container has the same ROS installation as your :doc:`local setup <manual_installation>`
+or the :doc:`RLL VM <vm_setup>`.
 The ROS distro you use is automatically detected when submitting and the corresponding container is used.
 So if you submit from a ROS Melodic system,
 then your code will be executed in a container with a ROS Melodic installation.

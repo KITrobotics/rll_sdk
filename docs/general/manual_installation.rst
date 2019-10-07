@@ -15,7 +15,8 @@ You can either select `ROS Melodic Morenia <http://wiki.ros.org/melodic/Installa
 or `ROS Kinetic Kame <http://wiki.ros.org/kinetic/Installation>`_. Both are supported, but
 ROS Melodic Morenia is recommended for a new installation.
 
-Make sure to also install the dependencies for building packages as described in the instructions.
+Make sure to follow all the installation steps as described in the instructions, including
+installing the dependencies for building packages.
 One additional package needs to be installed as well:
 
 .. code-block:: shell

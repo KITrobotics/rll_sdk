@@ -36,7 +36,8 @@ Making your first submission
    and will be offered as an alternative once it is ready.
 
 2. Download the API access config from the `settings page <https://rll.ipr.kit.edu/settings>`_
-   and save it to the config folder of the ``rll_tools`` package in your workspace:
+   and save it to the config folder of the ``rll_tools`` package in your workspace.
+   This should be the full path to the file:
 
    .. code-block:: shell
 
