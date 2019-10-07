@@ -42,6 +42,7 @@
 #include <rll_move/move_iface_state_machine.h>
 #include <rll_move/permissions.h>
 #include <rll_analytical_kinematics/rll_moveit_analytical_kinematics_plugin.h>
+#include <rll_move/authentication.h>
 
 class RLLMoveIface
 {
@@ -101,13 +102,14 @@ protected:
   bool no_gripper_attached_ = false;
   tf::Transform base_to_world_;
   tf::Transform ee_to_tip_;
+  Authentication authentication_;
   Permissions permissions_;
   Permissions::Index move_permission_;
   Permissions::Index only_during_job_run_permission_;
   Permissions::Index pick_place_permission_;
 
   virtual void setupPermissions();
-  bool beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result);
+  bool beforeActionExecution(RLLMoveIfaceState state, const std::string& secret, rll_msgs::JobEnvResult* result);
   bool afterActionExecution(rll_msgs::JobEnvResult* result);
 
   virtual RLLErrorCode idle();

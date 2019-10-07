@@ -1,3 +1,4 @@
+string authentication_secret
 ---
 JobStatus job
 JobExtraField[] job_data

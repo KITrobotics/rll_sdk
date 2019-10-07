@@ -82,6 +82,11 @@ RLLMoveIface::RLLMoveIface() : manip_move_group_(MANIP_PLANNING_GROUP), gripper_
   planning_scene_ = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor_);
   acm_ = planning_scene_->getAllowedCollisionMatrix();
 
+  // set the secret (if any) that is required to invoke actions
+  std::string secret;
+  ros::param::get(node_name_ + "/authentication_secret", secret);
+  authentication_.setSecret(secret);
+
   setupPermissions();
 
   // startup checks, shutdown the node if something is wrong
@@ -109,10 +114,16 @@ void RLLMoveIface::setupPermissions()
   permissions_.setRequiredPermissionsFor(RLLMoveIface::ROBOT_READY_SRV_NAME, Permissions::NO_PERMISSION_REQUIRED);
 }
 
-bool RLLMoveIface::beforeActionExecution(RLLMoveIfaceState state, rll_msgs::JobEnvResult* result)
+bool RLLMoveIface::beforeActionExecution(RLLMoveIfaceState state, const std::string& secret,
+                                         rll_msgs::JobEnvResult* result)
 {
   // before an action is executed we need to ensure that the caller is authorized to invoke an action
-  // TODO(uieai) add authentication check
+  if (!authentication_.authenticate(secret))
+  {
+    ROS_FATAL("Authentication is required to execute an action!");
+    result->job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    return false;
+  }
 
   // try to enter the corresponding state
   if (!iface_state_.enterState(state))
@@ -139,7 +150,7 @@ void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobSer
 {
   rll_msgs::JobEnvResult result;
 
-  if (!beforeActionExecution(RLLMoveIfaceState::RUNNING_JOB, &result))
+  if (!beforeActionExecution(RLLMoveIfaceState::RUNNING_JOB, goal->authentication_secret, &result))
   {
     // don't attempt to perform an action if we are in the INTERNAL_ERROR state
     as->setSucceeded(result);
@@ -174,11 +185,11 @@ void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobSer
   as->setSucceeded(result);
 }
 
-void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& /*goal*/, JobServer* as)
+void RLLMoveIface::idleAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as)
 {
   rll_msgs::JobEnvResult result;
 
-  if (!beforeActionExecution(RLLMoveIfaceState::IDLING, &result))
+  if (!beforeActionExecution(RLLMoveIfaceState::IDLING, goal->authentication_secret, &result))
   {
     // don't attempt to perform the action we are in the INTERNAL_ERROR state
     as->setSucceeded(result);
