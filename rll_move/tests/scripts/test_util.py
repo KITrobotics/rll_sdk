@@ -133,9 +133,10 @@ def generate_test_callback(package, tests, shutdown_timeout=10):
             except Exception as ex:
                 print(ex)
 
+        if(shutdown_timeout > 0):
         # try to shut down graciously by giving the action client time to
         # return a response and to reset the environment
-        rospy.Timer(rospy.Duration(shutdown_timeout), lambda ev: shutdown(),
+            rospy.Timer(rospy.Duration(shutdown_timeout), lambda ev: shutdown(),
                     oneshot=True)
 
     return execute

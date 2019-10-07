@@ -7,7 +7,7 @@ TEST(PermissionsTest, testBeginServiceCall)
 {
   RLLMoveIfaceStateMachine s;
   auto resp = s.beginServiceCall("test");
-  ASSERT_EQ(resp.value(), RLLErrorCode::SERVICE_CALL_NOT_ALLOWED);
+  ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
 
   resp = s.endServiceCall("test");
   ASSERT_EQ(resp.value(), RLLErrorCode::SERVICE_CALL_NOT_ALLOWED);
@@ -59,6 +59,40 @@ TEST(PermissionsTest, testLeaveErrorState)
   success = s.enterState(RLLMoveIfaceState::IDLING);
   ASSERT_FALSE(success);
   ASSERT_TRUE(s.isInInternalErrorState());
+}
+
+TEST(PermissionsTest, testServiceAllowedOutsideJobRunCall)
+{
+  RLLMoveIfaceStateMachine s;
+
+  auto resp = s.beginServiceCall("test");
+  ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
+
+  resp = s.endServiceCall("test");
+  ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
+
+  // allow outside of job run (i.e. in waiting)
+  resp = s.beginServiceCall("test", false);
+  ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
+
+  resp = s.endServiceCall("test", false);
+  ASSERT_EQ(RLLErrorCode::SUCCESS, resp.value());
+
+  // idle state should fail
+  s.enterState(RLLMoveIfaceState::IDLING);
+  resp = s.beginServiceCall("test", false);
+  ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
+
+  resp = s.endServiceCall("test", false);
+  ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
+
+  // error state should fail as well
+  s.enterErrorState();
+  resp = s.beginServiceCall("test", false);
+  ASSERT_EQ(RLLErrorCode::INTERNAL_ERROR, resp.value());
+
+  resp = s.endServiceCall("test", false);
+  ASSERT_EQ(RLLErrorCode::INTERNAL_ERROR, resp.value());
 }
 
 TEST(PermissionsTest, testFullDemoRun)

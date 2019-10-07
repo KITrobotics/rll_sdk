@@ -94,7 +94,7 @@ bool RLLMoveIfaceStateMachine::setState(RLLMoveIfaceState new_state)
   return true;
 }
 
-RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(std::string srv_name)
+RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(const std::string& srv_name, bool only_allowed_during_job_run)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -108,11 +108,14 @@ RLLErrorCode RLLMoveIfaceStateMachine::beginServiceCall(std::string srv_name)
     return RLLErrorCode::INTERNAL_ERROR;
   }
 
-  // only robot_ready service is allowed outside a job run
-  if (state_ != RLLMoveIfaceState::RUNNING_JOB && srv_name != RLLMoveIface::ROBOT_READY_SRV_NAME)
+  if (state_ != RLLMoveIfaceState::RUNNING_JOB)
   {
-    ROS_ERROR("Invalid state: service calls are only allowed if a job is running!");
-    return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;
+    // some service calls may be allowed outside a job run, these require the state at least to be WAITING
+    if (only_allowed_during_job_run || (state_ != RLLMoveIfaceState::WAITING))
+    {
+      ROS_ERROR("Invalid state: service call %s is not allowed in state %s.", srv_name.c_str(), stateToString(state_));
+      return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;
+    }
   }
 
   if (concurrent_service_calls_counter_ > 1)
@@ -137,7 +140,7 @@ bool RLLMoveIfaceStateMachine::setCurrentServiceCallResult(RLLErrorCode error_co
   return false;
 }
 
-RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(std::string srv_name)
+RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(std::string srv_name, bool only_allowed_during_job_run)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 
@@ -157,10 +160,15 @@ RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(std::string srv_name)
     return RLLErrorCode::INTERNAL_ERROR;
   }
 
-  if (state_ != RLLMoveIfaceState::RUNNING_JOB && srv_name != RLLMoveIface::ROBOT_READY_SRV_NAME)
+  // some service calls may be allowed outside a job run
+  if (state_ != RLLMoveIfaceState::RUNNING_JOB)
   {
-    ROS_ERROR("Invalid state: service calls can only be ended while a job is running!");
-    return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;
+    // some service calls may be allowed outside a job run
+    if (only_allowed_during_job_run || (state_ != RLLMoveIfaceState::WAITING))
+    {
+      ROS_ERROR("Invalid state: service call %s cannot be ended in state %s!", srv_name.c_str(), stateToString(state_));
+      return RLLErrorCode::SERVICE_CALL_NOT_ALLOWED;
+    }
   }
 
   if (override_service_call_result_.value() != RLLErrorCode::NOT_SET)

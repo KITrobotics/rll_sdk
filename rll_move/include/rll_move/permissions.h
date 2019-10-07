@@ -22,6 +22,7 @@
 #include <string>
 #include <map>
 #include <vector>
+#include <stack>
 #include <algorithm>
 #include <stdint.h>
 #include <ros/ros.h>
@@ -33,7 +34,7 @@
  * Permissions are kept lightweight. A 32-bit integer is used to represent a set
  * of bitwise permissions, which limits the amount of available permissions to 32.
  * A permission first needs to registered and is assigned an "permission index",
- * the corresponding bit position in the 32-bit integer. This permission can now
+ * which is 2^(bit position in the 32-bit integer). This permission can now
  * be granted or revoked. A group of permissions is described as the combination of
  * multiple permission indices and is internally used as a bitmask.
  *
@@ -47,22 +48,22 @@ class Permissions
 {
 public:
   using Group = uint32_t;
-  using Index = uint8_t;
-  static const Index MAX_PERMISSION_INDEX = 32 - 1;
+  using Index = uint32_t;
+  static const uint8_t MAX_PERMISSION_INDICES = 32 - 1;
   static const Group NO_PERMISSION_REQUIRED = 0;
   // since the zeroth bit cannot be set this permission will never be granted
   static const Group DENY_ALL = 1;
 
   explicit Permissions() = default;
 
-  bool isPremitted(Index index) const
+  Group getCurrentPermissions()
   {
-    if (index > MAX_PERMISSION_INDEX)
-    {
-      return false;
-    }
+    return current_permissions_;
+  }
 
-    return (current_permissions_ & index == index);
+  bool isPermitted(Index index) const
+  {
+    return (current_permissions_ & index) == index;
   }
 
   bool areAllRequiredPermissionsSet(Group permissions) const
@@ -72,30 +73,31 @@ public:
 
   Index registerPermission(const std::string& name, bool isPermitted = false)
   {
-    if (permissions_count_ >= MAX_PERMISSION_INDEX)
+    if (permissions_count_ >= MAX_PERMISSION_INDICES)
     {
       ROS_ERROR("Cannot add new permission! Maximum amount of permission registered");
       return 0;
     }
 
     permission_names_.push_back(name);
-    Index index = permissions_count_++;
-    updatePermission(index, isPermitted);
+    Index index = (1U << permissions_count_);
+    permissions_count_++;
+    updateCurrentPermissions(index, isPermitted);
     ROS_DEBUG("Registering permission: %s -> index=%d", name.c_str(), index);
 
     return index;
   }
 
-  bool updatePermission(const std::string& name, bool value)
+  bool updateCurrentPermissions(const std::string& name, bool value)
   {
     const auto iter = std::find(permission_names_.begin(), permission_names_.end(), name);
     if (iter == permission_names_.end())
     {
-      ROS_ERROR("No permission named %s", name.c_str());
+      ROS_ERROR("No such permission '%s'", name.c_str());
       return false;
     }
     Index index = std::distance(permission_names_.begin(), iter);
-    return updatePermission(index, value);
+    return updateCurrentPermissions(index, value);
   }
 
   void clearAllPermissions()
@@ -103,10 +105,27 @@ public:
     current_permissions_ = DENY_ALL;
   }
 
-  bool updatePermission(Index index, bool is_permitted)
+  void storeCurrentPermissions()
+  {
+    stored_permissions_.push(current_permissions_);
+  }
+
+  void restorePreviousPermissions()
+  {
+    if (stored_permissions_.size() == 0)
+    {
+      ROS_WARN("Cannot restore previous permissions, no permissions have been stored.");
+      return;
+    }
+
+    current_permissions_ = stored_permissions_.top();
+    stored_permissions_.pop();
+  }
+
+  bool updateCurrentPermissions(Index index, bool is_permitted)
   {
     // the zeroth bit can never be set, also only registered permissions can be updated
-    if (index < 1 || index > permissions_count_)
+    if (index < 1 || index >= (1U << permissions_count_))
     {
       ROS_ERROR("Cannot update permission for index: %d", index);
       return false;
@@ -118,17 +137,12 @@ public:
     }
     else
     {
-      current_permissions_ &= ~(index);
+      current_permissions_ &= ~index;
     }
 
     ROS_DEBUG("Updating permission: %d=%s, current: %u", index, is_permitted ? "yes" : "no", current_permissions_);
 
     return true;
-  }
-
-  void setRequiredPermissionsFor(std::string name, Group requirements)
-  {
-    requirements_by_name[name] = requirements;
   }
 
   void setDefaultRequiredPermissions(Group requirements)
@@ -137,17 +151,31 @@ public:
     ROS_DEBUG("Update default requirements=%u", default_requirements_);
   }
 
-  bool areAllRequirementsMetFor(std::string name) const
+  void setRequiredPermissionsFor(std::string name, Group requirements)
+  {
+    requirements_by_name[name] = requirements;
+  }
+
+  bool isPermissionRequiredFor(const std::string& name, Index requirement)
+  {
+    return (getRequiredPermissionsFor(name) & requirement) == requirement;
+  }
+
+  Group getRequiredPermissionsFor(const std::string& name) const
   {
     Group requirements = default_requirements_;
-
     // check if explicit requirements have been set for this name
     const auto iter = requirements_by_name.find(name);
     if (iter != requirements_by_name.end())
     {
       requirements = iter->second;
     }
+    return requirements;
+  }
 
+  bool areAllRequiredPermissionsSetFor(std::string name) const
+  {
+    Group requirements = getRequiredPermissionsFor(name);
     bool permitted = areAllRequiredPermissionsSet(requirements);
     ROS_DEBUG("%s requirements=%u, current=%u, permitted? %s", name.c_str(), requirements, current_permissions_,
               permitted ? "yes" : "no");
@@ -165,6 +193,7 @@ private:
   // by default nothing is permitted
   Group default_requirements_ = DENY_ALL;
   std::map<std::string, Group> requirements_by_name;
+  std::stack<Group> stored_permissions_;
 };
 
 #endif /* INCLUDE_RLL_MOVE_PERMISSIONS_H_ */
