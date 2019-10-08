@@ -315,7 +315,7 @@ void RLLMoveIface::handleFailureSeverity(const RLLErrorCode& error_code)
 
 RLLErrorCode RLLMoveIface::beforeNonMovementServiceCall(const std::string& srv_name)
 {
-  ROS_INFO("service '%s' requested", srv_name.c_str());
+  ROS_DEBUG("service '%s' requested", srv_name.c_str());
 
   bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
   RLLErrorCode error_code = iface_state_.beginServiceCall(srv_name, only_during_job_run);
@@ -337,7 +337,7 @@ RLLErrorCode RLLMoveIface::afterNonMovementServiceCall(const std::string& srv_na
 {
   bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
   RLLErrorCode error_code = iface_state_.endServiceCall(srv_name, only_during_job_run);
-  ROS_INFO("service '%s' ended", srv_name.c_str());
+  ROS_DEBUG("service '%s' ended", srv_name.c_str());
 
   // a previous error code is probably more specific and takes precedence
   return previous_error_code.failed() ? previous_error_code : error_code;
@@ -372,26 +372,6 @@ RLLErrorCode RLLMoveIface::afterMovementServiceCall(const std::string& srv_name,
   }
 
   return error_code;
-}
-
-template <class Request, class Response>
-bool RLLMoveIface::controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
-                                               RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&))
-{
-  RLLErrorCode error_code = beforeMovementServiceCall(srv_name);
-
-  if (error_code.succeeded())
-  {
-    // run only if the prior checks succeeded
-    error_code = (this->*move_func)(req, resp);
-  }
-
-  error_code = afterMovementServiceCall(srv_name, error_code);
-
-  resp.error_code = error_code.value();
-  resp.success = error_code.succeeded();
-
-  return true;
 }
 
 bool RLLMoveIface::moveRandomSrv(rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response& resp)

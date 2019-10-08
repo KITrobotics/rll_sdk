@@ -108,7 +108,7 @@ protected:
   Permissions::Index only_during_job_run_permission_;
   Permissions::Index pick_place_permission_;
 
-  virtual void setupPermissions();
+  void setupPermissions();
   bool beforeActionExecution(RLLMoveIfaceState state, const std::string& secret, rll_msgs::JobEnvResult* result);
   bool afterActionExecution(rll_msgs::JobEnvResult* result);
 
@@ -141,9 +141,9 @@ protected:
   virtual RLLErrorCode beforeMovementServiceCall(const std::string& srv_name);
   virtual RLLErrorCode afterMovementServiceCall(const std::string& srv_name, const RLLErrorCode& previous_error_code);
 
-  template <class Request, class Response>
+  template <class Request, class Response, class BaseClass>
   bool controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
-                                   RLLErrorCode (RLLMoveIface::*move_func)(Request&, Response&));
+                                   RLLErrorCode (BaseClass::*move_func)(Request&, Response&));
 
   RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface& move_group, bool for_gripper = false);
   RLLErrorCode moveToGoalLinear(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization = true);
@@ -173,6 +173,37 @@ protected:
   virtual bool modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory) = 0;
   virtual bool modifyLinTrajectory(moveit_msgs::RobotTrajectory& trajectory) = 0;
 };
+
+template <class Request, class Response, class BaseClass>
+bool RLLMoveIface::controlledMovementExecution(Request& req, Response& resp, const std::string& srv_name,
+                                               RLLErrorCode (BaseClass::*move_func)(Request&, Response&))
+{
+  RLLErrorCode error_code = beforeMovementServiceCall(srv_name);
+
+  // only execute the move_func if the prior check succeeded
+  if (error_code.succeeded())
+  {
+    // we need to cast the 'this' pointer to a (possibly) derived class. Since we use
+    // virtual inheritance we cannot use static_cast
+    auto iface_ptr = dynamic_cast<BaseClass*>(this);
+    if (iface_ptr == nullptr)
+    {
+      ROS_FATAL("controlledMovementExecution called with an invalid move function!");
+      error_code = RLLErrorCode::INTERNAL_ERROR;
+    }
+    else
+    {
+      error_code = (iface_ptr->*move_func)(req, resp);
+    }
+  }
+
+  error_code = afterMovementServiceCall(srv_name, error_code);
+
+  resp.error_code = error_code.value();
+  resp.success = error_code.succeeded();
+
+  return true;
+}
 
 template <class BaseIface, class EnvironmentIface>
 class RLLCombinedMoveIface : public BaseIface, public EnvironmentIface

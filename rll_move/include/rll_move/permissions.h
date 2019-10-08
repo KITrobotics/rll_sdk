@@ -88,7 +88,7 @@ public:
     return index;
   }
 
-  bool updateCurrentPermissions(const std::string& name, bool value)
+  Index getIndexForName(const std::string& name)
   {
     const auto iter = std::find(permission_names_.begin(), permission_names_.end(), name);
     if (iter == permission_names_.end())
@@ -96,7 +96,13 @@ public:
       ROS_ERROR("No such permission '%s'", name.c_str());
       return false;
     }
-    Index index = std::distance(permission_names_.begin(), iter);
+    uint8_t bit_position = std::distance(permission_names_.begin(), iter);
+    return (1 << bit_position);
+  }
+
+  bool updateCurrentPermissions(const std::string& name, bool value)
+  {
+    Index index = getIndexForName(name);
     return updateCurrentPermissions(index, value);
   }
 
@@ -151,8 +157,12 @@ public:
     ROS_DEBUG("Update default requirements=%u", default_requirements_);
   }
 
-  void setRequiredPermissionsFor(std::string name, Group requirements)
+  void setRequiredPermissionsFor(std::string name, Group requirements, bool inherit_default_permissions = false)
   {
+    if (inherit_default_permissions)
+    {
+      requirements |= default_requirements_;
+    }
     requirements_by_name[name] = requirements;
   }
 
