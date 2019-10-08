@@ -53,5 +53,5 @@ void Authentication::setSecret(const std::string& auth_token)
   secret_ = auth_token;
   authentication_required_ = secret_.length() > 0;
 
-  ROS_INFO("Authentication %s: %s", authentication_required_ ? "enabled" : "disabled", secret_.c_str());
+  ROS_INFO("Authentication %s", authentication_required_ ? "enabled" : "disabled");
 }
