@@ -28,6 +28,39 @@ TEST(PermissionsTest, testUpdatePermissions)
   EXPECT_TRUE(p.isPermitted(p2));
 }
 
+TEST(PermissionsTest, testInheritDefaultPermissions)
+{
+  Permissions p;
+  auto p1 = p.registerPermission("p1");
+  p.setDefaultRequiredPermissions(p1);
+  auto p2 = p.registerPermission("p2");
+
+  p.setDefaultRequiredPermissions(p1);
+  p.setRequiredPermissionsFor("test", p2, true);
+
+  EXPECT_EQ(p.getRequiredPermissionsFor("test"), p1 | p2);
+}
+
+TEST(PermissionsTest, testUpdateByPermissionName)
+{
+  Permissions p;
+  auto p1 = p.registerPermission("p1", false);
+  auto p2 = p.registerPermission("p2", true);
+
+  auto p1_new = p.getIndexForName("p1");
+  auto p2_new = p.getIndexForName("p2");
+  EXPECT_EQ(p1, p1_new);
+  EXPECT_EQ(p2, p2_new);
+
+  EXPECT_FALSE(p.isPermitted(p1));
+  p.updateCurrentPermissions("p1", true);
+  EXPECT_TRUE(p.isPermitted(p1));
+
+  EXPECT_TRUE(p.isPermitted(p2));
+  p.updateCurrentPermissions("p2", false);
+  EXPECT_FALSE(p.isPermitted(p2));
+}
+
 TEST(PermissionsTest, testUpdateTwoPermissionsAtOnce)
 {
   Permissions p;
