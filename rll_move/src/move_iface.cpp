@@ -160,7 +160,8 @@ void RLLMoveIface::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobSer
   // run the actual job processing and set the result accordingly
   // set the general movement permission for the duration of the job execution
   permissions_.storeCurrentPermissions();
-  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_, true);
+  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_ | pick_place_permission_,
+                                        true);
   runJob(goal, result);
   permissions_.restorePreviousPermissions();
 
