@@ -1,0 +1,40 @@
+# velocity limits are the same as in the URDF
+# Maximum acceleration is 10 and the accelerations for every joint are
+# scaled according to their velocity
+
+joint_limits:
+  $(arg robot_name)_joint_1:
+    has_velocity_limits: true
+    max_velocity: 1.7104
+    has_acceleration_limits: true
+    max_acceleration: 5.4444
+  $(arg robot_name)_joint_2:
+    has_velocity_limits: true
+    max_velocity: 1.7104
+    has_acceleration_limits: true
+    max_acceleration: 5.4444
+  $(arg robot_name)_joint_3:
+    has_velocity_limits: true
+    max_velocity: 1.7453
+    has_acceleration_limits: true
+    max_acceleration: 5.5555
+  $(arg robot_name)_joint_4:
+    has_velocity_limits: true
+    max_velocity: 2.2689
+    has_acceleration_limits: true
+    max_acceleration: 7.2222
+  $(arg robot_name)_joint_5:
+    has_velocity_limits: true
+    max_velocity: 2.4434
+    has_acceleration_limits: true
+    max_acceleration: 7.7777
+  $(arg robot_name)_joint_6:
+    has_velocity_limits: true
+    max_velocity: 3.1415
+    has_acceleration_limits: true
+    max_acceleration: 10.0
+  $(arg robot_name)_joint_7:
+    has_velocity_limits: true
+    max_velocity: 3.1415
+    has_acceleration_limits: true
+    max_acceleration: 10.0
