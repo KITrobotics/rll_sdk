@@ -856,6 +856,14 @@ RLLErrorCode RLLMoveIface::runLinearTrajectory(const moveit_msgs::RobotTrajector
       return RLLErrorCode::TRAJECTORY_MODIFICATION_FAILED;
     }
   }
+  else
+  {
+    success = modifyPtpTrajectory(my_plan.trajectory_);
+    if (!success)
+    {
+      return RLLErrorCode::TRAJECTORY_MODIFICATION_FAILED;
+    }
+  }
 
   moveit_error_code = manip_move_group_.execute(my_plan);
   error_code = convertMoveItErrorCode(moveit_error_code);
