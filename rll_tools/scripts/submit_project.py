@@ -120,7 +120,7 @@ def upload_archive(project_archive, api_access_cfg):
     resp = requests.put(submit_url, data=archive_content)
     try:
         resp_msg = json.loads(resp.text)
-    except json.JSONDecodeError:
+    except ValueError:
         rospy.logfatal("failed to decode server response:\n"
                        "%s", resp.text)
         return
