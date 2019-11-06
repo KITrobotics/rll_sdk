@@ -4,9 +4,9 @@
     type: joint_state_controller/JointStateController
     publish_rate: 1000
 
-  # Trajectory Controllers ---------------------------------------
+  # Trajectory Controllers --------------------------------------
   #
-  # Forward Position Controllers ---------------------------------------
+  # Forward Position Controllers --------------------------------
   PositionJointInterface_trajectory_controller:
     type: position_controllers/JointTrajectoryController
     joints:
@@ -26,26 +26,7 @@
     action_monitor_rate: 30            # Override default
     stop_trajectory_duration: 0.5        # Override default
 
-  # Forward Position Controllers ---------------------------------------
-  PosVelJointInterface_trajectory_controller:
-    type: pos_vel_controllers/JointTrajectoryController
-    joints:
-      - $(arg robot_name)_joint_1
-      - $(arg robot_name)_joint_2
-      - $(arg robot_name)_joint_3
-      - $(arg robot_name)_joint_4
-      - $(arg robot_name)_joint_5
-      - $(arg robot_name)_joint_6
-      - $(arg robot_name)_joint_7
-
-    constraints:
-      goal_time: 2.0                   # Override default
-
-    state_publish_rate:  1000            # Override default
-    action_monitor_rate: 30            # Override default
-    stop_trajectory_duration: 0.5        # Override default
-
-  # Gripper controller ---------------------------------------------
+  # Gripper controller ------------------------------------------
   PositionJointInterface_gripper_controller:
     type: effort_controllers/JointTrajectoryController
     joints:
