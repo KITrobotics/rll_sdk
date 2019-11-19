@@ -74,8 +74,6 @@ melodic-build-rostests:
 warningbuild-linting:
   variables:
     CATKIN_LINT: "pedantic"
-    # TODO: fix lint errors in these Gazebo packages
-    CATKIN_LINT_ARGS: "--skip-pkg gazebo_version_helpers --skip-pkg gazebo_grasp_plugin"
     ADDITIONAL_DEBS: "python-pip clang-tidy-6.0 clang-6.0"
     CATKIN_CONFIG: "--cmake-args -DCMAKE_CXX_FLAGS=-Werror"
     NOT_TEST_BUILD: "true"

@@ -2,7 +2,7 @@
 <package format="2">
   <name>gazebo_version_helpers</name>
   <version>0.0.0</version>
-  <description>The gazebo_version_helpers package</description>
+  <description>Helpers for handling different Gazebo versions</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->
@@ -49,6 +49,7 @@
   <!-- Use doc_depend for packages you need only for building documentation: -->
   <!--   <doc_depend>doxygen</doc_depend> -->
   <buildtool_depend>catkin</buildtool_depend>
+  <build_depend>gazebo</build_depend>
   <build_depend>gazebo_ros</build_depend>
   <build_depend>roscpp</build_depend>
   <build_export_depend>gazebo_ros</build_export_depend>

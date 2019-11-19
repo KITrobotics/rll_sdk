@@ -6,10 +6,10 @@ project(gazebo_grasp_plugin)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
   gazebo_ros
+  gazebo_version_helpers
   geometry_msgs
   roscpp
   std_msgs
-  gazebo_version_helpers
 )
 
 find_package(gazebo REQUIRED)
@@ -31,7 +31,7 @@ find_package(gazebo REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES gazebo_grasp_fix
-  CATKIN_DEPENDS gazebo_ros geometry_msgs roscpp std_msgs gazebo_version_helpers
+  CATKIN_DEPENDS gazebo_ros gazebo_version_helpers geometry_msgs roscpp std_msgs
   DEPENDS gazebo
 )
 
@@ -40,14 +40,14 @@ catkin_package(
 ###########
 # check c++11 / c++0x
 include(CheckCXXCompilerFlag)
-CHECK_CXX_COMPILER_FLAG("-std=c++11" COMPILER_SUPPORTS_CXX11)
-CHECK_CXX_COMPILER_FLAG("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
+check_cxx_compiler_flag("-std=c++11" COMPILER_SUPPORTS_CXX11)
+check_cxx_compiler_flag("-std=c++0x" COMPILER_SUPPORTS_CXX0X)
 if(COMPILER_SUPPORTS_CXX11)
-    set(CMAKE_CXX_FLAGS "-std=c++11")
-elseif(COMPILER_SUPPORTS_CXX0X)
-    set(CMAKE_CXX_FLAGS "-std=c++0x")
+  add_compile_options(-std=c++11)
+  elseif(COMPILER_SUPPORTS_CXX0X)
+  add_compile_options(-std=c++0x)
 else()
-    message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler. Suggested solution: update the pkg build-essential ")
+  message(FATAL_ERROR "The compiler ${CMAKE_CXX_COMPILER} has no C++11 support. Please use a different C++ compiler. Suggested solution: update the pkg build-essential ")
 endif()
 
 ## Specify additional locations of header files
@@ -57,11 +57,6 @@ include_directories(
   include
   ${catkin_INCLUDE_DIRS}
   ${GAZEBO_INCLUDE_DIRS}
-)
-
-link_directories(
-  ${catkin_LIBRARY_DIRS}
-  ${GAZEBO_LIBRARY_DIRS}
 )
 
 ## Declare a cpp library
@@ -105,11 +100,6 @@ install(TARGETS gazebo_grasp_fix
 install(DIRECTORY include/${PROJECT_NAME}/
    DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
    FILES_MATCHING PATTERN "*.h"
-)
-
-install(DIRECTORY launch
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}
-  FILES_MATCHING PATTERN "*.launch"
 )
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
