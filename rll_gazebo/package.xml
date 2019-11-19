@@ -2,7 +2,7 @@
 <package format="2">
   <name>rll_gazebo</name>
   <version>0.1.0</version>
-  <description>This package configures the RLL simulation in Gazebo</description>
+  <description>Configurations for simulating a Robot Learning Lab work cell in Gazebo</description>
 
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>
 

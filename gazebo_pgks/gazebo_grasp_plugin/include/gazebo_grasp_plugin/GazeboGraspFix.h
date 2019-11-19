@@ -245,6 +245,6 @@ private:
   // last time OnUpdate() was called
   common::Time prevUpdateTime;
 };
-}
+}  // namespace gazebo
 
 #endif  // GAZEBO_GAZEBOGRASPFIX_H

@@ -23,7 +23,7 @@
 #include <rll_move_client/move_client_default.h>
 #include <rll_move_client/util.h>
 
-void execute(RLLDefaultMoveClient* const move_client)
+bool execute(RLLDefaultMoveClient* const move_client)
 {
   // demonstrates how to use the available services:
   //
@@ -82,12 +82,14 @@ void execute(RLLDefaultMoveClient* const move_client)
 
   bool match = compareJointValues(joint_values, joint_values2);
   ROS_INFO("Set and queried joint values match: %s", match ? "yes" : "no");
+
+  return true;
 }
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "move_client_example");
-  RLLCallbackMoveClient<RLLDefaultMoveClient> client(&execute, "move_client");
+  RLLCallbackMoveClient<RLLDefaultMoveClient> client(&execute);
   ros::spin();
 
   return 0;

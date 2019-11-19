@@ -18,9 +18,11 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+from __future__ import print_function
 import time
-import rospy
 import unittest
+
+import rospy
 import rosunit
 import actionlib
 from rll_msgs.msg import JobStatus, JobEnvAction, JobEnvGoal
@@ -39,34 +41,34 @@ class TestCaseWithRLLMoveClient(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestCaseWithRLLMoveClient, self).__init__(*args, **kwargs)
 
-    def assertJointValuesClose(self, joints1, joints2):
+    def assert_joint_values_lose(self, joints1, joints2):
         self.assertTrue(compare_joint_values(joints1, joints2),
                         "Mismatching joint values: %s vs %s" % (
                             joints1, joints2))
 
-    def assertLastServiceCallSucceeded(self, resp):
-        self.assertLastErrorCode(RLLErrorCode.SUCCESS)
+    def assert_last_srv_call_success(self, resp):
+        self.assert_last_error_code(RLLErrorCode.SUCCESS)
         self.assertTrue(resp, "Service call should have succeeded")
 
-    def assertLastServiceCallFailedWith(self, resp, error_code):
-        self.assertLastErrorCode(error_code)
+    def assert_last_srv_call_failed(self, resp, error_code):
+        self.assert_last_error_code(error_code)
         self.assertFalse(resp, "Service call should have failed.")
 
-    def assertLastErrorCode(self, error_code):
+    def assert_last_error_code(self, error_code):
         last_error_code = self.client.get_last_error_code()
-        self.assertErrorCodeEquals(error_code, last_error_code)
+        self.assert_error_code_equals(error_code, last_error_code)
 
-    def assertErrorCodeEquals(self, code1, code2):
-        self.assertEquals(code1, code2,
-                          "Error codes do not match: '%s' vs '%s'! " % (
-                              RLLErrorCode(code1), RLLErrorCode(code2)))
+    def assert_error_code_equals(self, code1, code2):
+        self.assertEqual(code1, code2,
+                         "Error codes do not match: '%s' vs '%s'! " % (
+                             RLLErrorCode(code1), RLLErrorCode(code2)))
 
     def test_0_client_available(self):
         self.assertIsNotNone(TestCaseWithRLLMoveClient.client,
                              "The static client object is not set!")
 
 
-def concurrent_call(thread_func, n=10, delay_between_starts=0):
+def concurrent_call(thread_func, count=10, delay_between_starts=0):
     """
     Run the given function n times concurrently. The function receives the
     index (the i-th invocation) as an argument. The first thread gets a
@@ -81,23 +83,24 @@ def concurrent_call(thread_func, n=10, delay_between_starts=0):
     """
     import threading
     lock = threading.Lock()
-    results = [None for _ in range(n)]
+    results = [None for _ in range(count)]
 
     def collect(index):
         result = None
         try:
             result = thread_func(index)
-        except Exception as e:
-            rospy.logerr("Exception in thread execution: %s", e)
+        except StandardError as ex:
+            rospy.logerr("Exception in thread execution: %s", ex)
 
         lock.acquire()
         try:
-            rospy.loginfo("collected thread #%d" % index)
+            rospy.loginfo("collected thread #%d", index)
             results[index] = result
         finally:
             lock.release()
 
-    threads = [threading.Thread(target=collect, args=(i,)) for i in range(n)]
+    threads = [threading.Thread(target=collect, args=(i,))
+               for i in range(count)]
 
     threads[0].start()
     time.sleep(.5)  # give it a bit of an head start to make sure it is running
@@ -130,14 +133,14 @@ def generate_test_callback(package, tests, shutdown_timeout=10):
             try:
                 # catch possible errors to make sure the shutdown is called
                 rosunit.unitrun(package, test_name, test_class)
-            except Exception as ex:
+            except StandardError as ex:
                 print(ex)
 
-        if(shutdown_timeout > 0):
-        # try to shut down graciously by giving the action client time to
-        # return a response and to reset the environment
-            rospy.Timer(rospy.Duration(shutdown_timeout), lambda ev: shutdown(),
-                    oneshot=True)
+        if shutdown_timeout > 0:
+            # try to shut down graciously by giving the action client time to
+            # return a response and to reset the environment
+            rospy.Timer(rospy.Duration(shutdown_timeout),
+                        lambda ev: shutdown(), oneshot=True)
 
     return execute
 
@@ -150,7 +153,7 @@ def run_project_in(timeout):
 def run_project_or_shutdown():
     job_success, _ = run_project()
     # on failure shutdown
-    if not not job_success:
+    if not job_success:
         shutdown()
 
 
@@ -163,11 +166,19 @@ def run_project():
         rospy.logerr("job env action server is not available")
         return False, -1
 
+    # TODO: move the project_runner from rll_tools into a module,
+    #       so we can reuse the ocde here and can get rid of the
+    #       duplicate code
+    # note: all checks have to be disabled because of
+    #       https://github.com/PyCQA/pylint/issues/214
+    # pylint: disable=all
     job_env_goal = JobEnvGoal()
+    job_env_goal.client_ip_addr = "127.0.0.1"
     job_env.send_goal(job_env_goal)
     rospy.loginfo("started the project")
     job_env.wait_for_result()
     resp = job_env.get_result()
+    # pylint: enable=all
 
     state = job_env.get_state()
     rospy.loginfo("Goal state: %s", state)

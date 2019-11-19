@@ -17,10 +17,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_move/move_iface.h>
-#include <rll_move/move_iface_state_machine.h>
-#include <ros/ros.h>
 #include <string>
+
+#include <ros/ros.h>
+
+#include <rll_move/move_iface_services.h>
+#include <rll_move/move_iface_state_machine.h>
 
 void RLLMoveIfaceStateMachine::enterErrorState()
 {
@@ -140,7 +142,7 @@ bool RLLMoveIfaceStateMachine::setCurrentServiceCallResult(RLLErrorCode error_co
   return false;
 }
 
-RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(std::string srv_name, bool only_allowed_during_job_run)
+RLLErrorCode RLLMoveIfaceStateMachine::endServiceCall(const std::string& srv_name, bool only_allowed_during_job_run)
 {
   std::lock_guard<std::mutex> lock(mutex_);
 

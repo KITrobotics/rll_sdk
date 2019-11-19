@@ -22,10 +22,6 @@
 
 namespace rll_moveit_analytical_kinematics
 {
-RLLMoveItAnalyticalKinematicsPlugin::RLLMoveItAnalyticalKinematicsPlugin() : initialized_(false)
-{
-}
-
 bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
     const moveit::core::RobotModel& robot_model,
@@ -71,8 +67,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
     return false;
   }
 
-  moveit::core::RobotModel robot_model_instance_(urdf_model, srdf);
-  robot_model_ = moveit::core::RobotModelConstPtr(&robot_model_instance_);
+  moveit::core::RobotModel robot_model_instance(urdf_model, srdf);
+  robot_model_ = moveit::core::RobotModelConstPtr(&robot_model_instance);
 #endif
 
   const moveit::core::JointModelGroup* jmg = robot_model_->getJointModelGroup(group_name);
@@ -128,7 +124,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   robot_model_urdf = robot_model.getURDF();
   std::shared_ptr<const urdf::Joint> urdf_joint;
 #else  // Kinetic and older
-  const urdf::ModelInterfaceSharedPtr robot_model_urdf = robot_model_instance_.getURDF();
+  const urdf::ModelInterfaceSharedPtr robot_model_urdf =  // NOLINT readability-identifier-naming
+      robot_model_instance.getURDF();
   urdf::JointConstSharedPtr urdf_joint;
 #endif
 
@@ -153,11 +150,9 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   return true;
 }
 
-bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIK(const geometry_msgs::Pose& ik_pose,
-                                                        const std::vector<double>& ik_seed_state,
-                                                        std::vector<double>& solution,
-                                                        moveit_msgs::MoveItErrorCodes& error_code,
-                                                        const kinematics::KinematicsQueryOptions& /*options*/) const
+bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIK(  // NOLINT google-default-arguments
+    const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, std::vector<double>& solution,
+    moveit_msgs::MoveItErrorCodes& error_code, const kinematics::KinematicsQueryOptions& /*options*/) const
 {
   ROS_DEBUG_STREAM("getPositionIK");
 
@@ -184,7 +179,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIK(const geometry_msgs::Pos
 #endif  // INV_KIN_MODE==1
 
 #if INV_KIN_MODE == 2  // redundancy-resolution using e-function
-  kinematics_return = solver_.getIKefunc(cart_pose, seed_state, &solution);
+  kinematics_return = InvKin::getIKefunc(cart_pose, seed_state, &solution);
 #endif  // INV_KIN_MODE==2
 
   // convert error-types
@@ -200,35 +195,30 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIK(const geometry_msgs::Pos
   return true;
 }
 
-bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose,
-                                                           const std::vector<double>& ik_seed_state, double /*timeout*/,
-                                                           std::vector<double>& solution,
-                                                           moveit_msgs::MoveItErrorCodes& error_code,
-                                                           const kinematics::KinematicsQueryOptions& options) const
+bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
+    const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double /*timeout*/,
+    std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
+    const kinematics::KinematicsQueryOptions& options) const
 {
   ROS_DEBUG_STREAM("searchPositionIK 1");
 
   return getPositionIK(ik_pose, ik_seed_state, solution, error_code, options);
 }
 
-bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose,
-                                                           const std::vector<double>& ik_seed_state, double /*timeout*/,
-                                                           const std::vector<double>& /*consistency_limits*/,
-                                                           std::vector<double>& solution,
-                                                           moveit_msgs::MoveItErrorCodes& error_code,
-                                                           const kinematics::KinematicsQueryOptions& options) const
+bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
+    const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double /*timeout*/,
+    const std::vector<double>& /*consistency_limits*/, std::vector<double>& solution,
+    moveit_msgs::MoveItErrorCodes& error_code, const kinematics::KinematicsQueryOptions& options) const
 {
   ROS_DEBUG_STREAM("searchPositionIK 2");
 
   return getPositionIK(ik_pose, ik_seed_state, solution, error_code, options);
 }
 
-bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose,
-                                                           const std::vector<double>& ik_seed_state, double /*timeout*/,
-                                                           std::vector<double>& solution,
-                                                           const IKCallbackFn& solution_callback,
-                                                           moveit_msgs::MoveItErrorCodes& error_code,
-                                                           const kinematics::KinematicsQueryOptions& options) const
+bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
+    const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double /*timeout*/,
+    std::vector<double>& solution, const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
+    const kinematics::KinematicsQueryOptions& options) const
 {
   ROS_DEBUG_STREAM("searchPositionIK 3");
 
@@ -248,21 +238,15 @@ bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::
       return false;
     }
   }
-  else
-  {
-    return false;
-  }
 
   return false;
 }
 
-bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::Pose& ik_pose,
-                                                           const std::vector<double>& ik_seed_state, double /*timeout*/,
-                                                           const std::vector<double>& /*consistency_limits*/,
-                                                           std::vector<double>& solution,
-                                                           const IKCallbackFn& solution_callback,
-                                                           moveit_msgs::MoveItErrorCodes& error_code,
-                                                           const kinematics::KinematicsQueryOptions& options) const
+bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
+    const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double /*timeout*/,
+    const std::vector<double>& /*consistency_limits*/, std::vector<double>& solution,
+    const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
+    const kinematics::KinematicsQueryOptions& options) const
 {
   ROS_DEBUG_STREAM("searchPositionIK 4");
 
@@ -282,10 +266,6 @@ bool RLLMoveItAnalyticalKinematicsPlugin::searchPositionIK(const geometry_msgs::
       return false;
     }
   }
-  else
-  {
-    return false;
-  }
 
   return false;
 }
@@ -302,7 +282,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFK(const std::vector<std::s
   InvKinXCart cart_pose;
 
   InvKinMsg kinematics_return;
-  kinematics_return = solver_.forwardKinematics(&cart_pose, angles);
+  kinematics_return = InvKin::forwardKinematics(&cart_pose, angles);
 
   if (kinematics_return == INVKIN_OK)
   {
@@ -335,12 +315,12 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionIKelb(const geometry_msgs::
 
   InvKinJoints joints;
   joints.setJoints(ik_seed_state);
-  InvKinMsg kinematicsReturn;
+  InvKinMsg kinematics_return;
 
-  kinematicsReturn = solver_.getIKfixedNs(cart_pose, joints, &solution);
-  if (kinematicsReturn != INVKIN_OK && kinematicsReturn != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
+  kinematics_return = InvKin::getIKfixedNs(cart_pose, joints, &solution);
+  if (kinematics_return != INVKIN_OK && kinematics_return != (INVKIN_WARNING | INVKIN_CLOSE_TO_SINGULARITY))
   {
-    ROS_DEBUG_STREAM("inverseKinematics() failed: " << kinematicsReturn);
+    ROS_DEBUG_STREAM("inverseKinematics() failed: " << kinematics_return);
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
@@ -361,7 +341,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPositionFKelb(const std::vector<std
   InvKinXCart cart_pose;
 
   InvKinMsg kinematics_return;
-  kinematics_return = solver_.forwardKinematics(&cart_pose, angles);
+  kinematics_return = InvKin::forwardKinematics(&cart_pose, angles);
 
   if (kinematics_return == INVKIN_OK)
   {
@@ -396,13 +376,13 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPathIKelb(const std::vector<geometr
   std::vector<double> seed_tmp = ik_seed_state;
   last_valid_percentage = 0.0;
 
-  for (int i = 0; i < waypoints_pose.size(); i++)
+  for (unsigned int i = 0; i < waypoints_pose.size(); i++)
   {
     if (getPositionIKelb(waypoints_pose[i], seed_tmp, sol, error_code, waypoints_elb[i]))
     {
       seed_tmp = sol;
       tmp_state.setJointGroupPositions(group, sol);
-      path.push_back(robot_state::RobotStatePtr(new robot_state::RobotState(tmp_state)));  // NOLINT
+      path.push_back(std::make_shared<moveit::core::RobotState>(tmp_state));
     }
     else
     {

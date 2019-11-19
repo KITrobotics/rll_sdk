@@ -19,20 +19,20 @@
 
 #include <rll_move_client/move_client.h>
 
-const char* AnsiCodes::END = "\x1B[0m";
-const char* AnsiCodes::RED = "\x1B[91m";
-const char* AnsiCodes::GRN = "\x1B[92m";
-const char* AnsiCodes::YEL = "\x1B[93m";
-const char* AnsiCodes::BLU = "\x1B[94m";
-const char* AnsiCodes::MAG = "\x1B[95m";
-const char* AnsiCodes::CYN = "\x1B[96m";
-const char* AnsiCodes::WHT = "\x1B[97m";
-const char* AnsiCodes::BOLD = "\x1B[1m";
-const char* AnsiCodes::NAME = "\x1B[1m\x1B[94m";
-const char* AnsiCodes::OK = "\x1B[1m\x1B[92m";
-const char* AnsiCodes::INFO = "\x1B[1m\x1B[93m";
-const char* AnsiCodes::WARN = "\x1B[1m\x1B[95m";
-const char* AnsiCodes::FAIL = "\x1B[1m\x1B[91m";
+const char* AnsiCodes::END_ = "\x1B[0m";
+const char* AnsiCodes::RED_ = "\x1B[91m";
+const char* AnsiCodes::GRN_ = "\x1B[92m";
+const char* AnsiCodes::YEL_ = "\x1B[93m";
+const char* AnsiCodes::BLU_ = "\x1B[94m";
+const char* AnsiCodes::MAG_ = "\x1B[95m";
+const char* AnsiCodes::CYN_ = "\x1B[96m";
+const char* AnsiCodes::WHT_ = "\x1B[97m";
+const char* AnsiCodes::BOLD_ = "\x1B[1m";
+const char* AnsiCodes::NAME_ = "\x1B[1m\x1B[94m";
+const char* AnsiCodes::OK_ = "\x1B[1m\x1B[92m";
+const char* AnsiCodes::INFO_ = "\x1B[1m\x1B[93m";
+const char* AnsiCodes::WARN_ = "\x1B[1m\x1B[95m";
+const char* AnsiCodes::FAIL_ = "\x1B[1m\x1B[91m";
 
 // hints are only visible within this compilation unit
 const static std::map<uint8_t, const std::string> HINTS = {
@@ -64,14 +64,14 @@ void RLLMoveClientBase::logHint(RLLErrorCode error_code)
   auto iter = HINTS.find(error_code.value());
   if (iter != HINTS.end())
   {
-    const std::string hint = iter->second;
-    ROS_INFO("%sPossible failure reason:%s %s", AnsiCodes::INFO, AnsiCodes::END, hint.c_str());
+    const std::string HINT = iter->second;
+    ROS_INFO("%sPossible failure reason:%s %s", AnsiCodes::INFO_, AnsiCodes::END_, HINT.c_str());
   }
 }
 
 bool RLLMoveClientBase::handleResponseWithoutErrorCode(const std::string& srv_name, bool call_success)
 {
-  std::string name = AnsiCodes::NAME + srv_name + AnsiCodes::END;
+  std::string name = AnsiCodes::NAME_ + srv_name + AnsiCodes::END_;
   if (!call_success)
   {
     ROS_ERROR("Failed to call '%s' service.", name.c_str());
@@ -83,7 +83,7 @@ bool RLLMoveClientBase::handleResponseWithoutErrorCode(const std::string& srv_na
 bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name, bool call_success,
                                                     RLLErrorCode error_code)
 {
-  std::string name = AnsiCodes::NAME + srv_name + AnsiCodes::END;
+  std::string name = AnsiCodes::NAME_ + srv_name + AnsiCodes::END_;
   if (!call_success)
   {
     ROS_ERROR("Failed to call '%s' service.", name.c_str());
@@ -92,28 +92,27 @@ bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name,
 
   if (error_code.succeeded())
   {
-    ROS_INFO("%s %ssucceeded%s.", name.c_str(), AnsiCodes::OK, AnsiCodes::END);
+    ROS_INFO("%s %ssucceeded%s.", name.c_str(), AnsiCodes::OK_, AnsiCodes::END_);
     return true;
   }
 
   if (error_code.isCriticalFailure())
   {
-    ROS_ERROR("%s %sfailed critically: %s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
+    ROS_ERROR("%s %sfailed critically: %s%s", name.c_str(), AnsiCodes::FAIL_, error_code.message(), AnsiCodes::END_);
 
     throw CriticalServiceCallFailure("Service call " + srv_name + "failed critically: " + error_code.message());
   }
-  else
-  {
-    ROS_WARN("%s %sfailed: %s%s", name.c_str(), AnsiCodes::FAIL, error_code.message(), AnsiCodes::END);
 
-    if (exception_on_any_failure_)
-    {
-      throw ServiceCallFailure("Service call " + srv_name + "failed: " + error_code.message());
-    }
-    else if (error_code.value() == RLLErrorCode::JOB_EXECUTION_TIMED_OUT)
-    {
-      throw ServiceCallFailure("You exceeded the maximum job execution duration.");
-    }
+  ROS_WARN("%s %sfailed: %s%s", name.c_str(), AnsiCodes::FAIL_, error_code.message(), AnsiCodes::END_);
+
+  if (exception_on_any_failure_)
+  {
+    throw ServiceCallFailure("Service call " + srv_name + "failed: " + error_code.message());
+  }
+
+  if (error_code.value() == RLLErrorCode::JOB_EXECUTION_TIMED_OUT)
+  {
+    throw ServiceCallFailure("You exceeded the maximum job execution duration.");
   }
 
   if (verbose_)
@@ -125,11 +124,10 @@ bool RLLMoveClientBase::handleResponseWithErrorCode(const std::string& srv_name,
 }
 
 RLLBasicMoveClient::RLLBasicMoveClient()
-  : RLLMoveClientBase()
-  , move_joints_(nh_.serviceClient<rll_msgs::MoveJoints>(RLLMoveIface::MOVE_JOINTS_SRV_NAME))
-  , move_ptp_(nh_.serviceClient<rll_msgs::MovePTP>(RLLMoveIface::MOVE_PTP_SRV_NAME))
-  , move_lin_(nh_.serviceClient<rll_msgs::MoveLin>(RLLMoveIface::MOVE_LIN_SRV_NAME))
-  , move_random_(nh_.serviceClient<rll_msgs::MoveRandom>(RLLMoveIface::MOVE_RANDOM_SRV_NAME))
+  : move_joints_(nh_.serviceClient<rll_msgs::MoveJoints>(RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME))
+  , move_ptp_(nh_.serviceClient<rll_msgs::MovePTP>(RLLMoveIfaceServices::MOVE_PTP_SRV_NAME))
+  , move_lin_(nh_.serviceClient<rll_msgs::MoveLin>(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME))
+  , move_random_(nh_.serviceClient<rll_msgs::MoveRandom>(RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME))
 {
 }
 
@@ -137,8 +135,8 @@ bool RLLBasicMoveClient::moveRandom(geometry_msgs::Pose* const result_pose)
 {
   rll_msgs::MoveRandom move_random_msg;
 
-  bool success =
-      callServiceWithErrorCode<rll_msgs::MoveRandom>(RLLMoveIface::MOVE_RANDOM_SRV_NAME, move_random_, move_random_msg);
+  bool success = callServiceWithErrorCode<rll_msgs::MoveRandom>(RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME,
+                                                                move_random_, move_random_msg);
   if (success)
   {
     *result_pose = move_random_msg.response.pose;
@@ -151,7 +149,7 @@ bool RLLBasicMoveClient::movePTP(const geometry_msgs::Pose& pose)
   rll_msgs::MovePTP move_ptp_msg;
   move_ptp_msg.request.pose = pose;
 
-  return callServiceWithErrorCode<rll_msgs::MovePTP>(RLLMoveIface::MOVE_PTP_SRV_NAME, move_ptp_, move_ptp_msg);
+  return callServiceWithErrorCode<rll_msgs::MovePTP>(RLLMoveIfaceServices::MOVE_PTP_SRV_NAME, move_ptp_, move_ptp_msg);
 }
 
 bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose)
@@ -159,7 +157,7 @@ bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose)
   rll_msgs::MoveLin move_lin_msg;
   move_lin_msg.request.pose = pose;
 
-  return callServiceWithErrorCode<rll_msgs::MoveLin>(RLLMoveIface::MOVE_LIN_SRV_NAME, move_lin_, move_lin_msg);
+  return callServiceWithErrorCode<rll_msgs::MoveLin>(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME, move_lin_, move_lin_msg);
 }
 
 bool RLLBasicMoveClient::moveJoints(const std::vector<double>& joint_values)
@@ -172,6 +170,7 @@ bool RLLBasicMoveClient::moveJoints(const std::vector<double>& joint_values)
   return moveJoints(joint_values[0], joint_values[1], joint_values[2], joint_values[3], joint_values[4],
                     joint_values[5], joint_values[6]);
 }
+
 bool RLLBasicMoveClient::moveJoints(double a1, double a2, double a3, double a4, double a5, double a6, double a7)
 {
   rll_msgs::MoveJoints move_joints_msg;
@@ -183,14 +182,14 @@ bool RLLBasicMoveClient::moveJoints(double a1, double a2, double a3, double a4, 
   move_joints_msg.request.joint_6 = a6;
   move_joints_msg.request.joint_7 = a7;
 
-  return callServiceWithErrorCode<rll_msgs::MoveJoints>(RLLMoveIface::MOVE_JOINTS_SRV_NAME, move_joints_,
+  return callServiceWithErrorCode<rll_msgs::MoveJoints>(RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME, move_joints_,
                                                         move_joints_msg);
 }
 
 bool RLLGetPoseMoveClient::getCurrentPose(geometry_msgs::Pose* const pose)
 {
   rll_msgs::GetPose get_pose_msg;
-  bool success = callServiceWithErrorCode(RLLMoveIface::GET_POSE_SRV_NAME, get_pose_, get_pose_msg);
+  bool success = callServiceWithErrorCode(RLLMoveIfaceServices::GET_POSE_SRV_NAME, get_pose_, get_pose_msg);
   if (success)
   {
     *pose = get_pose_msg.response.pose;
@@ -201,8 +200,8 @@ bool RLLGetPoseMoveClient::getCurrentPose(geometry_msgs::Pose* const pose)
 bool RLLGetPoseMoveClient::getCurrentJointValues(std::vector<double>* const joint_values)
 {
   rll_msgs::GetJointValues get_joint_values_msg;
-  bool success =
-      callServiceWithErrorCode(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME, get_joint_values_, get_joint_values_msg);
+  bool success = callServiceWithErrorCode(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME, get_joint_values_,
+                                          get_joint_values_msg);
   if (success)
   {
     joint_values->push_back(get_joint_values_msg.response.joint_1);
@@ -225,7 +224,7 @@ bool RLLPickPlaceClient::pickPlace(const geometry_msgs::Pose& pose_above, const 
   pick_place_msg.request.gripper_close = gripper_close ? 1u : 0u;
   pick_place_msg.request.grasp_object = grasp_object;
 
-  bool success =
-      callServiceWithErrorCode<rll_msgs::PickPlace>(RLLMoveIface::PICK_PLACE_SRV_NAME, pick_place_, pick_place_msg);
+  bool success = callServiceWithErrorCode<rll_msgs::PickPlace>(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME, pick_place_,
+                                                               pick_place_msg);
   return success;
 }

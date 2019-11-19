@@ -2,7 +2,7 @@
 <package>
   <name>rll_control</name>
   <version>0.1.0</version>
-  <description>A package containing controllers used by MoveIt! and Gazebo</description>
+  <description>Controller configs used by MoveIt! and Gazebo</description>
 
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>
 

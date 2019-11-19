@@ -18,16 +18,17 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 import collections
+import socket
 
-import actionlib
 import rospy
-from rll_msgs.msg import DefaultMoveIfaceAction
-from rll_msgs.srv import MoveJoints, MovePTP, MoveLin, MoveRandom, \
-    GetJointValues, GetPose, PickPlace
+from std_srvs.srv import SetBool, SetBoolRequest
+
+from rll_msgs.srv import (MoveJoints, MovePTP, MoveLin, MoveRandom,
+                          GetJointValues, GetPose, PickPlace)
 
 from .error import ServiceCallFailure, CriticalServiceCallFailure, RLLErrorCode
-from .util import apply_ansi_format, C_NAME, C_END, C_OK, C_FAIL, C_WARN, \
-    C_INFO
+from .util import (apply_ansi_format, C_NAME, C_END, C_OK, C_FAIL, C_WARN,
+                   C_INFO)
 
 
 class RLLMoveClientBase(object):
@@ -52,10 +53,10 @@ class RLLMoveClientBase(object):
         self._last_error_code = resp.error_code
         return handle_response_func(srv_name, resp)
 
-    def _log_service_call(self, srv_name, log_format="%s requested", *args):
+    def _log_service_call(self, srv_name, log_format, *args):
         if self.verbose:
             name = apply_ansi_format(srv_name, C_NAME)
-            if len(args) > 0:
+            if args:
                 rospy.loginfo(log_format, name, args)
             else:
                 rospy.loginfo(log_format, name)
@@ -99,49 +100,97 @@ class RLLMoveClientBase(object):
         return False
 
 
-class RLLActionMoveClient:
+class RLLMoveClientListener(object):
+    JOB_FINISHED_SRV_NAME = "job_finished"
 
-    def __init__(self, execute_func=None, action_name="move_client"):
+    def __init__(self, execute_func=None):
+        tcp_port = 5005
+
         # TODO(uieai) do we need to inherit from RLLMoveClientBase ?
         self.execute_func = execute_func
 
-        self.server = actionlib.SimpleActionServer(
-            action_name, DefaultMoveIfaceAction, self.__execute, False)
+        self.job_finished_service = rospy.ServiceProxy(
+            self.JOB_FINISHED_SRV_NAME, SetBool)
 
-        rospy.loginfo("Action server started")
-        self.server.start()
+        # init TCP socket
+        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.sock.settimeout(2.0)
+        # listen on all interfaces
+        self.sock.bind(('', tcp_port))
+        # only allow one connection
+        self.sock.listen(1)
+        rospy.loginfo("Socket listener started")
 
-    def __execute(self, req):
+    def execute(self):
+        success = False
 
-        rospy.loginfo("Action triggered")
+        def execute_default():
+            rospy.logerr("No client code found. "
+                         "You must pass an execute() method to the client!")
+            return False
+
+        rospy.loginfo("Code execution triggered")
 
         try:
             if self.execute_func is not None:
-                result = self.execute_func(self)
+                success = self.execute_func(self)
             else:
-                result = self.execute()
-
-            # if the callback returns not None treat it as a success indication
-            if result is not None:
-                if result:
-                    rospy.loginfo("Callback completed %ssuccessfully%s",
-                                  C_OK, C_END)
-                else:
-                    rospy.loginfo("Callback completed %sunsuccessfully%s",
-                                  C_WARN, C_END)
-
-            self.server.set_succeeded()
-
+                success = execute_default()
         except ServiceCallFailure as expt:
-            rospy.logerr("The action routine was interrupted by an uncaught "
+            rospy.logerr("The client routine was interrupted by an uncaught "
                          "exception: \n%s", expt)
-            self.server.set_aborted()
 
-        rospy.loginfo("Action completed")
+        if not isinstance(success, bool):
+            rospy.loginfo("Client code did not return boolean indicating "
+                          "success, assuming %sunsuccessful completion%s",
+                          C_WARN, C_END)
+            success = False
+        elif success:
+            rospy.loginfo("Client code completed %ssuccessfully%s",
+                          C_OK, C_END)
+        else:
+            rospy.loginfo("Client code completed %sunsuccessfully%s",
+                          C_WARN, C_END)
 
-    def execute(self):
-        raise NotImplementedError(
-            "You must override the 'execute() method!")
+        req = SetBoolRequest()
+        req.data = success
+        resp = self.job_finished_service(req)
+        if not resp.success:
+            rospy.logerr("failed to report execution result to interface")
+
+        rospy.loginfo("Code execution completed")
+
+    def spin(self):
+        buffer_size = 10
+
+        while not rospy.is_shutdown():
+            try:
+                conn, addr = self.sock.accept()
+            except socket.timeout:
+                continue
+            except socket.error as err:
+                rospy.loginfo("socket error %s", err)
+                continue
+
+            rospy.loginfo("got a connection from addr %s", addr)
+
+            try:
+                data = conn.recv(buffer_size)  # pylint: disable=no-member
+            except socket.error as err:
+                rospy.logerr("socket error %s", err)
+                continue
+
+            if not data:
+                rospy.logerr("did not receive any data in listener spinner")
+                continue
+
+            if data == "start":
+                rospy.loginfo("received start signal")
+                conn.send(b'ok')  # pylint: disable=no-member
+                self.execute()
+            else:
+                rospy.logerr("error receiving start signal")
+                conn.send(b'error')  # pylint: disable=no-member
 
 
 class RLLBasicMoveClient(RLLMoveClientBase):
@@ -168,6 +217,7 @@ class RLLBasicMoveClient(RLLMoveClientBase):
         # available 'getter' -> return values
         self.get_current_pose_service = rospy.ServiceProxy(
             self.GET_POSE_SRV_NAME, GetPose)
+        # pylint: disable=invalid-name
         self.get_current_joint_values_service = rospy.ServiceProxy(
             self.GET_JOINT_VALUES_SRV_NAME, GetJointValues)
 
@@ -254,10 +304,10 @@ class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place
             pose_above, pose_grip, gripper_close, grasp_object)
 
 
-class RLLDefaultMoveClient(RLLActionMoveClient, RLLBasicMoveClient,
+class RLLDefaultMoveClient(RLLMoveClientListener, RLLBasicMoveClient,
                            PickPlaceClient):
 
-    def __init__(self, execute_func=None, action_name="move_client"):
-        RLLActionMoveClient.__init__(self, execute_func, action_name)
+    def __init__(self, execute_func=None):
+        RLLMoveClientListener.__init__(self, execute_func)
         RLLBasicMoveClient.__init__(self)
         PickPlaceClient.__init__(self)

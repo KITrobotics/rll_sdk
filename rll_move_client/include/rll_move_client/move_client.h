@@ -34,25 +34,25 @@
 #include <rll_msgs/GetPose.h>
 #include <rll_msgs/PickPlace.h>
 
-#include <rll_move/move_iface.h>
+#include <rll_move/move_iface_services.h>
 
 // scoped globals
 struct AnsiCodes
 {
-  static const char* END;
-  static const char* RED;
-  static const char* GRN;
-  static const char* YEL;
-  static const char* BLU;
-  static const char* MAG;
-  static const char* CYN;
-  static const char* WHT;
-  static const char* BOLD;
-  static const char* NAME;
-  static const char* OK;
-  static const char* INFO;
-  static const char* WARN;
-  static const char* FAIL;
+  static const char* END_;
+  static const char* RED_;
+  static const char* GRN_;
+  static const char* YEL_;
+  static const char* BLU_;
+  static const char* MAG_;
+  static const char* CYN_;
+  static const char* WHT_;
+  static const char* BOLD_;
+  static const char* NAME_;
+  static const char* OK_;
+  static const char* INFO_;
+  static const char* WARN_;
+  static const char* FAIL_;
 };
 
 class ServiceCallFailure : public std::runtime_error
@@ -114,8 +114,8 @@ void RLLMoveClientBase::logServiceCall(const std::string& srv_name, const Reques
 {
   if (verbose_)
   {
-    ROS_INFO("%s%s%s requested:", AnsiCodes::NAME, srv_name.c_str(), AnsiCodes::END);
-    ROS_INFO_STREAM(request);  // NOLINT
+    ROS_INFO("%s%s%s requested:", AnsiCodes::NAME_, srv_name.c_str(), AnsiCodes::END_);
+    ROS_INFO_STREAM(request);
   }
 }
 
@@ -166,9 +166,8 @@ class RLLGetPoseMoveClient : public virtual RLLMoveClientBase
 {
 public:
   explicit RLLGetPoseMoveClient()
-    : RLLMoveClientBase()
-    , get_joint_values_(nh_.serviceClient<rll_msgs::GetJointValues>(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME))
-    , get_pose_(nh_.serviceClient<rll_msgs::GetPose>(RLLMoveIface::GET_POSE_SRV_NAME))
+    : get_joint_values_(nh_.serviceClient<rll_msgs::GetJointValues>(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME))
+    , get_pose_(nh_.serviceClient<rll_msgs::GetPose>(RLLMoveIfaceServices::GET_POSE_SRV_NAME))
   {
   }
 
@@ -176,8 +175,8 @@ public:
   bool getCurrentJointValues(std::vector<double>* joint_values);
 
 protected:
-  ros::ServiceClient get_pose_;
   ros::ServiceClient get_joint_values_;
+  ros::ServiceClient get_pose_;
 };
 
 // TODO(uieai) test pick place
@@ -185,7 +184,7 @@ class RLLPickPlaceClient : public virtual RLLMoveClientBase
 {
 public:
   explicit RLLPickPlaceClient()
-    : RLLMoveClientBase(), pick_place_(nh_.serviceClient<rll_msgs::PickPlace>(RLLMoveIface::PICK_PLACE_SRV_NAME))
+    : pick_place_(nh_.serviceClient<rll_msgs::PickPlace>(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME))
   {
   }
 

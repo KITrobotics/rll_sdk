@@ -4,36 +4,39 @@ project(rll_move_client)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-std=c++11)
 
+# Warnings
+add_definitions(-Wall -Wextra
+  -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls)
+
 find_package(catkin REQUIRED COMPONENTS  
-  roscpp
-  rospy
-  moveit_core
-  std_msgs
-  actionlib
-  rll_msgs
   rll_move
+  rll_msgs
 )
 
 catkin_python_setup()
 
 catkin_package(
    INCLUDE_DIRS include
-   LIBRARIES rll_move_client   
-   CATKIN_DEPENDS rll_msgs rll_move
+   LIBRARIES ${PROJECT_NAME}
+   CATKIN_DEPENDS rll_move rll_msgs
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(include)
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
 
 add_library(${PROJECT_NAME}
   src/move_client.cpp
+  src/move_client_listener.cpp
   src/move_client_util.cpp
-  src/move_client_action.cpp  
 )
 
 # install the library for other ROS packages
 install(TARGETS ${PROJECT_NAME}
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION})
+
+catkin_install_python(PROGRAMS scripts/move_client_example.py
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 install(DIRECTORY include/${PROJECT_NAME}/
   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})

@@ -1,5 +1,8 @@
-# based on: https://github.com/frankaemika/franka_ros/blob/kinetic-devel/.clang-tidy
-Checks: 'clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,google-*,misc-*,readability-*,modernize-*,performance-*,-clang-diagnostic-deprecated-declarations,-modernize-pass-by-value,-clang-diagnostic-reinterpret-base-class,-clang-diagnostic-return-type,-clang-diagnostic-switch'
+# the following checks are additionally disabled because various core ROS templates or base classes throw these warnings:
+# modernize-use-bool-literals, readability-implicit-bool-cast, readability-implicit-bool-conversion, modernize-use-using, modernize-use-equals-delete, google-runtime-references
+Checks: 'boost-*,bugprone-*,cert-*,mpi-*,openmp-*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,google-*,misc-*,readability-*,modernize-*,performance-*,-modernize-use-bool-literals,-readability-implicit-bool-cast,-readability-implicit-bool-conversion,-modernize-use-using,-modernize-use-equals-delete,-google-runtime-references,-cert-err58-cpp'
+
+HeaderFilterRegex: ''
 
 CheckOptions:
 # Classes, structs, ...
@@ -23,10 +26,14 @@ CheckOptions:
     value:  lower_case
   - key:    readability-identifier-naming.MemberCase
     value:  lower_case
+  - key:    readability-identifier-naming.ClassMemberSuffix
+    value:  '_'
   - key:    readability-identifier-naming.PublicMemberCase
     value:  lower_case
   - key:    readability-identifier-naming.ProtectedMemberCase
     value:  lower_case
+  - key:    readability-identifier-naming.ProtectedMemberSuffix
+    value:  '_'
   - key:    readability-identifier-naming.PrivateMemberCase
     value:  lower_case
   - key:    readability-identifier-naming.PrivateMemberSuffix

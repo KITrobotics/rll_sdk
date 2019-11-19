@@ -17,7 +17,8 @@ variables:
   UPSTREAM_WORKSPACE: "file"
 
   ROSINSTALL_FILENAME: ".ci.rosinstall"
-  ROS_DISTRO: "kinetic"
+  ROS_DISTRO: "melodic"
+  ROS_REPO: "ros"
 
   # most projects will require the rll_sdk to be installed,
   # if you want to install it without providing a .ci.rosinstall file
@@ -35,31 +36,51 @@ before_script:
 # create the .rosinstall file IF it does not exist
   - test ! -f ${ROSINSTALL_FILENAME} && echo ${ROSINSTALL_DEFAULT} >> ${ROSINSTALL_FILENAME}
   - sed -i 's/https\:\/\/gitlab\.ipr\.kit\.edu/https\:\/\/gitlab-ci-token\:'${CI_JOB_TOKEN}'\@gitlab\.ipr\.kit\.edu/g' ${CI_PROJECT_DIR}/${ROSINSTALL_FILENAME}
-# Download the .clang-format config IF it does not exist
+# Download config files if they do not exist
   - test ! -f .clang-format && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.clang-format
+  - test ! -f .clang-tidy && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.clang-tidy
+  - test ! -f .flake8 && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.flake8
+  - test ! -f .pylintrc && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.pylintrc
 
 
 # Format checks are run for every branch regardless of the ROS_DISTRO
 format-check:
   variables:
     # run clang format check
-    CLANG_FORMAT_VERSION: "3.9"
+    CLANG_FORMAT_VERSION: "6.0"
     CLANG_FORMAT_CHECK: "file"
+    AFTER_SCRIPT: "apt -yq install python-pip && pip -q install flake8 && python -m flake8"
   script: .industrial_ci/gitlab.sh
   tags:
     - docker # use docker runner
 
 
-kinetic-build:
+kinetic-build-rostests:
+  variables:
+    ROS_DISTRO: "kinetic" # override ROS_DISTRO variable
   # run default -> build
   script: .industrial_ci/gitlab.sh
   tags:
     - docker
 
 
-melodic-build:
+melodic-build-rostests:
+  # run default -> build
+  script: .industrial_ci/gitlab.sh
+  tags:
+    - docker
+
+
+warningbuild-linting:
   variables:
-    ROS_DISTRO: "melodic" # override ROS_DISTRO variable
+    CATKIN_LINT: "pedantic"
+    # TODO: fix lint errors in these Gazebo packages
+    CATKIN_LINT_ARGS: "--skip-pkg gazebo_version_helpers --skip-pkg gazebo_grasp_plugin"
+    ADDITIONAL_DEBS: "python-pip clang-tidy-6.0 clang-6.0"
+    CATKIN_CONFIG: "--cmake-args -DCMAKE_CXX_FLAGS=-Werror"
+    NOT_TEST_BUILD: "true"
+    CLANG_TIDY_CMD: "run-clang-tidy-6.0.py -p /root/catkin_ws/build"
+    AFTER_SCRIPT: "${CLANG_TIDY_CMD}/rll_move -header-filter=rll_move/* && ${CLANG_TIDY_CMD}/rll_move_client -header-filter=rll_move_client/* && ${CLANG_TIDY_CMD}/rll_analytical_kinematics -header-filter=rll_analytical_kinematics/* && pip -q install 'pylint<2.0.0' && . /root/catkin_ws/install/setup.bash && find * -not -path 'docs/*' -iname '*.py' | xargs python -m pylint"
   # run default -> build
   script: .industrial_ci/gitlab.sh
   tags:

@@ -18,8 +18,9 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import rospy
 from math import pi
+
+import rospy
 from geometry_msgs.msg import Pose, Point
 
 from rll_move_client.client import RLLDefaultMoveClient
@@ -76,10 +77,14 @@ def execute(move_client):
 
     match = compare_joint_values(joint_values, joint_values2)
     rospy.loginfo("Set and queried joint values match: %s",
-                  match if "yes" else "no")
+                  "yes" if match else "no")
+
+
+def main():
+    rospy.init_node('move_client_example')
+    client = RLLDefaultMoveClient(execute)
+    client.spin()
 
 
 if __name__ == "__main__":
-    rospy.init_node('move_client_example')
-    client = RLLDefaultMoveClient(execute)
-    rospy.spin()
+    main()

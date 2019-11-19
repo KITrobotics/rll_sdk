@@ -2,6 +2,7 @@
  * This file is part of the Robot Learning Lab Move Client
  *
  * Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
+ * Copyright (C) 2019 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,27 +18,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOVE_CLIENT_ACTION_H_
-#define MOVE_CLIENT_ACTION_H_
+#ifndef MOVE_CLIENT_LISTENER_H_
+#define MOVE_CLIENT_LISTENER_H_
 
 #include <rll_move_client/move_client.h>
 
-#include <actionlib/server/simple_action_server.h>
-#include <rll_msgs/DefaultMoveIfaceAction.h>
-#include <rll_msgs/DefaultMoveIfaceActionGoal.h>
-
-class RLLActionMoveClient : public virtual RLLMoveClientBase
+class RLLMoveClientListener : public virtual RLLMoveClientBase
 {
 public:
-  explicit RLLActionMoveClient(const std::string& name);
+  explicit RLLMoveClientListener();
+
+  void spin();
 
 protected:
   bool virtual execute() = 0;
 
 private:
-  // From ROS-Wiki: "NodeHandle instance must be created before this line Otherwise strange error occurs."
-  actionlib::SimpleActionServer<rll_msgs::DefaultMoveIfaceAction> server_;
-  void executeCallback(const rll_msgs::DefaultMoveIfaceGoalConstPtr& goal);
+  int socket_;
+  ros::ServiceClient job_finished_;
+
+  void executeCallback();
 };
 
-#endif /* MOVE_CLIENT_ACTION_H_ */
+#endif /* MOVE_CLIENT_LISTENER_H_ */

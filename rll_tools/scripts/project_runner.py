@@ -18,10 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
+import sys
+
 import rospy
 import actionlib
+
 from rll_msgs.msg import JobStatus, JobEnvAction, JobEnvGoal
-import sys
 
 
 def job_result_codes_to_string(status):
@@ -30,16 +32,20 @@ def job_result_codes_to_string(status):
     return job_codes.get(status, "unknown")
 
 
-def run_project(timeout, secret):
+def run_client(server_timeout, auth_secret):
     job_env = actionlib.SimpleActionClient('job_env', JobEnvAction)
     rospy.sleep(0.5)
-    available = job_env.wait_for_server(rospy.Duration.from_sec(timeout))
+    available = job_env.wait_for_server(
+        rospy.Duration.from_sec(server_timeout))
     if not available:
         rospy.logerr("job env action server is not available")
         sys.exit(1)
 
+    # TODO: move the project_runner into a module, so the code
+    #       can be properly reused by tests
     job_env_goal = JobEnvGoal()
-    job_env_goal.authentication_secret = secret
+    job_env_goal.authentication_secret = auth_secret
+    job_env_goal.client_ip_addr = "127.0.0.1"
     job_env.send_goal(job_env_goal)
     rospy.loginfo("started the project")
     job_env.wait_for_result()
@@ -63,16 +69,17 @@ def run_project(timeout, secret):
 
 
 # reset robot and environment
-def idle(timeout, secret):
+def idle(server_timeout, auth_secret):
     job_idle = actionlib.SimpleActionClient('job_idle', JobEnvAction)
     rospy.sleep(0.5)
-    available = job_idle.wait_for_server(rospy.Duration.from_sec(timeout))
+    available = job_idle.wait_for_server(
+        rospy.Duration.from_sec(server_timeout))
     if not available:
         rospy.logerr("job idle action server is not available")
         sys.exit(1)
 
     job_idle_goal = JobEnvGoal()
-    job_idle_goal.authentication_secret = secret
+    job_idle_goal.authentication_secret = auth_secret
     job_idle.send_goal(job_idle_goal)
     rospy.loginfo("resetting environment back to start")
     job_idle.wait_for_result()
@@ -84,20 +91,23 @@ def idle(timeout, secret):
         sys.exit(1)
 
 
-if __name__ == '__main__':
-    rospy.init_node('project_runner')
-
-    timeout = rospy.get_param("~timeout", 5)
-    secret = rospy.get_param("~authentication_secret", "")
+def run_project():
+    server_timeout = rospy.get_param("~timeout", 5)
+    auth_secret = rospy.get_param("~authentication_secret", "")
     only_idle = rospy.get_param("~only_idle")
 
     if only_idle:
-        idle(timeout, secret)
+        idle(server_timeout, auth_secret)
         sys.exit(0)
 
-    success = run_project(timeout, secret)
+    success = run_client(server_timeout, auth_secret)
     if not success:
         rospy.logfatal("Internal error when running project")
         sys.exit(1)
 
-    idle(timeout, secret)
+    idle(server_timeout, auth_secret)
+
+
+if __name__ == '__main__':
+    rospy.init_node('project_runner')
+    run_project()

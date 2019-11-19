@@ -24,7 +24,7 @@
 #include <vector>
 #include <stack>
 #include <algorithm>
-#include <stdint.h>
+#include <cstdint>
 #include <ros/ros.h>
 
 /**
@@ -71,7 +71,7 @@ public:
     return (current_permissions_ & permissions) == permissions;
   }
 
-  Index registerPermission(const std::string& name, bool isPermitted = false)
+  Index registerPermission(const std::string& name, bool is_permitted = false)
   {
     if (permissions_count_ >= MAX_PERMISSION_INDICES)
     {
@@ -82,7 +82,7 @@ public:
     permission_names_.push_back(name);
     Index index = (1U << permissions_count_);
     permissions_count_++;
-    updateCurrentPermissions(index, isPermitted);
+    updateCurrentPermissions(index, is_permitted);
     ROS_DEBUG("Registering permission: %s -> index=%d", name.c_str(), index);
 
     return index;
@@ -90,13 +90,13 @@ public:
 
   Index getIndexForName(const std::string& name)
   {
-    const auto iter = std::find(permission_names_.begin(), permission_names_.end(), name);
-    if (iter == permission_names_.end())
+    const auto ITER = std::find(permission_names_.begin(), permission_names_.end(), name);
+    if (ITER == permission_names_.end())
     {
       ROS_ERROR("No such permission '%s'", name.c_str());
       return false;
     }
-    uint8_t bit_position = std::distance(permission_names_.begin(), iter);
+    uint8_t bit_position = std::distance(permission_names_.begin(), ITER);
     return (1 << bit_position);
   }
 
@@ -118,7 +118,7 @@ public:
 
   void restorePreviousPermissions()
   {
-    if (stored_permissions_.size() == 0)
+    if (stored_permissions_.empty())
     {
       ROS_WARN("Cannot restore previous permissions, no permissions have been stored.");
       return;
@@ -157,13 +157,13 @@ public:
     ROS_DEBUG("Update default requirements=%u", default_requirements_);
   }
 
-  void setRequiredPermissionsFor(std::string name, Group requirements, bool inherit_default_permissions = false)
+  void setRequiredPermissionsFor(const std::string& name, Group requirements, bool inherit_default_permissions = false)
   {
     if (inherit_default_permissions)
     {
       requirements |= default_requirements_;
     }
-    requirements_by_name[name] = requirements;
+    requirements_by_name_[name] = requirements;
   }
 
   bool isPermissionRequiredFor(const std::string& name, Index requirement)
@@ -175,15 +175,15 @@ public:
   {
     Group requirements = default_requirements_;
     // check if explicit requirements have been set for this name
-    const auto iter = requirements_by_name.find(name);
-    if (iter != requirements_by_name.end())
+    const auto ITER = requirements_by_name_.find(name);
+    if (ITER != requirements_by_name_.end())
     {
-      requirements = iter->second;
+      requirements = ITER->second;
     }
     return requirements;
   }
 
-  bool areAllRequiredPermissionsSetFor(std::string name) const
+  bool areAllRequiredPermissionsSetFor(const std::string& name) const
   {
     Group requirements = getRequiredPermissionsFor(name);
     bool permitted = areAllRequiredPermissionsSet(requirements);
@@ -202,7 +202,7 @@ private:
 
   // by default nothing is permitted
   Group default_requirements_ = DENY_ALL;
-  std::map<std::string, Group> requirements_by_name;
+  std::map<std::string, Group> requirements_by_name_;
   std::stack<Group> stored_permissions_;
 };
 

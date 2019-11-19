@@ -2,14 +2,18 @@
 <package format="2">
   <name>rll_msgs</name>
   <version>0.0.1</version>
-  <description>The rll_msgs package</description>
+  <description>Common message, service, topic and action definitions for the KUKA Robot Learning Lab at KIT</description>
 
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>
 
-  <license>GPLv3+</license>
+  <license>BSD</license>
 
   <depend>actionlib</depend>
   <depend>actionlib_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>std_srvs</depend>
+  <build_depend>message_generation</build_depend>
   <build_depend>message_generation</build_depend>
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>

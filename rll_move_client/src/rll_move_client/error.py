@@ -94,16 +94,34 @@ class RLLErrorCode(object):
     }
 
     HINTS = {
-        JOINT_VALUES_OUT_OF_RANGE: "One or more of the joint values you specified are outside their allowed limits.",
-        INVALID_TARGET_POSE: "The pose/joint values you specified cannot be reached i.e. they are outside their allowed limits, or would move the robot outside the allowed workspace.",
-        TOO_FEW_WAYPOINTS: "The distance to the requested goal pose is probably too small (e.g. less than 5mm for a linear motion).",
-        GOAL_TOO_CLOSE_TO_START: "The robot is already at/too close to the goal and no motion is performed.",
-        NO_IK_SOLUTION_FOUND: "The inverse kinematics did not yield a solution. Is your goal pose within the workspace?",
-        NO_RANDOM_POSITION_FOUND: "Random pose generation may fail e.g. if the generated pose is in collision.",
-        GOAL_IN_COLLISION: "The request motion would result in a collision either with an obstacle or the robot itself.",
-        MOVEIT_PLANNING_FAILED: "This is a generic motion planning error and can be caused e.g. by requesting a pose outside the allowed workspace.",
-        ONLY_PARTIAL_PATH_PLANNED: "A pose between the start and goal pose of a linear motion causes a collision, only part of the motion is possible.",
-        SERVICE_CALL_NOT_ALLOWED: "The movement interface currently does not accept service calls, possibly due to a critical failure."
+        JOINT_VALUES_OUT_OF_RANGE: ("One or more of the joint values "
+                                    "you specified are outside their "
+                                    "allowed limits."),
+        INVALID_TARGET_POSE: ("The pose/joint values you specified "
+                              "cannot be reached i.e. they are outside "
+                              "their allowed limits, or would move the "
+                              "robot outside the allowed workspace."),
+        TOO_FEW_WAYPOINTS: ("The distance to the requested goal pose "
+                            "is probably too small (e.g. less than 5mm "
+                            "for a linear motion)."),
+        GOAL_TOO_CLOSE_TO_START: ("The robot is already at/too close "
+                                  "to the goal and no motion is performed."),
+        NO_IK_SOLUTION_FOUND: ("The inverse kinematics did not yield a "
+                               "solution. Is your goal pose within "
+                               "the workspace?"),
+        NO_RANDOM_POSITION_FOUND: ("Random pose generation may fail e.g. "
+                                   "if the generated pose is in collision."),
+        GOAL_IN_COLLISION: ("The request motion would result in a collision "
+                            "either with an obstacle or the robot itself."),
+        MOVEIT_PLANNING_FAILED: ("This is a generic motion planning error and "
+                                 "can be caused e.g. by requesting a pose "
+                                 "outside the allowed workspace."),
+        ONLY_PARTIAL_PATH_PLANNED: ("A pose between the start and goal pose "
+                                    "of a linear motion causes a collision, "
+                                    "only part of the motion is possible."),
+        SERVICE_CALL_NOT_ALLOWED: ("The movement interface currently does not "
+                                   "accept service calls, possibly due to a "
+                                   "critical failure.")
     }
 
     def __init__(self, code=NOT_SET):

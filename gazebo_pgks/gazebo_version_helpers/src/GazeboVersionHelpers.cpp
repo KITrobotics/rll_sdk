@@ -1,10 +1,10 @@
 #include <gazebo_version_helpers/GazeboVersionHelpers.h>
 #include <gazebo/physics/physics.hh>
 
-using gazebo::GzPose3;
-using gazebo::GzVector3;
 using gazebo::GzMatrix3;
 using gazebo::GzMatrix4;
+using gazebo::GzPose3;
+using gazebo::GzVector3;
 
 ///////////////////////////////////////////////////////////////////////////////
 GzPose3 gazebo::GetWorldPose(const gazebo::physics::LinkPtr& link)

@@ -20,14 +20,11 @@
 
 from geometry_msgs.msg import Pose, Point
 
-from test_util import TestCaseWithRLLMoveClient
 from rll_move_client.error import RLLErrorCode
+from test_util import TestCaseWithRLLMoveClient
 
 
 class TestBasicMovements(TestCaseWithRLLMoveClient):
-
-    def __init__(self, *args, **kwargs):
-        super(TestBasicMovements, self).__init__(*args, **kwargs)
 
     def test_0_error_codes(self):
         e_ok = RLLErrorCode(RLLErrorCode.SUCCESS)
@@ -36,11 +33,11 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         e_critical = RLLErrorCode(RLLErrorCode.CRITICAL_FAILURE)
 
         def check_code(error_code, success, failure, recoverable, invalid):
-            self.assertEquals(error_code.succeeded(), success)
-            self.assertEquals(error_code.failed(), not success)
-            self.assertEquals(error_code.is_critical_failure(), failure)
-            self.assertEquals(error_code.is_recoverable_failure(), recoverable)
-            self.assertEquals(error_code.is_invalid_input(), invalid)
+            self.assertEqual(error_code.succeeded(), success)
+            self.assertEqual(error_code.failed(), not success)
+            self.assertEqual(error_code.is_critical_failure(), failure)
+            self.assertEqual(error_code.is_recoverable_failure(), recoverable)
+            self.assertEqual(error_code.is_invalid_input(), invalid)
 
         # basic checks to validate the ErrorCode class
         check_code(e_ok, True, False, False, False)
@@ -52,18 +49,18 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         goal_pose = Pose()
         goal_pose.position = Point(1, 1, 1)
         resp = self.client.move_ptp(goal_pose)
-        self.assertLastServiceCallFailedWith(resp,
-                                             RLLErrorCode.NO_IK_SOLUTION_FOUND)
+        self.assert_last_srv_call_failed(resp,
+                                         RLLErrorCode.NO_IK_SOLUTION_FOUND)
 
     def test_2_move_joints(self):
         resp = self.client.move_joints(0, 0, 0, 0, 0, 0, 0)
-        self.assertLastServiceCallSucceeded(resp)
+        self.assert_last_srv_call_success(resp)
 
         resp = self.client.move_joints([1, 0, 0, 0, 0, 0, 0])
-        self.assertLastServiceCallSucceeded(resp)
+        self.assert_last_srv_call_success(resp)
 
         resp = self.client.move_joints((0, 0, 1, 0, 0, 0, 0))
-        self.assertLastServiceCallSucceeded(resp)
+        self.assert_last_srv_call_success(resp)
 
         # should be seven values
         resp = self.client.move_joints(0, 0, 1, 0, 0, 0, )

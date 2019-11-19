@@ -6,24 +6,24 @@
 TEST(PermissionsTest, testBeginServiceCall)
 {
   RLLMoveIfaceStateMachine s;
-  auto resp = s.beginServiceCall("test");
+  auto resp = s.beginServiceCall("test", true);
   ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
 
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SERVICE_CALL_NOT_ALLOWED);
 
   bool success = s.enterState(RLLMoveIfaceState::RUNNING_JOB);
   ASSERT_TRUE(success);
 
-  resp = s.beginServiceCall("test");
+  resp = s.beginServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
-  resp = s.beginServiceCall("test");
+  resp = s.beginServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::CONCURRENT_SERVICE_CALL);
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 }
 
@@ -43,12 +43,12 @@ TEST(PermissionsTest, testLeaveErrorState)
 {
   RLLMoveIfaceStateMachine s;
   // enter error state
-  auto success = s.enterState(RLLMoveIfaceState::RUNNING_JOB);
-  success = s.enterState(RLLMoveIfaceState::IDLING);
+  s.enterState(RLLMoveIfaceState::RUNNING_JOB);
+  s.enterState(RLLMoveIfaceState::IDLING);
   ASSERT_TRUE(s.isInInternalErrorState());
 
   // try to change state
-  success = s.enterState(RLLMoveIfaceState::WAITING);
+  auto success = s.enterState(RLLMoveIfaceState::WAITING);
   ASSERT_FALSE(success);
   ASSERT_TRUE(s.isInInternalErrorState());
 
@@ -65,10 +65,10 @@ TEST(PermissionsTest, testServiceAllowedOutsideJobRunCall)
 {
   RLLMoveIfaceStateMachine s;
 
-  auto resp = s.beginServiceCall("test");
+  auto resp = s.beginServiceCall("test", true);
   ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
 
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(RLLErrorCode::SERVICE_CALL_NOT_ALLOWED, resp.value());
 
   // allow outside of job run (i.e. in waiting)
@@ -102,24 +102,24 @@ TEST(PermissionsTest, testFullDemoRun)
   auto success = s.enterState(RLLMoveIfaceState::RUNNING_JOB);
   ASSERT_TRUE(success);
 
-  auto resp = s.beginServiceCall("test");
+  auto resp = s.beginServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall("test");
-  ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-
-  resp = s.beginServiceCall("test1");
-  ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
-  resp = s.beginServiceCall("test2");
+  resp = s.beginServiceCall("test1", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
-  resp = s.beginServiceCall("test");
+  resp = s.beginServiceCall("test2", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
-  resp = s.endServiceCall("test");
+  resp = s.endServiceCall("test", true);
+  ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
+
+  resp = s.beginServiceCall("test", true);
+  ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
+  resp = s.endServiceCall("test", true);
   ASSERT_EQ(resp.value(), RLLErrorCode::SUCCESS);
 
   success = s.leaveState();

@@ -19,26 +19,23 @@
 #
 
 from math import pi
-from geometry_msgs.msg import Pose, Point
-from rll_move_client.util import orientation_from_rpy
-from rll_move_client.error import CriticalServiceCallFailure
 
-from test_util import TestCaseWithRLLMoveClient, concurrent_call, idle
-from rll_move_client.error import RLLErrorCode
+from geometry_msgs.msg import Pose, Point
 import rospy
 import rll_msgs
 
+from rll_move_client.error import RLLErrorCode, CriticalServiceCallFailure
+from rll_move_client.util import orientation_from_rpy
+from test_util import TestCaseWithRLLMoveClient, concurrent_call, idle
+
 
 class TestInvalidMovements(TestCaseWithRLLMoveClient):
-
-    def __init__(self, *args, **kwargs):
-        super(TestInvalidMovements, self).__init__(*args, **kwargs)
 
     def test_0_pose_outside_workspace(self):
         goal_pose = Pose()
         goal_pose.position = Point(1, 1, 1)
         resp = self.client.move_ptp(goal_pose)
-        self.assertLastServiceCallFailedWith(
+        self.assert_last_srv_call_failed(
             resp, RLLErrorCode.NO_IK_SOLUTION_FOUND)
 
     def test_1_move_ptp(self):
@@ -47,47 +44,48 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
 
         goal_pose.orientation = orientation_from_rpy(pi / 2, -pi / 4, pi)
         resp = self.client.move_ptp(goal_pose)
-        self.assertLastServiceCallSucceeded(resp)
+        self.assert_last_srv_call_success(resp)
 
     def test_2_move_lin_sole_rotation(self):
-        # move into position
+        # move into home position
         resp = self.client.move_joints(0, 0, 0, -pi / 2, 0, -pi / 2, 0)
-        self.assertLastServiceCallSucceeded(resp)
+        self.assert_last_srv_call_success(resp)
 
         goal_pose = Pose()
-        goal_pose.position = Point(.3, .41, .63)
+        goal_pose.position = Point(.3, .41, .62)
         goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
         resp = self.client.move_ptp(goal_pose)
 
-        # only change the orientation no motion -> should fail
+        # only change the orientation, no linear motion -> should fail
         goal_pose.orientation = orientation_from_rpy(0, 0, 0)
         success = self.client.move_lin(goal_pose)
-        self.assertLastServiceCallFailedWith(
+        self.assert_last_srv_call_failed(
             success, RLLErrorCode.TOO_FEW_WAYPOINTS)
 
-        # only change the position -> should succeed
-        goal_pose.position = Point(.2, .41, .63)
+        # only change the position, orientation from before -> should succeed
+        goal_pose.position = Point(.19, .41, .63)
         goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
         success = self.client.move_lin(goal_pose)
-        self.assertLastServiceCallSucceeded(success)
+        self.assert_last_srv_call_success(success)
 
     def test_3_parallel_move_calls(self):
-        def do_move_random(index):
+        def do_move_random(_):
             # construct a new service proxy, using the same proxy results in
             # tcp connection issues
             srv = rospy.ServiceProxy('move_random', rll_msgs.srv.MoveRandom)
             resp = srv.call()
             return resp
 
-        results = concurrent_call(do_move_random, n=4,
+        results = concurrent_call(do_move_random, count=4,
                                   delay_between_starts=.1)
 
         # first should have succeeded (it is an recoverable failure)
-        self.assertErrorCodeEquals(results[0].error_code, RLLErrorCode.SUCCESS)
+        self.assert_error_code_equals(results[0].error_code,
+                                      RLLErrorCode.SUCCESS)
 
         for result in results[1:]:
-            self.assertErrorCodeEquals(result.error_code,
-                                       RLLErrorCode.CONCURRENT_SERVICE_CALL)
+            self.assert_error_code_equals(result.error_code,
+                                          RLLErrorCode.CONCURRENT_SERVICE_CALL)
 
     def test_4_idle_during_job_run(self):
         # this should result in an internal error, it will also crash

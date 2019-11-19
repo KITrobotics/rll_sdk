@@ -19,40 +19,39 @@
 #
 
 from math import pi
+
 from geometry_msgs.msg import Pose, Point
+import rospy
+
+from rll_move_client.error import RLLErrorCode
 from rll_move_client.util import orientation_from_rpy, compare_joint_values
 
 from test_util import TestCaseWithRLLMoveClient
-from rll_move_client.error import RLLErrorCode
-import rospy
 
 
 class TestRepeatedMovements(TestCaseWithRLLMoveClient):
 
-    def __init__(self, *args, **kwargs):
-        super(TestRepeatedMovements, self).__init__(*args, **kwargs)
-
-    def test_1_repeated_move_lin_reset(self):
+    def test1_move_lin_reset(self):
         self.repeat_movement(3, True)
 
-    def test_2_repeated_move_lin_reset_failure(self):
+    def test2_move_lin_reset_fail(self):
         self.repeat_movement(3, True, True)
 
-    def test_3_repeated_move_lin_no_reset(self):
+    def test3_move_lin_no_reset(self):
         self.repeat_movement(3, False)
 
-    def test_4_repeated_move_lin_no_reset_failure(self):
+    def test4_move_lin_no_reset_fail(self):
         self.repeat_movement(3, False, True)
 
-    def repeat_movement(self, n=10, reset=True, cause_failure=False):
+    def repeat_movement(self, count=10, reset=True, cause_failure=False):
         last_joint_values = None
-        for i in range(n):
-            rospy.loginfo("Run %d/%d", i + 1, n)
+        for i in range(count):
+            rospy.loginfo("Run %d/%d", i + 1, count)
 
             if reset:
                 # reset joints to known start position
                 resp = self.client.move_joints(0, 0, 0, -pi / 2, 0, -pi / 2, 0)
-                self.assertLastServiceCallSucceeded(resp)
+                self.assert_last_srv_call_success(resp)
 
             goal_pose = Pose()
             goal_pose.position = Point(.3, .41, .63)
@@ -60,20 +59,20 @@ class TestRepeatedMovements(TestCaseWithRLLMoveClient):
 
             # move into position
             resp = self.client.move_ptp(goal_pose)
-            self.assertLastServiceCallSucceeded(resp)
+            self.assert_last_srv_call_success(resp)
 
             if cause_failure:
-                # only change the orientation no motion -> should fail
+                # only change the orientation, no linear motion -> should fail
                 goal_pose.orientation = orientation_from_rpy(0, 0, 0)
                 success = self.client.move_lin(goal_pose)
-                self.assertLastServiceCallFailedWith(
+                self.assert_last_srv_call_failed(
                     success, RLLErrorCode.TOO_FEW_WAYPOINTS)
 
-            # only change the position -> should succeed
+            # change the position, orientatin stays -> should succeed
             goal_pose.position = Point(.2, .41, .63)
             goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
             success = self.client.move_lin(goal_pose)
-            self.assertLastServiceCallSucceeded(success)
+            self.assert_last_srv_call_success(success)
             joint_values = self.client.get_current_joint_values()
 
             if last_joint_values is not None:

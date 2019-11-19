@@ -21,19 +21,16 @@
 #ifndef RLL_MOVE_IFACE_SIMULATION_H_
 #define RLL_MOVE_IFACE_SIMULATION_H_
 
-#include <rll_move/move_iface.h>
+#include <rll_move/move_iface_planning.h>
 
-class RLLSimulationMoveIface : public virtual RLLMoveIface
+class RLLSimulationMoveIface : public virtual RLLMoveIfacePlanning
 {
 public:
   explicit RLLSimulationMoveIface() = default;
-  virtual ~RLLSimulationMoveIface() = default;
+  ~RLLSimulationMoveIface() override = default;
 
-  RLLErrorCode closeGripper() override;
-  RLLErrorCode openGripper() override;
-
+protected:
   bool modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory) override;
-  bool modifyLinTrajectory(moveit_msgs::RobotTrajectory& trajectory) override;
 };
 
 #endif /* RLL_MOVE_IFACE_SIMULATION_H_ */

@@ -23,11 +23,10 @@
 
 #include <rll_move/move_iface_base.h>
 
-class RLLDefaultMoveIfaceBase : public RLLMoveIfaceBase<>
+class RLLDefaultMoveIfaceBase : public RLLMoveIfaceBase
 {
 public:
-  RLLDefaultMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name = "move_client")
-    : RLLMoveIfaceBase(nh, action_name)
+  explicit RLLDefaultMoveIfaceBase(const ros::NodeHandle& nh) : RLLMoveIfaceBase(nh)
   {
   }
   void startServicesAndRunNode(ros::NodeHandle& nh) override;

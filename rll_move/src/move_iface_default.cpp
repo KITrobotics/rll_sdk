@@ -26,45 +26,44 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle& nh)
   spinner.start();
 
   RLLDefaultMoveIfaceBase* iface_ptr = this;
-  RLLMoveIface* move_iface_ptr = iface_ptr;
+  RLLMoveIfaceServices* move_iface_srv_ptr = iface_ptr;
+  RLLMoveIfaceBase* move_iface_base_ptr = iface_ptr;
 
   iface_ptr->resetToHome();
 
-  RLLMoveIface::JobServer server_job(nh, RLLMoveIface::RUN_JOB_SRV_NAME,
-                                     boost::bind(&RLLMoveIface::runJobAction, iface_ptr, _1, &server_job), false);
+  RLLMoveIfaceBase::JobServer server_job(nh, RLLMoveIfaceBase::RUN_JOB_SRV_NAME,
+                                         boost::bind(&RLLMoveIfaceBase::runJobAction, iface_ptr, _1, &server_job),
+                                         false);
   server_job.start();
-  RLLMoveIface::JobServer server_idle(nh, RLLMoveIface::IDLE_JOB_SRV_NAME,
-                                      boost::bind(&RLLMoveIface::idleAction, iface_ptr, _1, &server_idle), false);
+  RLLMoveIfaceBase::JobServer server_idle(nh, RLLMoveIfaceBase::IDLE_JOB_SRV_NAME,
+                                          boost::bind(&RLLMoveIfaceBase::idleAction, iface_ptr, _1, &server_idle),
+                                          false);
   server_idle.start();
   // note: since the move*Srv methods are defined in RLLMoveIface we need a pointer-to-RLLMoveIface
-  ros::ServiceServer robot_ready =
-      nh.advertiseService(RLLMoveIface::ROBOT_READY_SRV_NAME, &RLLMoveIface::robotReadySrv, move_iface_ptr);
-  ros::ServiceServer move_random =
-      nh.advertiseService(RLLMoveIface::MOVE_RANDOM_SRV_NAME, &RLLMoveIface::moveRandomSrv, move_iface_ptr);
-  ros::ServiceServer pick_place =
-      nh.advertiseService(RLLMoveIface::PICK_PLACE_SRV_NAME, &RLLMoveIface::pickPlaceSrv, move_iface_ptr);
-  ros::ServiceServer move_lin =
-      nh.advertiseService(RLLMoveIface::MOVE_LIN_SRV_NAME, &RLLMoveIface::moveLinSrv, move_iface_ptr);
-  ros::ServiceServer move_lin_elb =
-      nh.advertiseService(RLLMoveIface::MOVE_LIN_ELB_SRV_NAME, &RLLMoveIface::moveLinElbSrv, move_iface_ptr);
-  ros::ServiceServer move_ptp =
-      nh.advertiseService(RLLMoveIface::MOVE_PTP_SRV_NAME, &RLLMoveIface::movePTPSrv, move_iface_ptr);
-  ros::ServiceServer move_ptp_elb =
-      nh.advertiseService(RLLMoveIface::MOVE_PTP_ELB_SRV_NAME, &RLLMoveIface::movePTPelbSrv, move_iface_ptr);
-  ros::ServiceServer move_joints =
-      nh.advertiseService(RLLMoveIface::MOVE_JOINTS_SRV_NAME, &RLLMoveIface::moveJointsSrv, move_iface_ptr);
-  ros::ServiceServer get_pose =
-      nh.advertiseService(RLLMoveIface::GET_POSE_SRV_NAME, &RLLMoveIface::getCurrentPoseSrv, move_iface_ptr);
-  ros::ServiceServer get_joint_values = nh.advertiseService(RLLMoveIface::GET_JOINT_VALUES_SRV_NAME,
-                                                            &RLLMoveIface::getCurrentJointValuesSrv, move_iface_ptr);
+  ros::ServiceServer robot_ready = nh.advertiseService(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME,
+                                                       &RLLMoveIfaceServices::robotReadySrv, move_iface_srv_ptr);
+  ros::ServiceServer job_finished = nh.advertiseService(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME,
+                                                        &RLLMoveIfaceBase::jobFinishedSrv, move_iface_base_ptr);
+  ros::ServiceServer move_random = nh.advertiseService(RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME,
+                                                       &RLLMoveIfaceServices::moveRandomSrv, move_iface_srv_ptr);
+  ros::ServiceServer pick_place = nh.advertiseService(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME,
+                                                      &RLLMoveIfaceServices::pickPlaceSrv, move_iface_srv_ptr);
+  ros::ServiceServer move_lin = nh.advertiseService(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME,
+                                                    &RLLMoveIfaceServices::moveLinSrv, move_iface_srv_ptr);
+  ros::ServiceServer move_lin_elb = nh.advertiseService(RLLMoveIfaceServices::MOVE_LIN_ELB_SRV_NAME,
+                                                        &RLLMoveIfaceServices::moveLinElbSrv, move_iface_srv_ptr);
+  ros::ServiceServer move_ptp = nh.advertiseService(RLLMoveIfaceServices::MOVE_PTP_SRV_NAME,
+                                                    &RLLMoveIfaceServices::movePTPSrv, move_iface_srv_ptr);
+  ros::ServiceServer move_ptp_elb = nh.advertiseService(RLLMoveIfaceServices::MOVE_PTP_ELB_SRV_NAME,
+                                                        &RLLMoveIfaceServices::movePTPelbSrv, move_iface_srv_ptr);
+  ros::ServiceServer move_joints = nh.advertiseService(RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME,
+                                                       &RLLMoveIfaceServices::moveJointsSrv, move_iface_srv_ptr);
+  ros::ServiceServer get_pose = nh.advertiseService(RLLMoveIfaceServices::GET_POSE_SRV_NAME,
+                                                    &RLLMoveIfaceServices::getCurrentPoseSrv, move_iface_srv_ptr);
+  ros::ServiceServer get_joint_values =
+      nh.advertiseService(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME,
+                          &RLLMoveIfaceServices::getCurrentJointValuesSrv, move_iface_srv_ptr);
 
   ROS_INFO("RLL Move Interface started");
   ros::waitForShutdown();
 }
-
-/*
- * Local Variables:
- * c-file-style: "linux"
- * indent-tabs-mode: t
- * End:
- */
