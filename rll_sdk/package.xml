@@ -21,6 +21,8 @@
   <exec_depend>rll_moveit_config</exec_depend>
   <exec_depend>rll_msgs</exec_depend>
   <exec_depend>rll_tools</exec_depend>
+  <exec_depend>gazebo_grasp_plugin</exec_depend>
+  <exec_depend>gazebo_version_helpers</exec_depend>
 
   <export>
     <metapackage />
