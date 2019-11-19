@@ -36,6 +36,14 @@ GazeboGraspFix::GazeboGraspFix(physics::ModelPtr _model)
 ////////////////////////////////////////////////////////////////////////////////
 GazeboGraspFix::~GazeboGraspFix()
 {
+  // Release filter to make it safe to reload the model with plugin
+  if (!filter_name.empty() && this->world)
+  {
+    physics::PhysicsEnginePtr physics = GetPhysics(this->world);
+    physics::ContactManager* contactManager = physics->GetContactManager();
+    if (contactManager)
+      contactManager->RemoveFilter(filter_name);
+  }
   this->update_connection.reset();
   if (this->node)
     this->node->Fini();
@@ -241,7 +249,8 @@ void GazeboGraspFix::Load(physics::ModelPtr _parent, sdf::ElementPtr _sdf)
   physics::ContactManager* contactManager = physics->GetContactManager();
   contactManager->PublishContacts();  // TODO not sure this is required?
 
-  std::string topic = contactManager->CreateFilter(model->GetScopedName(), collisionNames);
+  filter_name = model->GetScopedName();
+  std::string topic = contactManager->CreateFilter(filter_name, collisionNames);
   if (!this->contactSub)
   {
     gzmsg << "Subscribing contact manager to topic " << topic << std::endl;
@@ -520,9 +529,9 @@ void GazeboGraspFix::OnUpdate()
     const std::string& objName = ocIt->first;
     const ObjectContactInfo& objContInfo = ocIt->second;
 
-// gzmsg<<"Number applied forces on "<<objName<<": "<<objContInfo.appliedForces.size()<<std::endl;
+    // gzmsg<<"Number applied forces on "<<objName<<": "<<objContInfo.appliedForces.size()<<std::endl;
 
-// TODO: remove this test print, for issue #26 -------------------
+    // TODO: remove this test print, for issue #26 -------------------
 #if 0
     physics::CollisionPtr objColl =
       boost::dynamic_pointer_cast<physics::Collision>(GetEntityByName(world, objName));
@@ -718,9 +727,8 @@ void GazeboGraspFix::OnUpdate()
       GzVector3 newObjDist = currContactWorldPose - gazebo::GetPos(currObjWorldPose);
 
       // gzmsg<<"Obj Trans "<<cpInfo.collLink->GetName()<<": "<<relObjPos.x<<", "<<relObjPos.y<<",
-      // "<<relObjPos.z<<std::endl;
-      // gzmsg<<"Cont Trans "<<cpInfo.collLink->GetName()<<": "<<relContactPos.x<<", "<<relContactPos.y<<",
-      // "<<relContactPos.z<<std::endl;
+      // "<<relObjPos.z<<std::endl; gzmsg<<"Cont Trans "<<cpInfo.collLink->GetName()<<": "<<relContactPos.x<<",
+      // "<<relContactPos.y<<", "<<relContactPos.z<<std::endl;
 
       // the difference between these vectors should not be too large...
       float diff = fabs(gazebo::GetLength(oldObjDist) - gazebo::GetLength(newObjDist));

@@ -212,7 +212,7 @@ void GazeboGraspGripper::HandleDetach(const std::string& objName)
     obj->GetLink()->SetCollideMode("all");
   }
 
-// TODO: remove this test print, for issue #26 -------------------
+  // TODO: remove this test print, for issue #26 -------------------
 #if 0
   if (obj && obj->GetLink())
   {
@@ -226,7 +226,7 @@ void GazeboGraspGripper::HandleDetach(const std::string& objName)
 
   this->fixedJoint->Detach();
 
-// TODO: remove this test print, for issue #26 -------------------
+  // TODO: remove this test print, for issue #26 -------------------
 #if 0
   if (obj && obj->GetLink())
   {

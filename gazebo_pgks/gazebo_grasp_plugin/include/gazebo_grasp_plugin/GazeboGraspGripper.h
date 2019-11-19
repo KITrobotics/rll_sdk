@@ -79,5 +79,6 @@ private:
   // name of the object currently attached.
   std::string attachedObjName;
 };
+
 }  // namespace gazebo
 #endif  // GAZEBO_GAZEBOGRASPGRIPPER_H

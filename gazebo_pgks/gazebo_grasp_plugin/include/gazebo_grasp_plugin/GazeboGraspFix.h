@@ -244,7 +244,11 @@ private:
 
   // last time OnUpdate() was called
   common::Time prevUpdateTime;
+
+  // ContactManager filter to be removed in destructor
+  std::string filter_name;
 };
+
 }  // namespace gazebo
 
 #endif  // GAZEBO_GAZEBOGRASPFIX_H
