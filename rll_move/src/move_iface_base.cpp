@@ -138,11 +138,11 @@ bool RLLMoveIfaceBase::afterActionExecution(rll_msgs::JobEnvResult* result)
 void RLLMoveIfaceBase::runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result)
 {
   // set the general movement permission for the duration of the job execution
-  // permissions will be restored in runClient() after client finished
   permissions_.storeCurrentPermissions();
   permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_ | pick_place_permission_,
                                         true);
   runClient(goal, result);
+  permissions_.restorePreviousPermissions();
 }
 
 RLLErrorCode RLLMoveIfaceBase::idle()
@@ -195,8 +195,6 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
     ros::Duration(0.01).sleep();
   }
 
-  permissions_.restorePreviousPermissions();
-
   if (job_result_.isSet())
   {
     ROS_INFO("interface client completed");
@@ -208,13 +206,6 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
 
   result.job.status = job_result_.getResult();
 
-  if (iface_state_.isInInternalErrorState())
-  {
-    ROS_FATAL("Internal error during current job execution!");
-    result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
-    return false;
-  }
-
   // It is possible that a service call might still be in execution
   // therefore wait for the service call to end before completing the runJob action
   if (iface_state_.setCurrentServiceCallResult(RLLErrorCode::JOB_EXECUTION_TIMED_OUT))
@@ -223,6 +214,13 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
     {
       ros::Duration(.01).sleep();
     }
+  }
+
+  if (iface_state_.isInInternalErrorState())
+  {
+    ROS_FATAL("Internal error during current job execution!");
+    result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    return false;
   }
 
   // sanity check: if a job fails with an internal error than further operations should have been aborted
@@ -316,17 +314,18 @@ bool RLLMoveIfaceBase::callClient()
   if (client_sent != send_msg_size)
   {
     ROS_WARN("error sending start message to client");
+    close(client_socket_);
     return false;
   }
 
-  recv(client_socket_, recv_msg, CLIENT_SERVER_BUFFER_SIZE, 0);
+  size_t recv_size = recv(client_socket_, recv_msg, CLIENT_SERVER_BUFFER_SIZE, 0);
   close(client_socket_);
-  if (strcmp(recv_msg, CLIENT_SERVER_OK_RESP_) == 0)
+  if (strncmp(recv_msg, CLIENT_SERVER_OK_RESP_, recv_size) == 0)
   {
     job_result_.jobStarted();
     return true;
   }
-  if (strcmp(recv_msg, CLIENT_SERVER_ERROR_RESP_) == 0)
+  if (strncmp(recv_msg, CLIENT_SERVER_ERROR_RESP_, recv_size) == 0)
   {
     ROS_WARN("client responded with an error");
     return false;
