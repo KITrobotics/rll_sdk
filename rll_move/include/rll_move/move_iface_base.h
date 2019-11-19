@@ -21,86 +21,132 @@
 #ifndef RLL_MOVE_IFACE_BASE_H_
 #define RLL_MOVE_IFACE_BASE_H_
 
-#include <rll_move/move_iface.h>
-#include <actionlib/client/simple_action_client.h>
-#include <rll_msgs/DefaultMoveIfaceAction.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-// NOTE: to avoid making RLLMoveIface a template class and to keep the SimpleActionClient code out of it,
-// RLLMoveIfaceBase is introduced as an intermediary class. It should be used as the base class for custom interfaces.
-template <class Action = rll_msgs::DefaultMoveIfaceAction, class Goal = rll_msgs::DefaultMoveIfaceGoal>
-class RLLMoveIfaceBase : public virtual RLLMoveIface
+#include <actionlib/server/simple_action_server.h>
+
+#include <rll_msgs/JobEnvAction.h>
+#include <rll_move/move_iface_services.h>
+#include <rll_move/authentication.h>
+
+class RLLJobResult
 {
 public:
-  RLLMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name);
+  void setResult(bool result)
+  {
+    success_ = result;
+    result_reported_ = true;
+    time_job_finished_ = ros::Time::now();
+  }
 
-  // since there will be a sim/real version, setup the services/actions in here und make sure to call spin()
+  void jobStarted()
+  {
+    time_job_started_ = ros::Time::now();
+  }
+
+  void reset()
+  {
+    success_ = false;
+    result_reported_ = false;
+  }
+
+  bool isSet()
+  {
+    return result_reported_;
+  }
+
+  // returns as RLL job status code
+  uint8_t getResult()
+  {
+    if (result_reported_ && success_)
+    {
+      return rll_msgs::JobStatus::SUCCESS;
+    }
+
+    return rll_msgs::JobStatus::FAILURE;
+  }
+
+  ros::Duration getJobDuration()
+  {
+    if (result_reported_)
+    {
+      return time_job_finished_ - time_job_started_;
+    }
+
+    return ros::DURATION_MAX;
+  }
+
+protected:
+  bool success_ = false;
+  bool result_reported_ = false;
+  ros::Time time_job_started_;
+  ros::Time time_job_finished_;
+};
+
+// TODO(wolfgang): rename this into a project base class?
+// RLLMoveIfaceBase should be used as the base class for custom interfaces.
+class RLLMoveIfaceBase : public virtual RLLMoveIfaceServices
+{
+public:
+  explicit RLLMoveIfaceBase(const ros::NodeHandle& nh);
+
+  static const std::string IDLE_JOB_SRV_NAME;
+  static const std::string RUN_JOB_SRV_NAME;
+  static const std::string JOB_FINISHED_SRV_NAME;
+
+  static const int CLIENT_SERVER_PORT;
+  static const int CLIENT_SERVER_BUFFER_SIZE;
+  static const char* CLIENT_SERVER_START_CMD_;
+  static const char* CLIENT_SERVER_OK_RESP_;
+  static const char* CLIENT_SERVER_ERROR_RESP_;
+
+  // since there will be a sim/real version, setup the services in here und make sure to call spin()
   // or use global service objects to keep them alive
   virtual void startServicesAndRunNode(ros::NodeHandle& nh) = 0;
 
+  using JobServer = actionlib::SimpleActionServer<rll_msgs::JobEnvAction>;
+  void runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
+  void idleAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
+  bool jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp);
+
 protected:
   ros::NodeHandle nh_;
+  int client_socket_;
+  struct sockaddr_in client_serv_addr_;
 
-  void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result) override;
+  Authentication authentication_;
+  RLLJobResult job_result_;
+
+  virtual void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result);
+  virtual bool runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result);
+  virtual RLLErrorCode idle();
+  bool initClientSocket(const std::string& client_ip_addr);
+  bool callClient();
+
+  bool beforeActionExecution(RLLMoveIfaceState state, const std::string& secret, rll_msgs::JobEnvResult* result);
+  bool afterActionExecution(rll_msgs::JobEnvResult* result);
 
   void abortDueToCriticalFailure() override
   {
-    RLLMoveIface::abortDueToCriticalFailure();
-    action_client_ptr_->cancelAllGoals();
+    RLLMoveIfaceServices::abortDueToCriticalFailure();
   }
 
   int job_execution_timeout_seconds_ = 600;  // default is ten minutes
-  actionlib::SimpleActionClient<Action>* const action_client_ptr_;
-  actionlib::SimpleActionClient<Action> action_client_;
 };
 
-template <class Action, class Goal>
-RLLMoveIfaceBase<Action, Goal>::RLLMoveIfaceBase(ros::NodeHandle nh, const std::string& action_name)
-  : RLLMoveIface(), nh_(nh), action_client_(action_name, false), action_client_ptr_(&action_client_)
+template <class BaseIface, class EnvironmentIface>
+class RLLCombinedMoveIface : public BaseIface, public EnvironmentIface
 {
-  bool retrieved = ros::param::get(node_name_ + "/job_execution_timeout", job_execution_timeout_seconds_);
-  if (retrieved)
+public:
+  explicit RLLCombinedMoveIface(ros::NodeHandle nh) : BaseIface(nh), EnvironmentIface()
   {
-    ROS_INFO("job execution timeout changed to %ds", job_execution_timeout_seconds_);
   }
-}
+};
 
-template <class Action, class Goal>
-void RLLMoveIfaceBase<Action, Goal>::runJob(const rll_msgs::JobEnvGoalConstPtr& /*goal*/,
-                                            rll_msgs::JobEnvResult& result)
-{
-  Goal goal_iface_client;
-
-  ROS_INFO("got job running request");
-
-  if (!action_client_ptr_->waitForServer(ros::Duration(4.0)))
-  {
-    ROS_ERROR("action server not available");
-    result.job.status = rll_msgs::JobStatus::FAILURE;
-    return;
-  }
-
-  action_client_ptr_->sendGoal(goal_iface_client);
-  ROS_INFO("called the interface client");
-
-  // wait for the job to complete or reach the timeout
-  bool success = action_client_ptr_->waitForResult(ros::Duration(job_execution_timeout_seconds_));
-  ROS_INFO("interface client completed or timed out");
-
-  if (iface_state_.isInInternalErrorState())
-  {
-    // This is the default job runner and should only be used for demos or testing
-    // Assume an internal error if something fails
-    ROS_FATAL("Error during current job execution, assuming internal error");
-    result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
-  }
-  else if (!success)
-  {
-    result.job.status = rll_msgs::JobStatus::FAILURE;
-  }
-  else
-  {
-    result.job.status = rll_msgs::JobStatus::SUCCESS;
-  }
-}
+/**
+ * \brief Waits for the `move_group` action to become available.
+ */
+bool waitForMoveGroupAction();
 
 #endif /* RLL_MOVE_IFACE_BASE_H_ */

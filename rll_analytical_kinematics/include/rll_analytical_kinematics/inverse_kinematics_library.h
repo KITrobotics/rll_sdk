@@ -60,7 +60,7 @@ public:
   double& operator[](int i);
 
   // getters
-  const double operator()(int i) const;
+  double operator()(int i) const;
 
   double j[NR_JOINTS];
 };
@@ -173,10 +173,10 @@ class InvKin
 {
 public:
   // Robot properties
-  static double LIMBS[4];
-  static InvKinJoints LOWER_JOINT_LIMITS;
-  static InvKinJoints UPPER_JOINT_LIMITS;
-  static bool INITIALIZED;
+  static double LIMBS_[4];
+  static InvKinJoints LOWER_JOINT_LIMITS_;
+  static InvKinJoints UPPER_JOINT_LIMITS_;
+  static bool INITIALIZED_;
 
   // methods:
 
@@ -201,10 +201,10 @@ public:
                                             const Eigen::Matrix3d& bw, const Eigen::Matrix3d& cw, int* n);
 
   // get closest solution to seed-state using optimization defined in optimize()
-  static InvKinMsg getClosestPositionIK(InvKinJoints sol[], int* index_sol, const InvKinJoints& seed_state,
-                                        const InvKinXCart& seed_state_x, InvKinXCart* cart_pose, const int configs[],
-                                        int n_configs, InvKinMsg (*optimize)(InvKinElbowInterval[], int,
-                                                                             const InvKinXCart&, InvKinXCart*));
+  static InvKinMsg
+  getClosestPositionIK(InvKinJoints sol[], int* index_sol, const InvKinJoints& seed_state,
+                       const InvKinXCart& seed_state_x, InvKinXCart* cart_pose, const int configs[], int n_configs,
+                       InvKinMsg (*optimize)(InvKinElbowInterval[], int, const InvKinXCart&, InvKinXCart*));
 
   // redundancy resolution using exponential function
   static InvKinMsg redundancyResolutionExp(InvKinElbowInterval feasible_intervals[], int n,
@@ -216,7 +216,7 @@ public:
   // redundancy resolution using fixed nsparam
   static InvKinMsg getIKfixedNs(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution);
   // redundancy resolution using e-function and hard coded config and nsparam in ik_pose
-  static InvKinMsg getIKefuncFixedConfigFixedNs(InvKinXCart ik_pose, InvKinJoints seed_state,
+  static InvKinMsg getIKefuncFixedConfigFixedNs(const InvKinXCart& ik_pose, InvKinJoints seed_state,
                                                 std::vector<double>* solution);
   // redundancy-resolution using e-function
   static InvKinMsg getIKefunc(InvKinXCart ik_pose, InvKinJoints seed_state, std::vector<double>* solution);

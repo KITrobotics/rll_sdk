@@ -5,32 +5,39 @@ project(rll_move)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-std=c++11)
 
+# Warnings
+add_definitions(-Wall -Wextra
+  -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls)
+
 find_package(catkin REQUIRED COMPONENTS
-  roscpp
+  eigen_conversions
   moveit_core
+  moveit_ros_move_group
   moveit_ros_planning
   moveit_ros_planning_interface
-  rll_msgs
-  actionlib
   rll_analytical_kinematics
-  eigen_conversions
+  rll_msgs
+  rostest
 )
 
 catkin_package(
    INCLUDE_DIRS include
-   LIBRARIES rll_move
-   CATKIN_DEPENDS message_runtime rll_msgs moveit_ros_planning_interface rll_analytical_kinematics
+   LIBRARIES ${PROJECT_NAME}
+   CATKIN_DEPENDS message_runtime moveit_ros_planning_interface rll_analytical_kinematics rll_msgs
 )
 
-include_directories(include ${catkin_INCLUDE_DIRS})
+include_directories(SYSTEM ${catkin_INCLUDE_DIRS})
+include_directories(include)
 
 add_library(${PROJECT_NAME}
-  src/move_iface.cpp
-  src/move_iface_error.cpp
+  src/authentication.cpp
+  src/move_iface_base.cpp
   src/move_iface_default.cpp
+  src/move_iface_error.cpp
+  src/move_iface_planning.cpp
+  src/move_iface_services.cpp
   src/move_iface_simulation.cpp
   src/move_iface_state_machine.cpp
-  src/authentication.cpp
 )
 
 install(TARGETS ${PROJECT_NAME}
@@ -40,6 +47,7 @@ install(TARGETS ${PROJECT_NAME}
 install(DIRECTORY include/${PROJECT_NAME}/
         DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
 
+install(DIRECTORY launch DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})
 
 add_dependencies(${PROJECT_NAME} ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
 
@@ -48,17 +56,15 @@ target_link_libraries(${PROJECT_NAME}
 )
 
 add_executable(move_iface_full src/move_iface_full_node.cpp)
-target_link_libraries(move_iface_full rll_move ${catkin_LIBRARIES})
+target_link_libraries(move_iface_full ${PROJECT_NAME} ${catkin_LIBRARIES})
 
+install(TARGETS move_iface_full
+        RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
 if(CATKIN_ENABLE_TESTING)
-  find_package(catkin REQUIRED COMPONENTS rostest)
   add_rostest(tests/launch/move_iface_movement.test)
 
   add_rostest_gtest(unit_test tests/launch/move_iface_unit.test tests/src/test_permissions.cpp tests/src/test_state_machine.cpp)
   
-  target_link_libraries(unit_test rll_move ${catkin_LIBRARIES})
+  target_link_libraries(unit_test ${PROJECT_NAME} ${catkin_LIBRARIES})
 endif()
-
-
-

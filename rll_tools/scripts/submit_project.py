@@ -18,18 +18,19 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import rospy
-import rospkg
-import yaml
-
 from os import path, remove, walk, environ
 import tarfile
 import glob
-import requests
 import json
+import yaml
+import rospkg
+import requests
 
-exclude_files = []
-webapp_url = "https://rll.ipr.kit.edu/"
+import rospy
+
+
+EXCLUDE_FILES = []
+WEBAPP_URL = "https://rll.ipr.kit.edu/"
 
 
 def read_ignore_file(filename):
@@ -37,17 +38,17 @@ def read_ignore_file(filename):
         file_content = frp.read().split("\n")
 
     # remove empty lines and comments
-    file_content = filter(None, file_content)
-    file_content = [line for line in file_content if not line.startswith('#')]
+    file_content = [line for line in file_content
+                    if line and not line.startswith('#')]
 
     return file_content
 
 
 def tar_excludes(filename):
-    if exclude_files == []:
+    if EXCLUDE_FILES == []:
         return False
 
-    if filename in exclude_files:
+    if filename in EXCLUDE_FILES:
         return True
 
     return False
@@ -82,7 +83,7 @@ def gen_exclude_filelist(project_path):
     ignore_patterns = gen_ignore_patterns(project_path)
 
     for pattern in ignore_patterns:
-        for root, dirs, files in walk(project_path):
+        for root, dirs, _ in walk(project_path):
             matched_files = glob.glob(path.join(root, pattern))
             if matched_files:
                 files_to_exclude.extend(matched_files)
@@ -91,7 +92,7 @@ def gen_exclude_filelist(project_path):
                 if matched_files:
                     files_to_exclude.extend(matched_files)
 
-    exclude_files.extend(files_to_exclude)
+    EXCLUDE_FILES.extend(files_to_exclude)
 
 
 def create_project_archive(project_path):
@@ -111,7 +112,7 @@ def create_project_archive(project_path):
 def upload_archive(project_archive, api_access_cfg):
     rospy.loginfo("uploading archive...")
     submit_url = (api_access_cfg["api_url"] + "jobs/submit_tar?username="
-                  + api_access_cfg["username"] + "&project=" + project
+                  + api_access_cfg["username"] + "&project=" + PROJECT
                   + "&token=" + api_access_cfg["token"] + "&ros_distro="
                   + environ["ROS_DISTRO"])
     with open(project_archive) as archive:
@@ -129,14 +130,14 @@ def upload_archive(project_archive, api_access_cfg):
                                  "of running jobs"):
             rospy.logerr("You reached the submission limit for this project. "
                          "Please wait until one of your jobs has finished.")
-            rospy.loginfo("You can check the job status at %sjobs", webapp_url)
+            rospy.loginfo("You can check the job status at %sjobs", WEBAPP_URL)
         else:
             rospy.logerr("submitting project failed with error '%s'",
                          resp_msg["error"])
     else:
         rospy.loginfo("SUCCESS: your job is submitted")
         rospy.loginfo("The job ID is %s", resp_msg["job_id"])
-        rospy.loginfo("You can check the job status at %sjobs", webapp_url)
+        rospy.loginfo("You can check the job status at %sjobs", WEBAPP_URL)
 
 
 def check_size(project_archive):
@@ -161,7 +162,7 @@ def submit_project():
     if not path.isfile(config_path):
         rospy.logfatal("API access config file not found.")
         rospy.loginfo("Please download the file at %ssettings "
-                      "and save it to %s", webapp_url, config_path)
+                      "and save it to %s", WEBAPP_URL, config_path)
         return
 
     with open(config_path, 'r') as doc:
@@ -172,11 +173,11 @@ def submit_project():
             return
 
     try:
-        project_path = rospack.get_path(project)
+        project_path = rospack.get_path(PROJECT)
     except rospkg.ResourceNotFound:
         rospy.logfatal("Could not find the project you want to submit. "
                        "Make sure the project '%s' in your Catkin workspace",
-                       project)
+                       PROJECT)
         return
 
     project_archive = create_project_archive(project_path)
@@ -188,6 +189,6 @@ def submit_project():
 
 if __name__ == '__main__':
     rospy.init_node("project_submitter")
-    project = rospy.get_param("~project")
+    PROJECT = rospy.get_param("~project")
 
     submit_project()

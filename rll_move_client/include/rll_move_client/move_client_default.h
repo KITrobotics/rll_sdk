@@ -21,43 +21,36 @@
 #define MOVE_CLIENT_DEFAULT_H_
 
 #include <rll_move_client/move_client.h>
-#include <rll_move_client/move_client_action.h>
+#include <rll_move_client/move_client_listener.h>
 
-class RLLDefaultMoveClient : public RLLActionMoveClient, public RLLBasicMoveClient, public RLLGetPoseMoveClient
+class RLLDefaultMoveClient : public RLLMoveClientListener, public RLLBasicMoveClient, public RLLGetPoseMoveClient
 {
 public:
-  explicit RLLDefaultMoveClient(const std::string& name)
-    : RLLActionMoveClient(name), RLLBasicMoveClient(), RLLGetPoseMoveClient()
-  {
-  }
+  explicit RLLDefaultMoveClient() = default;
 };
 
 class RLLDefaultPickPlaceMoveClient : public RLLDefaultMoveClient, public RLLPickPlaceClient
 {
 public:
-  explicit RLLDefaultPickPlaceMoveClient(const std::string& name) : RLLDefaultMoveClient(name), RLLPickPlaceClient()
-  {
-  }
+  explicit RLLDefaultPickPlaceMoveClient() = default;
 };
 
-// if you do not want to derive from RLLMoveClientAction, you can use this template class
+// if you do not want to derive from RLLMoveClientListener, you can use this template class
 // and specify a callback function which will be passed a MoveClient instance
 template <class Client>
 class RLLCallbackMoveClient : public Client
 {
 public:
-  using ClientCallback = void (*)(Client* const);
-  RLLCallbackMoveClient(ClientCallback exec_func, const std::string& name) : Client(name), exec_func(exec_func)
+  using ClientCallback = bool (*)(Client* const);
+  explicit RLLCallbackMoveClient(ClientCallback exec_func) : Client(), exec_func_(exec_func)
   {
   }
 
 protected:
-  ClientCallback exec_func;
+  ClientCallback exec_func_;
   bool execute() override
   {
-    // ignore the result, to keep the callback as simple as possible
-    exec_func(this);
-    return true;
+    return exec_func_(this);
   }
 };
 

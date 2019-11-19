@@ -41,38 +41,35 @@
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/robot_state/robot_state.h>
 
-// debugging
-//#include <iostream>
-
 namespace rll_moveit_analytical_kinematics
 {
 class RLLMoveItAnalyticalKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
-  RLLMoveItAnalyticalKinematicsPlugin();
+  RLLMoveItAnalyticalKinematicsPlugin() = default;
 
-  bool getPositionIK(
+  bool getPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, std::vector<double>& solution,
       moveit_msgs::MoveItErrorCodes& error_code,
       const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
-  bool searchPositionIK(
+  bool searchPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
       const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
-  bool searchPositionIK(
+  bool searchPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       const std::vector<double>& consistency_limits, std::vector<double>& solution,
       moveit_msgs::MoveItErrorCodes& error_code,
       const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
-  bool searchPositionIK(
+  bool searchPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       std::vector<double>& solution, const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
       const kinematics::KinematicsQueryOptions& options = kinematics::KinematicsQueryOptions()) const override;
 
-  bool searchPositionIK(
+  bool searchPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double timeout,
       const std::vector<double>& consistency_limits, std::vector<double>& solution,
       const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
@@ -114,7 +111,7 @@ public:
 
 private:
   InvKin solver_;
-  bool initialized_;  // Indicates if parameters are initialized
+  bool initialized_{ false };  // Indicates if parameters are initialized
   std::vector<std::string> joint_names_;
   std::vector<double> joint_min_vector_;
   std::vector<double> joint_max_vector_;

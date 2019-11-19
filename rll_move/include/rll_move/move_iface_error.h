@@ -71,9 +71,7 @@ public:
     NOT_SET = 255
   };
 
-  RLLErrorCode() noexcept : value_(NOT_SET)
-  {
-  }
+  RLLErrorCode() noexcept = default;
 
   RLLErrorCode(Code code) noexcept : value_(code)  // NOLINT google-explicit-constructor
   {
@@ -88,12 +86,12 @@ public:
     return value_;
   }
 
-  operator Code() const noexcept
+  explicit operator Code() const noexcept
   {
     return value_;
   }
 
-  operator uint8_t() const noexcept
+  explicit operator uint8_t() const noexcept
   {
     return value_;
   }
@@ -122,8 +120,9 @@ public:
 
   bool isCriticalFailure() const noexcept
   {
-    // NOT_SET is a critical error because it means the error_code has not been set, which should not happen
-    return value_ >= CRITICAL_FAILURE_BEGIN && value_ <= NOT_SET;
+    // This includes NOT_SET. NOT_SET is a critical error because it means the error_code has not been set, which should
+    // not happen
+    return value_ >= CRITICAL_FAILURE_BEGIN;
   }
 
   bool isNonCriticalFailure() const noexcept
@@ -144,7 +143,7 @@ public:
   const char* message() const noexcept;
 
 private:
-  Code value_;
+  Code value_{ NOT_SET };
 };
 
 const char* stringifyMoveItErrorCodes(const moveit_msgs::MoveItErrorCodes& error_code);

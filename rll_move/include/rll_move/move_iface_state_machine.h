@@ -54,9 +54,7 @@ enum class RLLMoveIfaceState
 class RLLMoveIfaceStateMachine
 {
 public:
-  RLLMoveIfaceStateMachine() : state_(RLLMoveIfaceState::WAITING)
-  {
-  }
+  RLLMoveIfaceStateMachine() = default;
 
   virtual ~RLLMoveIfaceStateMachine() = default;
 
@@ -78,12 +76,12 @@ public:
   /**
    * \brief Notify the state machine that an service call is now in execution.
    */
-  virtual RLLErrorCode beginServiceCall(const std::string& srv_name, bool allowed_only_during_job_run = true);
+  virtual RLLErrorCode beginServiceCall(const std::string& srv_name, bool only_allowed_during_job_run);
 
   /**
    * \brief Notify the state machine that an service call has ended.
    */
-  virtual RLLErrorCode endServiceCall(std::string srv_name, bool allowed_only_during_job_run = true);
+  virtual RLLErrorCode endServiceCall(const std::string& srv_name, bool only_allowed_during_job_run);
 
   /**
    * \brief Indicates if a service call is currently in execution.
@@ -127,7 +125,7 @@ protected:
   // only one is service call is allowed but this way we can
   // track if there are the same amount of begin()/end() calls
   unsigned int concurrent_service_calls_counter_ = 0;
-  RLLMoveIfaceState state_;
+  RLLMoveIfaceState state_{ RLLMoveIfaceState::WAITING };
   std::mutex mutex_;
 
 private:

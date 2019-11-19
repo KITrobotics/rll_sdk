@@ -237,7 +237,7 @@ void GazeboGraspGripper::HandleDetach(const std::string& objName)
 
   }
 #endif
-// -------------------
+  // -------------------
 
 #endif  // USE_MODEL_ATTACH
   this->attached = false;

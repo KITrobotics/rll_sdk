@@ -133,6 +133,6 @@ GzPose3 GetRelativePose(const T& t)
 #endif
 }
 
-}  // namespace
+}  // namespace gazebo
 
 #endif  //  GAZEBO_VERSIONHELPERS_H

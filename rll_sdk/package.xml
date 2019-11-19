@@ -2,7 +2,7 @@
 <package format="2">
   <name>rll_sdk</name>
   <version>0.0.1</version>
-  <description>rll_sdk is a metapackage for all RLL SDK packages</description>
+  <description>KUKA Robot Learning Lab at KIT SDK metapackage</description>
   <maintainer email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</maintainer>
   <license>GPLv3+</license>
 
@@ -17,6 +17,7 @@
   <exec_depend>rll_description</exec_depend>
   <exec_depend>rll_gazebo</exec_depend>
   <exec_depend>rll_move</exec_depend>
+  <exec_depend>rll_move_client</exec_depend>
   <exec_depend>rll_moveit_config</exec_depend>
   <exec_depend>rll_msgs</exec_depend>
   <exec_depend>rll_tools</exec_depend>

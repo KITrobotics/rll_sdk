@@ -3,9 +3,6 @@ project(rll_gazebo)
 
 find_package(catkin REQUIRED)
 
-catkin_package(
-#  INCLUDE_DIRS include
-#  LIBRARIES rll_gazebo
-#  CATKIN_DEPENDS other_catkin_pkg
-#  DEPENDS system_lib
-)
+catkin_package()
+
+install(DIRECTORY launch worlds DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})

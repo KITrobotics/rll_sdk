@@ -2,7 +2,7 @@
 <package format="2">
   <name>rll_analytical_kinematics</name>
   <version>0.0.1</version>
-  <description>The rll_analytical_kinematics package</description>
+  <description>Analytical solution for the inverse kinematics of the KUKA iiwa</description>
 
   <maintainer email="updim@student.kit.edu">Philipp Altoe</maintainer>
 
@@ -13,7 +13,6 @@
   <build_depend>moveit_ros_planning</build_depend>
   <build_depend>eigen</build_depend>
   <build_depend>liblapack-dev</build_depend>
-  <build_depend>roscpp</build_depend>
   <build_depend>tf_conversions</build_depend>
   <build_depend>pluginlib</build_depend>
   <exec_depend>moveit_core</exec_depend>

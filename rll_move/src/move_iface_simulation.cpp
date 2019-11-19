@@ -1,7 +1,7 @@
 /*
  * This file is part of the Robot Learning Lab SDK
  *
- * Copyright (C) 2018 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
+ * Copyright (C) 2018-2019 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
  * Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,54 +18,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+
 #include <rll_move/move_iface_simulation.h>
 
-RLLErrorCode RLLSimulationMoveIface::closeGripper()
+bool RLLSimulationMoveIface::modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory)
 {
-  if (!manipCurrentStateAvailable())
-  {
-    return RLLErrorCode::MANIPULATOR_NOT_AVAILABLE;
-  }
-  ROS_INFO("Closing the gripper");
+  robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
+  rt.setRobotTrajectoryMsg(*manip_move_group_.getCurrentState(), trajectory);
 
-  gripper_move_group_.setStartStateToCurrentState();
-  gripper_move_group_.setNamedTarget(GRIPPER_CLOSE_TARGET_NAME);
-
-  RLLErrorCode error_code = runPTPTrajectory(gripper_move_group_, true);
-  if (error_code.failed())
+  trajectory_processing::IterativeParabolicTimeParameterization time_param;
+  bool success = time_param.computeTimeStamps(rt, DEFAULT_VELOCITY_SCALING_FACTOR, DEFAULT_ACCELERATION_SCALING_FACTOR);
+  if (!success)
   {
-    ROS_INFO("Failed to close the gripper");
+    return false;
   }
 
-  return error_code;
-}
+  rt.getRobotTrajectoryMsg(trajectory);
 
-RLLErrorCode RLLSimulationMoveIface::openGripper()
-{
-  if (!manipCurrentStateAvailable())
-  {
-    return RLLErrorCode::MANIPULATOR_NOT_AVAILABLE;
-  }
-  ROS_INFO("Opening the gripper");
-
-  gripper_move_group_.setStartStateToCurrentState();
-  gripper_move_group_.setNamedTarget(GRIPPER_OPEN_TARGET_NAME);
-
-  RLLErrorCode error_code = runPTPTrajectory(gripper_move_group_, true);
-  if (error_code.failed())
-  {
-    ROS_INFO("Failed to open the gripper");
-  }
-
-  return error_code;
-}
-
-bool RLLSimulationMoveIface::modifyLinTrajectory(moveit_msgs::RobotTrajectory& /*trajectory*/)
-{
-  return true;
-}
-
-bool RLLSimulationMoveIface::modifyPtpTrajectory(moveit_msgs::RobotTrajectory& /*trajectory*/)
-{
   return true;
 }

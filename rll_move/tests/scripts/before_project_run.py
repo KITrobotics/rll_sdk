@@ -18,12 +18,13 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from geometry_msgs.msg import Pose, Point
-
 import rospy
-from test_util import TestCaseWithRLLMoveClient
-from rll_move_client.error import RLLErrorCode
 from std_srvs.srv import Trigger, TriggerRequest
+
+from rll_move_client.error import RLLErrorCode
+
+from test_util import TestCaseWithRLLMoveClient
+
 
 class TestBeforeProjectRun(TestCaseWithRLLMoveClient):
 
@@ -33,12 +34,9 @@ class TestBeforeProjectRun(TestCaseWithRLLMoveClient):
 
     def test_0_call_service(self):
         resp = self.client.move_random()
-        self.assertLastServiceCallFailedWith(
+        self.assert_last_srv_call_failed(
             resp, RLLErrorCode.SERVICE_CALL_NOT_ALLOWED)
-
 
         # robot ready should be allowed even ouside project run
         resp = self.robot_ready_service.call(TriggerRequest())
         self.assertTrue(resp)
-        
-       
