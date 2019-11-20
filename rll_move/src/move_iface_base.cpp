@@ -318,14 +318,14 @@ bool RLLMoveIfaceBase::callClient()
     return false;
   }
 
-  size_t recv_size = recv(client_socket_, recv_msg, CLIENT_SERVER_BUFFER_SIZE, 0);
+  recv(client_socket_, recv_msg, CLIENT_SERVER_BUFFER_SIZE, 0);
   close(client_socket_);
-  if (strncmp(recv_msg, CLIENT_SERVER_OK_RESP_, recv_size) == 0)
+  if (strcmp(recv_msg, CLIENT_SERVER_OK_RESP_) == 0)
   {
     job_result_.jobStarted();
     return true;
   }
-  if (strncmp(recv_msg, CLIENT_SERVER_ERROR_RESP_, recv_size) == 0)
+  if (strcmp(recv_msg, CLIENT_SERVER_ERROR_RESP_) == 0)
   {
     ROS_WARN("client responded with an error");
     return false;

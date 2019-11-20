@@ -124,8 +124,8 @@ void RLLMoveClientListener::spin()
 
     ROS_INFO("got a connection from addr %s and port %d", inet_ntoa(conn_addr.sin_addr), ntohs(conn_addr.sin_port));
 
-    size_t recv_length = recv(tmp_socket, recv_msg, RLLMoveIfaceBase::CLIENT_SERVER_BUFFER_SIZE, 0);
-    if (strncmp(recv_msg, RLLMoveIfaceBase::CLIENT_SERVER_START_CMD_, recv_length) == 0)
+    recv(tmp_socket, recv_msg, RLLMoveIfaceBase::CLIENT_SERVER_BUFFER_SIZE, 0);
+    if (strcmp(recv_msg, RLLMoveIfaceBase::CLIENT_SERVER_START_CMD_) == 0)
     {
       ROS_INFO("received start signal");
       send(tmp_socket, RLLMoveIfaceBase::CLIENT_SERVER_OK_RESP_, strlen(RLLMoveIfaceBase::CLIENT_SERVER_OK_RESP_), 0);
