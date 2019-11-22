@@ -3,6 +3,7 @@
 # This file is part of the Robot Learning Lab Move Client
 #
 # Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
+# Copyright (C) 2019 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -121,13 +122,14 @@ class RLLMoveClientListener(object):
         self.sock.listen(1)
         rospy.loginfo("Socket listener started")
 
-    def execute(self):
-        success = False
+    def execute(self):  # pylint: disable=no-self-use
+        rospy.logerr("No client code found. "
+                     "You must pass an execute() method to the client "
+                     "or overwrite the execute() method of the client!")
+        return False
 
-        def execute_default():
-            rospy.logerr("No client code found. "
-                         "You must pass an execute() method to the client!")
-            return False
+    def __execute(self):
+        success = False
 
         rospy.loginfo("Code execution triggered")
 
@@ -135,7 +137,7 @@ class RLLMoveClientListener(object):
             if self.execute_func is not None:
                 success = self.execute_func(self)
             else:
-                success = execute_default()
+                success = self.execute()
         except ServiceCallFailure as expt:
             rospy.logerr("The client routine was interrupted by an uncaught "
                          "exception: \n%s", expt)
@@ -187,7 +189,7 @@ class RLLMoveClientListener(object):
             if data == "start":
                 rospy.loginfo("received start signal")
                 conn.send(b'ok')  # pylint: disable=no-member
-                self.execute()
+                self.__execute()
             else:
                 rospy.logerr("error receiving start signal")
                 conn.send(b'error')  # pylint: disable=no-member

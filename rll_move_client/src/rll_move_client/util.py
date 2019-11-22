@@ -46,18 +46,18 @@ def array_to_quaternion(arr):
     return Quaternion(arr[0], arr[1], arr[2], arr[3])
 
 
-def euler_to_quaternion(roll, pitch, yaw, axes='sxyz'):
+def euler_to_quaternion(alpha, beta, gamma, axes='sxyz'):
     """
     Construct a `Quaternion` from the given euler angles
 
-    :param roll:
-    :param pitch:
-    :param yaw:
+    :param alpha:
+    :param beta:
+    :param gamma:
     :param axes:
     :return:
     """
     return array_to_quaternion(
-        tf.transformations.quaternion_from_euler(roll, pitch, yaw, axes))
+        tf.transformations.quaternion_from_euler(alpha, beta, gamma, axes))
 
 
 def orientation_from_rpy(roll, pitch, yaw):
