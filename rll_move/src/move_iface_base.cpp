@@ -285,7 +285,7 @@ bool RLLMoveIfaceBase::initClientSocket(const std::string& client_ip_addr)
 
 bool RLLMoveIfaceBase::callClient()
 {
-  unsigned int max_retries = 3;
+  unsigned int max_retries = 11;
   unsigned int retry_counter = 0;
   char recv_msg[CLIENT_SERVER_BUFFER_SIZE];
   memset(recv_msg, 0, CLIENT_SERVER_BUFFER_SIZE * sizeof(char));
@@ -293,7 +293,9 @@ bool RLLMoveIfaceBase::callClient()
 
   while (retry_counter < max_retries)
   {
-    if (connect(client_socket_, reinterpret_cast<struct sockaddr*>(&client_serv_addr_), sizeof(client_serv_addr_)) < 0)
+    int result =
+        connect(client_socket_, reinterpret_cast<struct sockaddr*>(&client_serv_addr_), sizeof(client_serv_addr_));
+    if (result < 0 && retry_counter < max_retries)
     {
       ROS_INFO("failed to connect to client, retrying...");
       retry_counter++;
