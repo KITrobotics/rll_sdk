@@ -167,14 +167,13 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(rll_msgs::MoveRandom::Request& /*r
   bool success = false;
   int retry_counter = 0;
   geometry_msgs::Pose random_pose;
-  geometry_msgs::Pose start = manip_move_group_.getCurrentPose().pose;
 
   while (!success && retry_counter < 30)
   {
     retry_counter++;
 
     random_pose = manip_move_group_.getRandomPose().pose;
-    if (poseGoalTooClose(start, random_pose))
+    if (poseGoalTooClose(random_pose))
     {
       success = false;
       ROS_INFO("last random pose too close to start pose, retrying...");
@@ -231,9 +230,8 @@ bool RLLMoveIfaceServices::pickPlaceSrv(rll_msgs::PickPlace::Request& req, rll_m
 RLLErrorCode RLLMoveIfaceServices::pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& /*resp*/)
 {
   RLLErrorCode error_code;
-  geometry_msgs::Pose start = manip_move_group_.getCurrentPose().pose;
 
-  if (!poseGoalTooClose(start, req.pose_above))
+  if (!poseGoalTooClose(req.pose_above))
   {
     ROS_INFO("Moving above target");
     error_code = moveToGoalLinear(req.pose_above);

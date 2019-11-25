@@ -63,7 +63,7 @@ protected:
   tf::Transform ee_to_tip_;
 
   bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
-  bool poseGoalTooClose(const geometry_msgs::Pose& start, const geometry_msgs::Pose& goal);
+  bool poseGoalTooClose(const geometry_msgs::Pose& goal);
   RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
   bool jointsGoalInCollision(const std::vector<double>& goal);
   robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);

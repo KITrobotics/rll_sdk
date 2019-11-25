@@ -314,9 +314,9 @@ bool RLLMoveIfacePlanning::jointsGoalTooClose(const std::vector<double>& start, 
   return (distance < 0.01);
 }
 
-bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& start, const geometry_msgs::Pose& goal)
+bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& goal)
 {
-  std::vector<double> start_joints, goal_joints;
+  std::vector<double> goal_joints;
   moveit_msgs::MoveItErrorCodes error_code;
   kinematics::KinematicsBaseConstPtr solver =
       manip_move_group_.getRobotModel()->getJointModelGroup(manip_move_group_.getName())->getSolverInstance();
@@ -324,15 +324,6 @@ bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& start, co
 
   tf::Transform world_to_ee, base_to_tip;
   geometry_msgs::Pose pose_tip;
-
-  tf::poseMsgToTF(start, world_to_ee);
-  base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
-  tf::poseTFToMsg(base_to_tip, pose_tip);
-  if (!solver->searchPositionIK(pose_tip, seed, 0.1, start_joints, error_code))
-  {
-    ROS_WARN("start pose for goal distance check invalid: error code %s", stringifyMoveItErrorCodes(error_code));
-    return true;
-  }
 
   tf::poseMsgToTF(goal, world_to_ee);
   base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
@@ -343,7 +334,7 @@ bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& start, co
     return true;
   }
 
-  if (jointsGoalTooClose(start_joints, goal_joints))
+  if (jointsGoalTooClose(seed, goal_joints))
   {
     ROS_WARN("goal joint values too close to start joint values");
     return true;
