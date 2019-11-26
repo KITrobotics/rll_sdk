@@ -92,6 +92,7 @@ RLLErrorCode convertMoveItErrorCode(const moveit::planning_interface::MoveItErro
       return RLLErrorCode::INVALID_INPUT;
 
     case moveit_msgs::MoveItErrorCodes::PLANNING_FAILED:
+    case moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN:
       return RLLErrorCode::MOVEIT_PLANNING_FAILED;
 
     default:
