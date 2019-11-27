@@ -18,9 +18,12 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import time
-import rospy
+from __future__ import print_function
+
 from math import pi
+import time
+
+import rospy
 from geometry_msgs.msg import Pose, Point
 
 from rll_move_client.client import RLLDefaultMoveClient
@@ -58,8 +61,13 @@ def hello_world(move_client):
         rospy.logwarn("move_joints service call failed (as expected)")
 
     # ups, moving the fourth joint by 90 degrees didn't work, we bumped into
-    # the workspace boundaries -> try moving 90 degrees in the other direction
-    resp = move_client.move_joints(0.0, 0.0, 0.0, -pi / 2, 0.0, 0.0, 0.0)
+    # the workspace boundaries
+    # Let's try to move joint 2, 4 and 6 so that we end up in an upright
+    # position of the end effector close to the front of the workspace.
+    rospy.loginfo("calling move_joints to move into an upright position "
+                  "close to the front of the workspace")
+    resp = move_client.move_joints(0.0, pi / 4, 0.0, -pi / 4,
+                                   0.0, -pi / 2, 0.0)
 
     if not resp:
         rospy.logerr("move_joints service call failed (unexpectedly)!")
@@ -109,7 +117,7 @@ def hello_world(move_client):
     goal_pose.orientation = orientation_from_rpy(0, pi / 2, 0)
 
     # move to the starting position still in a ptp fashion
-    goal_pose.position = Point(0.5, -0.6, 0.25)
+    goal_pose.position = Point(0.5, -0.6, 0.3)
 
     rospy.loginfo("move_ptp to the starting point of the triangle")
     move_client.move_ptp(goal_pose)  # (error check omitted)
@@ -126,13 +134,13 @@ def hello_world(move_client):
     time.sleep(1)
 
     # next point is the upper right point of the triangle
-    goal_pose.position.y = -0.1
+    goal_pose.position.y = -0.15
     rospy.loginfo("move_lin to the upper right point of the triangle")
     move_client.move_lin(goal_pose)  # (error check omitted)
 
     # close the triangle by moving back diagonally to the start position
     goal_pose.position.y = -0.6
-    goal_pose.position.z = .25
+    goal_pose.position.z = .3
     rospy.loginfo("move_lin to the start to close the triangle shape")
     move_client.move_lin(goal_pose)  # (error check omitted)
 
@@ -165,8 +173,14 @@ def hello_world(move_client):
     # we can obtain the chosen random pose from the response
     rospy.loginfo("move_random moved to: %s", resp)
 
+    return True
 
-if __name__ == "__main__":
+
+def main():
     rospy.init_node('hello_world')
     client = RLLDefaultMoveClient(hello_world)
-    rospy.spin()
+    client.spin()
+
+
+if __name__ == "__main__":
+    main()

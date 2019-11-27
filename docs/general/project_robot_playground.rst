@@ -213,23 +213,33 @@ as a starting point for the following examples.
 
    .. code-tab:: py
 
-      import rospy
-      from geometry_msgs.msg import Pose, Point
+      #! /usr/bin/env python
+
       from math import pi
 
+      import rospy
+      from geometry_msgs.msg import Pose, Point
+
       from rll_move_client.client import RLLDefaultMoveClient
-      from rll_move_client.util import euler_to_quaternion
+      from rll_move_client.util import orientation_from_rpy
+
 
       def hello_world(move_client):
-        rospy.loginfo("Action triggered")
+          rospy.loginfo("Hello world")
 
-        # put your code here
+          # put your code here
+
+          return True
+
+
+      def main():
+          rospy.init_node('hello_world')
+          client = RLLDefaultMoveClient(hello_world)
+          client.spin()
 
 
       if __name__ == "__main__":
-        rospy.init_node('hello_world')
-        client = RLLDefaultMoveClient(hello_world)
-        rospy.spin()
+          main()
 
    .. code-tab:: c++
 
@@ -239,24 +249,26 @@ as a starting point for the following examples.
       #include <rll_move_client/move_client_default.h>
       #include <rll_move_client/util.h>
 
-      void helloWorld(RLLDefaultMoveClient* const move_client)
+      bool helloWorld(RLLDefaultMoveClient* const move_client)
       {
-        ROS_INFO("Action triggered");
+        ROS_INFO("Hello world");
 
         // put your code here
+
+        return true;
       }
 
       int main(int argc, char** argv)
       {
         ros::init(argc, argv, "hello_world");
-        RLLCallbackMoveClient<RLLDefaultMoveClient> client(&helloWorld, "move_client");
-        ros::spin();
+        RLLCallbackMoveClient<RLLDefaultMoveClient> client(&helloWorld);
+        client.spin();
         return 0;
       }
 
-Internally, the `RLL MoveClient` creates a ROS `SimpleActionServer`, which,
-once the action is invoked, calls the specified callback function,
-in this case :code:`hello_world()`.
+Internally, the `RLL MoveClient` creates a socket listener, which, once a
+start signal is received, calls the specified callback function, in this case
+:code:`hello_world()`.
 
 .. note::
   The code snippets shown below need to be inserted below
@@ -273,10 +285,10 @@ positions the robot can actually reach.
 
 The robot is mounted on a table, where the table defines the workspace
 boundaries in the x- and y-direction. In the figure below you can see a
-schematic view of the default setup. The origin is in the middle of the table
-and the robot is mounted `0.2m` behind it. The positive x-axis is pointing to
-the right, the positive y-axis is oriented to the front and the z-axis is
-pointing upwards.
+schematic overview of the default setup. The origin is in the middle of the
+table and the robot is mounted `0.2m` behind it. The positive x-axis is
+pointing to the right, the positive y-axis is oriented to the front and the
+z-axis is pointing upwards.
 
 .. _robot-workspace:
 .. figure:: _static/robot_workspace.svg
@@ -304,7 +316,7 @@ which holds the target position and orientation.
       goal_pose = Pose()
       goal_pose.position = Point(.5, .2, .7)
       # rotate 90 degrees around the y axis
-      goal_pose.orientation = euler_to_quaternion(0, pi / 2, 0)
+      goal_pose.orientation = orientation_from_rpy(0, pi / 2, 0)
 
       move_client.move_ptp(goal_pose)
 
@@ -553,8 +565,8 @@ Hello ROS
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 11,12
-         :lines: 21-32, 168-172
+         :emphasize-lines: 16,17
+         :lines: 1, 20-35, 175-186
 
    .. group-tab:: C++
 
@@ -562,7 +574,7 @@ Hello ROS
          :language: cpp
          :linenos:
          :emphasize-lines: 9,10
-         :lines: 20-29, 186-194
+         :lines: 20-29, 187-198
 
 
 We use the :ref:`move-client-getting-started` template from above and
@@ -581,8 +593,8 @@ The previous example didn't actually move the robot. Lets change that!
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 12
-         :lines: 21-30, 34-39, 168-172
+         :emphasize-lines: 17
+         :lines: 1, 20-33, 37-42, 175-186
 
    .. group-tab:: C++
 
@@ -590,7 +602,7 @@ The previous example didn't actually move the robot. Lets change that!
          :linenos:
          :language: cpp
          :emphasize-lines: 10
-         :lines: 20-27, 31-37, 186-194
+         :lines: 20-27, 31-36, 187-198
 
 
 We use the :ref:`move_random <move-client-move-random>` function to move the
@@ -611,16 +623,16 @@ neglected.
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 14, 20, 27-28, 32, 34-35
-         :lines: 21-30, 41-67, 168-172
+         :emphasize-lines: 19, 25, 32-33, 41-42, 44-45
+         :lines: 1, 20-33, 44-75, 175-186
 
    .. group-tab:: C++
 
       .. literalinclude:: _static/code_examples/hello_world.cpp
          :linenos:
          :language: cpp
-         :emphasize-lines: 12, 19, 23-26, 31, 33-36
-         :lines: 20-27, 38-67, 186-194
+         :emphasize-lines: 12, 20, 24-27, 34, 36-39
+         :lines: 20-27, 38-70, 188-199
 
 
 We use the :ref:`move_joints<move-client-move-joints>` function to specify
@@ -645,16 +657,16 @@ More movement
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 13-15, 18, 33, 35, 40, 42
-         :lines: 21-30, 69-102, 168-172
+         :emphasize-lines: 18-20, 23, 38, 40, 45, 47
+         :lines: 1, 20-33, 77-110, 175-186
 
    .. group-tab:: C++
 
       .. literalinclude:: _static/code_examples/hello_world.cpp
          :linenos:
          :language: cpp
-         :emphasize-lines: 11-15, 18, 34, 38, 43, 45
-         :lines: 20-27, 69-105, 186-194
+         :emphasize-lines: 13-17, 20, 36, 40, 45, 47
+         :lines: 20-27, 48, 71-110, 188-199
 
 Point based movement ist easier to understand. You only need to specify
 the position and orientation of the end effector and the robot will move there.
@@ -675,8 +687,8 @@ Linear movement
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 16, 19, 22, 27, 31, 36,38,41-42, 44
-         :lines: 21-30, 104-139, 168-172
+         :emphasize-lines: 22, 25, 28, 33, 37, 42, 44, 47-48, 50
+         :lines: 1, 20-33, 79, 112-147, 175-186
 
    .. group-tab:: C++
 
@@ -684,7 +696,7 @@ Linear movement
          :linenos:
          :language: cpp
          :emphasize-lines: 15, 18-20, 23, 28, 32, 37, 40,45-46, 49
-         :lines: 20-27, 71, 109-150, 186-194
+         :lines: 20-27, 74, 112-153, 188-199
 
 
 Previously we moved in a point to point fashion to a desired pose.
@@ -700,16 +712,16 @@ three consecutive linear movements, forming a triangular path, are executed.
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 19, 26, 21, 28
-         :lines: 21-30, 71, 112, 140-158, 168-172
+         :emphasize-lines: 25, 32, 27, 34
+         :lines: 1, 20-33, 79, 117, 120, 148-166, 175-186
 
    .. group-tab:: C++
 
       .. literalinclude:: _static/code_examples/hello_world.cpp
          :linenos:
          :language: cpp
-         :emphasize-lines: 16, 25, 18, 27
-         :lines: 20-27, 71, 152-174, 186-194
+         :emphasize-lines: 22, 31, 24, 33
+         :lines: 20-27, 48, 74, 117, 120-122, 154-177, 188-199
 
 Since :code:`move_lin()` requires the end effector to travel on a
 linear trajectory, it is more constrained than :code:`move_ptp()`
@@ -732,7 +744,7 @@ The complete code, which encompasses the examples above, is shown below:
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
          :caption: Complete hello_world.py example
-         :lines: 21-
+         :lines: 1, 20-
 
    .. group-tab:: C++
 

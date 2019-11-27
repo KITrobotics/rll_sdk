@@ -23,7 +23,7 @@
 #include <rll_move_client/move_client_default.h>
 #include <rll_move_client/util.h>
 
-void helloWorld(RLLDefaultMoveClient* const move_client)
+bool helloWorld(RLLDefaultMoveClient* const move_client)
 {
   std::cout << "Hello World" << std::endl;  // avoid cout for logging
   ROS_INFO("Hello ROS");                    // better use ROS_INFO, ROS_ERROR...
@@ -36,7 +36,7 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   ros::Duration(2).sleep();
 
   // move all seven joints into their zero (initial) position
-  // set all joint values of the Request to zero (unecessary, zero is the default)
+  // set all joint values of the Request to zero (unnecessary, zero is the default)
   ROS_INFO("calling move_joints with all joint values = 0");
   move_client->moveJoints(0, 0, 0, 0, 0, 0, 0);
 
@@ -45,7 +45,8 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   // rotate the fourth joint by 90 degrees (pi/2 since we work with radians)
   // the remaining joint values are still equal to zero
   ROS_INFO("calling move_joints with joint_4 = pi/2");
-  bool success = move_client->moveJoints(0, 0, 0, M_PI / 2, 0, 0, 0);
+  bool success;
+  success = move_client->moveJoints(0, 0, 0, M_PI / 2, 0, 0, 0);
 
   // previously we neglected to check the response of the service call.
   // You should always check the result of a service call!
@@ -55,9 +56,11 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   }
 
   // ups, moving the fourth joint by 90 degrees didn't work, we bumped into
-  // the workspace boundaries -> try moving 90 degrees in the other direction
-  ROS_INFO("calling move_joints with joint_4 = -pi/2");
-  success = move_client->moveJoints(0, 0, 0, -M_PI / 2, 0, 0, 0);
+  // the workspace boundaries
+  // Let's try to move joint 2, 4 and 6 so that we end up in an upright position
+  // of the end effector close to the front of the workspace.
+  ROS_INFO("calling move_joints to move into an upright position close to the front of the workspace");
+  success = move_client->moveJoints(0, M_PI / 4, 0, -M_PI / 4, 0, -M_PI / 2, 0);
 
   if (!success)
   {
@@ -116,7 +119,7 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   // move to the starting position still in a ptp fashion
   goal_pose.position.x = 0.5;
   goal_pose.position.y = -0.6;
-  goal_pose.position.z = 0.25;
+  goal_pose.position.z = 0.3;
 
   ROS_INFO("move_ptp to the starting point of the triangle:");
   move_client->movePTP(goal_pose);
@@ -133,7 +136,7 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   ros::Duration(1).sleep();
 
   // next point is the upper right point of the triangle
-  goal_pose.position.y = -0.1;
+  goal_pose.position.y = -0.15;
 
   ROS_INFO("moveLin to the upper right point of the triangle:");
   move_client->moveLin(goal_pose);
@@ -142,7 +145,7 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
 
   // close the triangle by moving back diagonally to the start position
   goal_pose.position.y = -0.6;
-  goal_pose.position.z = .25;
+  goal_pose.position.z = .3;
 
   ROS_INFO("moveLin to the start to close the triangle shape:");
   move_client->moveLin(goal_pose);
@@ -182,13 +185,15 @@ void helloWorld(RLLDefaultMoveClient* const move_client)
   ROS_INFO_STREAM(goal_pose);
 
   ros::Duration(2).sleep();
+
+  return true;
 }
 
 int main(int argc, char** argv)
 {
   ros::init(argc, argv, "hello_world");
-  RLLCallbackMoveClient<RLLDefaultMoveClient> client(&helloWorld, "move_client");
-  ros::spin();
+  RLLCallbackMoveClient<RLLDefaultMoveClient> client(&helloWorld);
+  client.spin();
 
   return 0;
 }
