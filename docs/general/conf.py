@@ -90,6 +90,8 @@ html_theme_options = {'style_nav_header_background': '#3973b8'}
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_extra_path = ['_extras']
+
 html_context = {
     'css_files': [
         '_static/style_override.css',
