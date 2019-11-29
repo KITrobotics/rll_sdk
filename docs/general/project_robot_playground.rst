@@ -287,7 +287,7 @@ The robot is mounted on a table, where the table defines the workspace
 boundaries in the x- and y-direction. In the figure below you can see a
 schematic overview of the default setup. The origin is in the middle of the
 table and the robot is mounted `0.2m` behind it. The positive x-axis is
-pointing to the right, the positive y-axis is oriented to the front and the
+pointing to the front, the positive y-axis is oriented to the right and the
 z-axis is pointing upwards.
 
 .. _robot-workspace:
