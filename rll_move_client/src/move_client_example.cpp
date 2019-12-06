@@ -90,7 +90,7 @@ int main(int argc, char** argv)
 {
   ros::init(argc, argv, "move_client_example");
   RLLCallbackMoveClient<RLLDefaultMoveClient> client(&execute);
-  ros::spin();
+  client.spin();
 
   return 0;
 }

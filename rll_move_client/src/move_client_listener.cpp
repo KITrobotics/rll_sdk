@@ -68,13 +68,17 @@ RLLMoveClientListener::RLLMoveClientListener()
     ROS_ERROR("failed to init socket listener");
   }
 
+  // TODO(uieai): If starting the socket fails, e.g. because another client is already running
+  // only the error message gets printed which isn't really helpful. A better error message
+  // should be printed and the client shutdown? The python version shuts down with address already in use
+
   ROS_INFO("Socket listener started");
 }
 
 void RLLMoveClientListener::executeCallback()
 {
   bool success = false;
-
+  is_job_running_ = true;
   ROS_INFO("Code execution triggered");
 
   try
@@ -83,7 +87,12 @@ void RLLMoveClientListener::executeCallback()
   }
   catch (ServiceCallFailure& e)
   {
-    ROS_ERROR("The client routine was interrupted by an uncaught exception: %s", e.what());
+    ROS_ERROR("The client routine was interrupted by an uncaught service exception: %s", e.what());
+  }
+  catch (...)
+  {
+    // catch all exceptions to make sure the client exits cleanly
+    ROS_ERROR("The client routine was interrupted by an uncaught exception.");
   }
 
   if (success)
@@ -95,6 +104,18 @@ void RLLMoveClientListener::executeCallback()
     ROS_INFO("Callback completed %sunsuccessfully%s", AnsiCodes::WARN_, AnsiCodes::END_);
   }
 
+  notifyJobFinished(success);
+  ROS_INFO("Code execution completed");
+}
+
+void RLLMoveClientListener::notifyJobFinished(bool success)
+{
+  if (!is_job_running_)
+  {
+    return;
+  }
+  is_job_running_ = false;
+
   std_srvs::SetBool job_finished_msg;
   job_finished_msg.request.data = success;
   bool call_success = job_finished_.call(job_finished_msg);
@@ -102,8 +123,6 @@ void RLLMoveClientListener::executeCallback()
   {
     ROS_ERROR("failed to report execution result to interface");
   }
-
-  ROS_INFO("Code execution completed");
 }
 
 void RLLMoveClientListener::spin()

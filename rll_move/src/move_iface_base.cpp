@@ -242,6 +242,17 @@ bool RLLMoveIfaceBase::jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs:
   {
     job_result_.setResult(req.data);
   }
+  else if (iface_state_.isJobRunning() && error_code.value() == RLLErrorCode::CONCURRENT_SERVICE_CALL)
+  {
+    // If the jobFinished service is called while another service is currently in execution
+    // the job result is nevertheless set to false to end the current job.
+    // This is done to avoid having to wait for the job execution timeout. If the client code is interrupted,
+    // e.g. because the user stops the client code mid execution, the client still tries to call this service,
+    // to notify the move interface. However, the jobFinished call would ordinarily be rejected due to the
+    // concurrent service call policy if another service call happens to still be in execution
+    ROS_WARN("Concurrent call to jobFinished, setting job success to false.");
+    job_result_.setResult(false);
+  }
 
   error_code = afterNonMovementServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME, error_code);
   resp.success = error_code.succeeded();
