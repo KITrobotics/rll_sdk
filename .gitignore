@@ -66,3 +66,4 @@ CVS/*
 
 # python bytecode
 *.pyc
+*.egg-info/

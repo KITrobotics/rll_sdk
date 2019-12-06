@@ -103,6 +103,12 @@ public:
     return state_ == RLLMoveIfaceState::INTERNAL_ERROR;
   }
 
+  bool isJobRunning()
+  {
+    std::lock_guard<std::mutex> service_call_lock(mutex_);
+    return state_ == RLLMoveIfaceState::RUNNING_JOB;
+  }
+
   const char* stateToString(RLLMoveIfaceState state)
   {
     switch (state)

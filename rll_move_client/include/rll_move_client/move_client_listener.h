@@ -29,11 +29,13 @@ public:
   explicit RLLMoveClientListener();
 
   void spin();
+  void notifyJobFinished(bool success);
 
 protected:
   bool virtual execute() = 0;
 
 private:
+  bool is_job_running_ = false;
   int socket_;
   ros::ServiceClient job_finished_;
 

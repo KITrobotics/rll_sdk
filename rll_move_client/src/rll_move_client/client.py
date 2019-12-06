@@ -49,7 +49,6 @@ class RLLMoveClientBase(object):
                                        handle_response_func, *args):
 
         self._log_service_call(srv_name, log_format, *args)
-
         resp = srv(*args)
         self._last_error_code = resp.error_code
         return handle_response_func(srv_name, resp)
@@ -100,15 +99,27 @@ class RLLMoveClientBase(object):
 
         return False
 
+    def _handle_resp_with_values(self, resp_handler_func):
+        def handle(name, resp):
+            success = self._handle_response_error_code(name, resp)
+
+            # some service calls can return additional values
+            # therefore, swap the result, in such a fashion that the still
+            # can be evaluated as truthy/falsey
+            if success:
+                return resp_handler_func(resp)
+
+            return None
+
+        return handle
+
 
 class RLLMoveClientListener(object):
     JOB_FINISHED_SRV_NAME = "job_finished"
 
-    def __init__(self, execute_func=None):
-        tcp_port = 5005
-
-        # TODO(uieai) do we need to inherit from RLLMoveClientBase ?
+    def __init__(self, execute_func=None, tcp_port=5005):
         self.execute_func = execute_func
+        self._is_job_running = False
 
         self.job_finished_service = rospy.ServiceProxy(
             self.JOB_FINISHED_SRV_NAME, SetBool)
@@ -129,8 +140,8 @@ class RLLMoveClientListener(object):
         return False
 
     def __execute(self):
-        success = False
-
+        self._is_job_running = True
+        success = None
         rospy.loginfo("Code execution triggered")
 
         try:
@@ -140,7 +151,14 @@ class RLLMoveClientListener(object):
                 success = self.execute()
         except ServiceCallFailure as expt:
             rospy.logerr("The client routine was interrupted by an uncaught "
-                         "exception: \n%s", expt)
+                         "service call exception: \n%s", expt)
+        except KeyboardInterrupt:
+            rospy.loginfo("The client routine was interrupted by the user.")
+        except Exception as expt:  # pylint: disable=broad-except
+            # catch all exceptions to ensure that the interface is informed
+            # about the job result, but still log the full stack trace
+            rospy.logerr("The client routine was interrupted by an uncaught "
+                         "exception: \n%s", exc_info=True)
 
         if not isinstance(success, bool):
             rospy.loginfo("Client code did not return boolean indicating "
@@ -154,16 +172,35 @@ class RLLMoveClientListener(object):
             rospy.loginfo("Client code completed %sunsuccessfully%s",
                           C_WARN, C_END)
 
-        req = SetBoolRequest()
-        req.data = success
+        self.notify_job_finished(success)
+        rospy.loginfo("Code execution completed")
+
+        return success
+
+    def notify_job_finished(self, success=False):
+        if not self._is_job_running:
+            # only set the result if a job is actually running
+            return None
+
+        self._is_job_running = False
+
+        req = SetBoolRequest(data=success)
         resp = self.job_finished_service(req)
         if not resp.success:
             rospy.logerr("failed to report execution result to interface")
 
-        rospy.loginfo("Code execution completed")
+        return resp
+
+    def _on_ros_shutdown(self):
+        rospy.logdebug("ROS shutdown triggered")
+        if self._is_job_running:
+            rospy.logwarn("Client code interrupted during a job run!")
+            self.notify_job_finished(False)
 
     def spin(self):
         buffer_size = 10
+
+        rospy.on_shutdown(self._on_ros_shutdown)
 
         while not rospy.is_shutdown():
             try:
@@ -190,6 +227,7 @@ class RLLMoveClientListener(object):
                 rospy.loginfo("received start signal")
                 conn.send(b'ok')  # pylint: disable=no-member
                 self.__execute()
+
             else:
                 rospy.logerr("error receiving start signal")
                 conn.send(b'error')  # pylint: disable=no-member
@@ -242,20 +280,6 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             self.move_joints_service, self.MOVE_JOINTS_SRV_NAME,
             "%s requested with: %s", self._handle_response_error_code,
             *args)
-
-    def _handle_resp_with_values(self, resp_handler_func):
-        def handle(name, resp):
-            success = self._handle_response_error_code(name, resp)
-
-            # some service calls can return additional values
-            # therefore, swap the result, in such a fashion that the still
-            # can be evaluated as truthy/falsey
-            if success:
-                return resp_handler_func(resp)
-
-            return None
-
-        return handle
 
     def move_random(self):
 
