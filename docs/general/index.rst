@@ -10,13 +10,20 @@ KUKA Robot Learning Lab at KIT Documentation
 
 .. toctree::
    :maxdepth: 2
-   :caption: Contents:
+   :caption: General:
 
    about
    getting_started
    job_processing
    manual_installation
    vm_setup
-   project_robot_playground
    publications
    faq
+
+.. toctree::
+   :maxdepth: 2
+   :caption: Working with the RLL:
+
+   development_workflow
+   rll_move_client
+   project_robot_playground

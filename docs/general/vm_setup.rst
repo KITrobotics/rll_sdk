@@ -9,8 +9,25 @@ and is based on Lubuntu 18.04 with ROS Melodic Morenia.
 Installation
 --------------
 
-0. If you do not have VirtualBox installed, download and install `VirtualBox <https://www.virtualbox.org/>`_.
-   You can get more information on how to install and configure from the `Virtual Box Manual <https://www.virtualbox.org/manual/>`_.
+If you do not have VirtualBox already installed, download and install
+`VirtualBox <https://www.virtualbox.org/>`_ first.
+If you encounter problems installing VirtualBox or want to read up on the
+configuration options available consult the
+`Virtual Box Manual <https://www.virtualbox.org/manual/>`_.
+
+.. note:: On some machines hardware virtualization is deactivated by default.
+   In this case you need to enable the corresponding option in your computer's
+   BIOS. Depending on your system this will likely be called *Intel
+   Virtualization Technology* or *AMD-V virtualization*.
+
+
+The RLL VM requires about 15 GB of storage space and you should use a recent
+computer since running the simulation inside the VM can be quite resource
+intensive.
+
+
+Setup the RLL VM Image
+^^^^^^^^^^^^^^^^^^^^^^
 
 1. Download the RLL Virtual Machine (VM) packaged as an `.ova` file
    `here <https://rll-dl.ipr.kit.edu/vm/rll-vm-lubuntu-18.04.ova>`_.
@@ -18,23 +35,17 @@ Installation
 2. Start VirtualBox and import the downloaded `.ova` file by choosing:
    `File->Import Appliance` from the menu.
 
-
 3. Select the downloaded `.ova` file and adjust the machine settings if
    required. The defaults should be fine and can be adjusted later.
 
 4. Click `Import`, this will take a while.
 
-5. By default the VM uses only 8MB of `Video Memory`. It is highly recommended
-   to increase this value. Open the VM settings, go to the `Display Settings`
-   and increase the `Video Memory` e.g. up to `128MB`. You can also tick the
-   `Enable 3D Acceleration` checkbox. If you later notice that the VM crashes
-   or has display issues un-tick the checkbox.
+5. Open the VM settings, go to the `Display Settings` and make sure that the
+   VM has enough `Video Memory` available, i.e. set it to the maximum value of
+   `128MB`. You should also tick the `Enable 3D Acceleration` checkbox. If you
+   later notice that the VM crashes or has display issues un-tick the checkbox.
 
 6. If you have completed these steps the VM is setup and can be powered on.
-
-.. note:: The default username and password are both: **rll**
-
-.. note:: The VM is configured to use a German keyboard layout by default.
 
 .. note:: You **cannot** change the virtual machine's  settings while the VM instance is running.
           If you want to change the settings you need to first power if off.
@@ -49,7 +60,8 @@ that is Ubuntu 18.04 with the LXDE desktop environment.
 You can find all installed programs via the application menu in the bottom
 left of your VM desktop. You can launch the file explorer and web browser
 by clicking the icons next to it. You will often need to start a Terminal.
-The easiest way to do so is to use the keyboard shortcut `Ctrl + Alt + T`.
+The easiest way to do so is to use the keyboard shortcut `Ctrl + Alt + T`
+while you are within the VM window.
 
 To power off the VM you can click on the icon in the bottom right and select
 `Shutdown` in the dialog that will appear.
@@ -63,16 +75,25 @@ selecting `Power off the machine` in the dialog.
     The VM desktop with the application menu in the bottom left
     and shortcuts on desktop to edit, run and submit the robot playground project.
 
+.. note:: The default username and password are both: **rll**
+
+.. note:: The VM is configured to use a German keyboard layout by default.
+
 
 ROS workspace
 ^^^^^^^^^^^^^
 
 The VM contains an already initialized catkin workspace in the :code:`~/rll_ws`
-folder with the :doc:`Robot Playground project <project_robot_playground>`
-set up and ready to run. The VM comes with some handy desktop shortcuts
-to make launching and editing the robot playground project more convenient.
+folder within the user's home directory.
+The :doc:`Robot Playground project<project_robot_playground>` is set up and
+ready to run. Additionally, the VM comes with some handy desktop shortcuts to
+make launching and editing the robot playground project more convenient.
 
-RLL Desktop shortcuts
+.. hint:: On Linux based systems, paths beginning with a leading :code:`~`
+   refer to the user's home folder. The full path to the catkin workspace is
+   therefore :code:`/home/rll/rll_ws`.
+
+RLL desktop shortcuts
 ^^^^^^^^^^^^^^^^^^^^^
 
 You can use the provided desktop shortcuts to build, edit and submit the
@@ -93,7 +114,8 @@ available:
 
 3 **Submit the Robot Playground** uploads your code to be run on a real robot.
 
-  .. note:: You still need to setup your API access token first as described in :ref:`making-your-first-submission`
+  .. note:: In order for this to work, you need to setup your API access token
+     first as described in :ref:`configure-api-access`
 
 4. **RLL Website** opens Firefox and loads the RLL website. From here you can
    go to the documentation by clicking the corresponding menu item. If you want
