@@ -2,7 +2,7 @@
 <launch>
   <arg name="project" default="rll_robot_playground_project" />
 
-  <node name="rll_project_submitter" pkg="rll_tools" type="submit_project.py" output="screen">
+  <node name="rll_project_submitter" pkg="rll_tools" type="submit_project.py" output="screen" cwd="node">
         <param name="project" value="$(arg project)"/>
   </node>
 

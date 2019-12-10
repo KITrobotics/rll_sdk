@@ -18,13 +18,15 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-from os import path, remove, walk, environ
+from os import path, remove, walk, environ, getcwd
 import tarfile
 import glob
 import json
 import yaml
 import rospkg
 import requests
+from catkin_pkg.packages import find_packages
+from catkin_tools.metadata import find_enclosing_workspace
 
 import rospy
 
@@ -109,10 +111,10 @@ def create_project_archive(project_path):
     return submit_archive
 
 
-def upload_archive(project_archive, api_access_cfg):
+def upload_archive(project, project_archive, api_access_cfg):
     rospy.loginfo("uploading archive...")
     submit_url = (api_access_cfg["api_url"] + "jobs/submit_tar?username="
-                  + api_access_cfg["username"] + "&project=" + PROJECT
+                  + api_access_cfg["username"] + "&project=" + project
                   + "&token=" + api_access_cfg["token"] + "&ros_distro="
                   + environ["ROS_DISTRO"])
     with open(project_archive) as archive:
@@ -140,6 +142,23 @@ def upload_archive(project_archive, api_access_cfg):
         rospy.loginfo("You can check the job status at %sjobs", WEBAPP_URL)
 
 
+def find_project_path(project):
+    workspace = find_enclosing_workspace(getcwd())
+    if not workspace:
+        return None
+
+    src_path = path.join(workspace, "src")
+    packages = find_packages(src_path, warnings=[])
+    catkin_package = [pkg_path for pkg_path, p in packages.items()
+                      if p.name == project]
+    if catkin_package:
+        project_path = path.join(src_path, catkin_package[0])
+    else:
+        project_path = None
+
+    return project_path
+
+
 def check_size(project_archive):
     max_file_size = 20 * 1024 * 1024  # upload file size is limited to 20MB
 
@@ -154,7 +173,7 @@ def check_size(project_archive):
     return True
 
 
-def submit_project():
+def submit_project(project):
     rospack = rospkg.RosPack()
     config_path = path.join(rospack.get_path("rll_tools"), "config",
                             "api-access.yaml")
@@ -172,23 +191,28 @@ def submit_project():
             rospy.logfatal("malformed api-access.yaml file")
             return
 
-    try:
-        project_path = rospack.get_path(PROJECT)
-    except rospkg.ResourceNotFound:
+    project_path = find_project_path(project)
+    if not project_path:
         rospy.logfatal("Could not find the project you want to submit. "
-                       "Make sure the project '%s' in your Catkin workspace",
-                       PROJECT)
+                       "Make sure the project '%s' in your Catkin workspace.",
+                       project)
+        rospy.logfatal("And you need to run this submit command inside your "
+                       "Catkin workspace.")
         return
 
     project_archive = create_project_archive(project_path)
     size_ok = check_size(project_archive)
     if not size_ok:
         return
-    upload_archive(project_archive, api_access_cfg)
+    upload_archive(project, project_archive, api_access_cfg)
+
+
+def main():
+    rospy.init_node("project_submitter")
+    project = rospy.get_param("~project")
+
+    submit_project(project)
 
 
 if __name__ == '__main__':
-    rospy.init_node("project_submitter")
-    PROJECT = rospy.get_param("~project")
-
-    submit_project()
+    main()
