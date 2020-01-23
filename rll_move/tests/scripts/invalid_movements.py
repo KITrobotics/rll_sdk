@@ -26,7 +26,9 @@ import rll_msgs
 
 from rll_move_client.error import RLLErrorCode, CriticalServiceCallFailure
 from rll_move_client.util import orientation_from_rpy
-from test_util import TestCaseWithRLLMoveClient, concurrent_call, idle
+from rll_tools.run import idle
+
+from test_util import TestCaseWithRLLMoveClient, concurrent_call
 
 
 class TestInvalidMovements(TestCaseWithRLLMoveClient):
@@ -90,7 +92,7 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
     def test_4_idle_during_job_run(self):
         # this should result in an internal error, it will also crash
         # the current run_job action
-        idle_success, _ = idle()
+        idle_success = idle()
         self.assertFalse(idle_success)
 
         self.assertRaises(CriticalServiceCallFailure, self.client.move_random)

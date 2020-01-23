@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>rll_tools</name>
   <version>0.0.1</version>
   <description>Different handy tools for the KUKA Robot Learning Lab at KIT</description>
@@ -8,7 +8,10 @@
 
   <license>GPLv3+</license>
 
-  <exec_depend>message_runtime</exec_depend>
+  <exec_depend condition="$ROS_DISTRO == melodic">python-typing</exec_depend>
+  <build_depend>rll_msgs</build_depend>
+  <build_export_depend>rll_msgs</build_export_depend>
+  <exec_depend>rll_msgs</exec_depend>
   <exec_depend>python-requests</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
 

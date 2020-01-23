@@ -30,6 +30,12 @@ Move services are available in the `/iiwa/` namespace, e.g. `/iiwa/pick_place` o
 
 If you want to improve the web API description, have a look at the [ReadMe](docs/api/README.md).
 
+## ROS Kinetic gotchas
+
+Some of the python packages use the `typing` module which cannot be installed via rosdep on Kinetic. You need to install it manually by running:
+
+  pip install typing
+
 ## Acknowledgements
 
 The description, control and Gazebo config was inspired by the [iiwa stack](https://github.com/IFL-CAMP/iiwa_stack).

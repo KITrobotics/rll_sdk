@@ -44,7 +44,8 @@ format-check:
     # run clang format check
     CLANG_FORMAT_VERSION: "6.0"
     CLANG_FORMAT_CHECK: "file"
-    AFTER_SCRIPT: "apt -yq install python-pip && pip -q install flake8 && python -m flake8"
+    AFTER_SCRIPT: "apt -yq install python-pip && pip -q install flake8 typing && python -m flake8"
+
   script: .industrial_ci/gitlab.sh
   tags:
     - docker # use docker runner
@@ -53,6 +54,7 @@ format-check:
 kinetic-build-rostests:
   variables:
     ROS_DISTRO: "kinetic" # override ROS_DISTRO variable
+    BEFORE_SCRIPT: "apt -yq install python-pip && pip -q install typing"
   # run default -> build
   script: .industrial_ci/gitlab.sh
   tags:
@@ -68,7 +70,7 @@ melodic-build-rostests:
 
 warningbuild-linting:
   variables:
-    ADDITIONAL_DEBS: "python-pip clang-tidy-6.0 clang-6.0"
+    ADDITIONAL_DEBS: "python-pip python-typing clang-tidy-6.0 clang-6.0"
     CATKIN_LINT: "pedantic"
     CATKIN_CONFIG: "--cmake-args -DCMAKE_CXX_FLAGS=-Werror"
     NOT_TEST_BUILD: "true"
