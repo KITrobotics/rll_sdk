@@ -18,29 +18,16 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-import sys
-
 import rospy
-from rll_tools.run import idle, run_project
+from rll_tools.submit import submit_project
 
 
 def main():
-    server_timeout = rospy.get_param("~timeout", 5)
-    auth_secret = rospy.get_param("~authentication_secret", "")
-    only_idle = rospy.get_param("~only_idle", False)
+    rospy.init_node("project_submitter")
+    project = rospy.get_param("~project")
 
-    if not only_idle:
-        success = run_project(server_timeout, auth_secret)
-        if not success:
-            rospy.logfatal("Internal error when running project")
-            sys.exit(1)
-
-    success = idle(server_timeout, auth_secret)
-    if not success:
-        rospy.logfatal("Internal error when running idle")
-        sys.exit(1)
+    submit_project(project)
 
 
 if __name__ == '__main__':
-    rospy.init_node('project_runner')
     main()

@@ -23,8 +23,9 @@ import time
 import rospy
 
 from rll_move_client.client import RLLDefaultMoveClient
+from rll_tools.run import run_project_in_background
 
-from test_util import generate_test_callback, run_project_in
+from test_util import generate_test_callback
 from invalid_movements import TestInvalidMovements
 from basic_movements import TestBasicMovements
 from repeat_movements import TestRepeatedMovements
@@ -48,7 +49,7 @@ def main():
     # wait for the move_iface to start
     time.sleep(8)
     execute_before(client)
-    run_project_in(2)
+    run_project_in_background(2)
     client.spin()
 
 
