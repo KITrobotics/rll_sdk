@@ -22,5 +22,6 @@
   <exec_depend>rospy</exec_depend>
   <exec_depend>std_msgs</exec_depend>
   <exec_depend condition="$ROS_DISTRO == melodic">python-typing</exec_depend>
+  <exec_depend>python-readchar-pip</exec_depend>
 
 </package>
