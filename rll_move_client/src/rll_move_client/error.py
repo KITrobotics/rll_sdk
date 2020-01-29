@@ -43,6 +43,8 @@ class RLLErrorCode(object):
     JOB_EXECUTION_TIMED_OUT = 71
     SERVICE_CALL_NOT_ALLOWED = 72
 
+    SERVICE_CALL_CLIENT_ERROR = 127  # Note: only used client side
+
     # critical failure
     CRITICAL_FAILURE = 128
     EXECUTION_FAILED = 129
