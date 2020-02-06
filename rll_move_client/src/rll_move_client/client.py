@@ -382,15 +382,15 @@ class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place
         self._pick_place_service = rospy.ServiceProxy(
             self.PICK_PLACE_SRV_NAME, PickPlace)
 
-    def pick_place(self, pose_approach, pose_grip,  # pylint: disable=r0913
-                   pose_retreat, gripper_close, grasp_object):
-        # type: (Pose, Pose, Pose, bool, str) -> bool
+    def pick_place(self, pose_above, pose_grip,  # pylint: disable=r0913
+                   gripper_close, grasp_object):
+        # type: (Pose, Pose, bool, str) -> bool
 
         return self._call_service_with_error_check(
             self._pick_place_service, self.PICK_PLACE_SRV_NAME,
-            "%s requested with: %s->%s->%s close:%s, grasp:%s",
+            "%s requested with: %s->%s close:%s, grasp:%s",
             self._handle_response_error_code,
-            pose_approach, pose_grip, pose_retreat, gripper_close,
+            pose_above, pose_grip, gripper_close,
             grasp_object)
 
 
