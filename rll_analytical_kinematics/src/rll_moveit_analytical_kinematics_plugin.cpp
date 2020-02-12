@@ -57,7 +57,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
 
   setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
 
-  rdf_loader::RDFLoader rdf_loader(robot_description);
+  rdf_loader::RDFLoader rdf_loader(robot_description_);
   const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
   const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
 
@@ -67,8 +67,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
     return false;
   }
 
-  moveit::core::RobotModel robot_model_instance(urdf_model, srdf);
-  robot_model_ = moveit::core::RobotModelConstPtr(&robot_model_instance);
+  static moveit::core::RobotModel robot_model_instance(urdf_model, srdf);
+  robot_model_ = moveit::core::RobotModelConstPtr(std::make_shared<moveit::core::RobotModel>(robot_model_instance));
 #endif
 
   const moveit::core::JointModelGroup* jmg = robot_model_->getJointModelGroup(group_name);
@@ -375,6 +375,8 @@ bool RLLMoveItAnalyticalKinematicsPlugin::getPathIKelb(const std::vector<geometr
   std::vector<double> sol(7);
   std::vector<double> seed_tmp = ik_seed_state;
   last_valid_percentage = 0.0;
+
+  tmp_state.setToDefaultValues();
 
   for (unsigned int i = 0; i < waypoints_pose.size(); i++)
   {

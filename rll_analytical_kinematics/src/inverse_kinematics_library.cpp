@@ -656,6 +656,7 @@ InvKinMsg InvKin::inverseKinematics(InvKinJoints* joint_angles, const InvKinXCar
     Eigen::Vector3d z;
     z << 0, 0, 1;
 
+    // check if first and seventh axis are on one line
     double overhead = acos(xsw.dot(z) / lsw);
     if (overhead < 15.0 / 180.0 * M_PI || overhead > 165.0 / 180.0 * M_PI)
     {
