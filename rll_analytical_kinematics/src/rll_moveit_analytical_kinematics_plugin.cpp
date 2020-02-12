@@ -22,6 +22,13 @@
 
 namespace rll_moveit_analytical_kinematics
 {
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+#else
+static void noDeleter(const moveit::core::RobotModel* /*unused*/)
+{
+}
+#endif
+
 bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
     const moveit::core::RobotModel& robot_model,
@@ -68,7 +75,7 @@ bool RLLMoveItAnalyticalKinematicsPlugin::initialize(
   }
 
   static moveit::core::RobotModel robot_model_instance(urdf_model, srdf);
-  robot_model_ = moveit::core::RobotModelConstPtr(std::make_shared<moveit::core::RobotModel>(robot_model_instance));
+  robot_model_ = moveit::core::RobotModelConstPtr(&robot_model_instance, &noDeleter);
 #endif
 
   const moveit::core::JointModelGroup* jmg = robot_model_->getJointModelGroup(group_name);
