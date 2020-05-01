@@ -162,7 +162,7 @@ bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose)
 
 bool RLLBasicMoveClient::moveJoints(const std::vector<double>& joint_values)
 {
-  if (joint_values.size() < 7)
+  if (joint_values.size() < RLL_NUM_JOINTS)
   {
     ROS_WARN("You need to pass seven joint values");
     return false;
@@ -171,6 +171,7 @@ bool RLLBasicMoveClient::moveJoints(const std::vector<double>& joint_values)
                     joint_values[5], joint_values[6]);
 }
 
+// NOLINTNEXTLINE readability-function-size
 bool RLLBasicMoveClient::moveJoints(double a1, double a2, double a3, double a4, double a5, double a6, double a7)
 {
   rll_msgs::MoveJoints move_joints_msg;

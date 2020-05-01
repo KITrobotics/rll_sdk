@@ -32,6 +32,6 @@
   <exec_depend>rll_description</exec_depend>
   <exec_depend>rll_gazebo</exec_depend>
   <exec_depend>rll_control</exec_depend>
-  <exec_depend>rll_analytical_kinematics</exec_depend>
+  <exec_depend>rll_kinematics</exec_depend>
 
 </package>

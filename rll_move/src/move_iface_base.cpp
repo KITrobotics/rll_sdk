@@ -1,7 +1,7 @@
 /*
  * This file is part of the Robot Learning Lab SDK
  *
- * Copyright (C) 2018-2019 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
+ * Copyright (C) 2018-2020 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
  * Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <moveit_msgs/MoveGroupAction.h>
 #include <actionlib/client/simple_action_client.h>
+#include <moveit_msgs/MoveGroupAction.h>
 
 #include <rll_move/move_iface_base.h>
 
@@ -28,8 +28,6 @@ const std::string RLLMoveIfaceBase::RUN_JOB_SRV_NAME = "job_env";
 
 const std::string RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME = "job_finished";
 
-const int RLLMoveIfaceBase::CLIENT_SERVER_PORT = 5005;
-const int RLLMoveIfaceBase::CLIENT_SERVER_BUFFER_SIZE = 10;
 const char* RLLMoveIfaceBase::CLIENT_SERVER_START_CMD_ = "start";
 const char* RLLMoveIfaceBase::CLIENT_SERVER_OK_RESP_ = "ok";
 const char* RLLMoveIfaceBase::CLIENT_SERVER_ERROR_RESP_ = "error";
@@ -63,7 +61,7 @@ void RLLMoveIfaceBase::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, Jo
   }
 
   // run the actual job processing and set the result accordingly
-  runJob(goal, result);
+  runJob(goal, &result);
 
   afterActionExecution(&result);
   as->setSucceeded(result);
@@ -135,7 +133,7 @@ bool RLLMoveIfaceBase::afterActionExecution(rll_msgs::JobEnvResult* result)
 }
 
 // this method should usually be overwritten by projects to add their own routines
-void RLLMoveIfaceBase::runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result)
+void RLLMoveIfaceBase::runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result)
 {
   // set the general movement permission for the duration of the job execution
   permissions_.storeCurrentPermissions();
@@ -160,12 +158,12 @@ RLLErrorCode RLLMoveIfaceBase::idle()
   return RLLErrorCode::SUCCESS;
 }
 
-bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result)
+bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result)
 {
   bool success = initClientSocket(goal->client_ip_addr);
   if (!success)
   {
-    result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    result->job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
     return false;
   }
 
@@ -173,7 +171,7 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
   if (!success)
   {
     ROS_WARN("failed to call the interface client");
-    result.job.status = rll_msgs::JobStatus::FAILURE;
+    result->job.status = rll_msgs::JobStatus::FAILURE;
     return false;
   }
 
@@ -204,7 +202,7 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
     ROS_WARN("interface client timed out");
   }
 
-  result.job.status = job_result_.getResult();
+  result->job.status = job_result_.getResult();
 
   // It is possible that a service call might still be in execution
   // therefore wait for the service call to end before completing the runJob action
@@ -219,12 +217,12 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
   if (iface_state_.isInInternalErrorState())
   {
     ROS_FATAL("Internal error during current job execution!");
-    result.job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
+    result->job.status = rll_msgs::JobStatus::INTERNAL_ERROR;
     return false;
   }
 
   // sanity check: if a job fails with an internal error than further operations should have been aborted
-  if (result.job.status == rll_msgs::JobStatus::INTERNAL_ERROR && !iface_state_.isInInternalErrorState())
+  if (result->job.status == rll_msgs::JobStatus::INTERNAL_ERROR && !iface_state_.isInInternalErrorState())
   {
     ROS_FATAL("Job resulted in an INTERNAL_ERROR, but the state is not set accordingly. This should NOT happen!");
     abortDueToCriticalFailure();
@@ -240,7 +238,8 @@ bool RLLMoveIfaceBase::jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs:
 
   if (error_code.succeeded())
   {
-    job_result_.setResult(req.data);
+    bool job_succeeded = req.data != RLL_SRV_FALSE;
+    job_result_.setResult(job_succeeded);
   }
   else if (iface_state_.isJobRunning() && error_code.value() == RLLErrorCode::CONCURRENT_SERVICE_CALL)
   {
@@ -255,7 +254,7 @@ bool RLLMoveIfaceBase::jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs:
   }
 
   error_code = afterNonMovementServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME, error_code);
-  resp.success = error_code.succeeded();
+  resp.success = error_code.succeededSrv();
   return true;
 }
 

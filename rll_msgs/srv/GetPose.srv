@@ -2,3 +2,5 @@
 bool success
 uint8 error_code
 geometry_msgs/Pose pose
+float64 arm_angle
+uint8 config

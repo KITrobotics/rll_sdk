@@ -18,17 +18,17 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_MOVE_IFACE_BASE_H_
-#define RLL_MOVE_IFACE_BASE_H_
+#ifndef RLL_MOVE_MOVE_IFACE_BASE_H
+#define RLL_MOVE_MOVE_IFACE_BASE_H
 
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <actionlib/server/simple_action_server.h>
 
-#include <rll_msgs/JobEnvAction.h>
-#include <rll_move/move_iface_services.h>
 #include <rll_move/authentication.h>
+#include <rll_move/move_iface_services.h>
+#include <rll_msgs/JobEnvAction.h>
 
 class RLLJobResult
 {
@@ -84,7 +84,7 @@ protected:
   ros::Time time_job_finished_;
 };
 
-// TODO(wolfgang): rename this into a project base class?
+// TODO(wolfgang): rename this into a project base class
 // RLLMoveIfaceBase should be used as the base class for custom interfaces.
 class RLLMoveIfaceBase : public virtual RLLMoveIfaceServices
 {
@@ -95,32 +95,38 @@ public:
   static const std::string RUN_JOB_SRV_NAME;
   static const std::string JOB_FINISHED_SRV_NAME;
 
-  static const int CLIENT_SERVER_PORT;
-  static const int CLIENT_SERVER_BUFFER_SIZE;
+  static const int CLIENT_SERVER_PORT = 5005;
+  static const int CLIENT_SERVER_BUFFER_SIZE = 10;
   static const char* CLIENT_SERVER_START_CMD_;
   static const char* CLIENT_SERVER_OK_RESP_;
   static const char* CLIENT_SERVER_ERROR_RESP_;
 
   // since there will be a sim/real version, setup the services in here und make sure to call spin()
   // or use global service objects to keep them alive
-  virtual void startServicesAndRunNode(ros::NodeHandle& nh) = 0;
+  virtual void startServicesAndRunNode(ros::NodeHandle* nh) = 0;
 
   using JobServer = actionlib::SimpleActionServer<rll_msgs::JobEnvAction>;
   void runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
   void idleAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as);
+  // NOLINTNEXTLINE google-runtime-references
   bool jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp);
 
 protected:
   ros::NodeHandle nh_;
+  RLLJobResult job_result_;
+
+  virtual void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result);
+  virtual bool runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result);
+  virtual RLLErrorCode idle();
+
+private:
   int client_socket_;
   struct sockaddr_in client_serv_addr_;
 
   Authentication authentication_;
-  RLLJobResult job_result_;
 
-  virtual void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result);
-  virtual bool runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult& result);
-  virtual RLLErrorCode idle();
+  int job_execution_timeout_seconds_ = 600;  // default is ten minutes
+
   bool initClientSocket(const std::string& client_ip_addr);
   bool callClient();
 
@@ -131,8 +137,6 @@ protected:
   {
     RLLMoveIfaceServices::abortDueToCriticalFailure();
   }
-
-  int job_execution_timeout_seconds_ = 600;  // default is ten minutes
 };
 
 template <class BaseIface, class EnvironmentIface>
@@ -149,4 +153,4 @@ public:
  */
 bool waitForMoveGroupAction();
 
-#endif /* RLL_MOVE_IFACE_BASE_H_ */
+#endif  // RLL_MOVE_MOVE_IFACE_BASE_H

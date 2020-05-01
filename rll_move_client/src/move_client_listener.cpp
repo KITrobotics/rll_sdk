@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <sys/socket.h>
 #include <arpa/inet.h>
+#include <sys/socket.h>
 
 #include <rll_move/move_iface_base.h>
 #include <rll_move_client/move_client_listener.h>
@@ -117,9 +117,10 @@ void RLLMoveClientListener::notifyJobFinished(bool success)
   is_job_running_ = false;
 
   std_srvs::SetBool job_finished_msg;
-  job_finished_msg.request.data = success;
+  job_finished_msg.request.data = static_cast<unsigned char>(success);
   bool call_success = job_finished_.call(job_finished_msg);
-  if (!call_success || !job_finished_msg.response.success)
+  bool call_resp_success = job_finished_msg.response.success != 0u;
+  if (!call_success || !call_resp_success)
   {
     ROS_ERROR("failed to report execution result to interface");
   }

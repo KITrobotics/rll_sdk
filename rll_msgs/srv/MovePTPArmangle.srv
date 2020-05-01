@@ -1,7 +1,5 @@
 geometry_msgs/Pose pose
-float64 elbow_angle
-bool direction
+float64 arm_angle
 ---
 bool success
 uint8 error_code
-

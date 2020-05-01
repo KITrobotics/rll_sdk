@@ -24,9 +24,9 @@
 
 const std::string RLLMoveIfaceServices::ROBOT_READY_SRV_NAME = "robot_ready";
 const std::string RLLMoveIfaceServices::MOVE_PTP_SRV_NAME = "move_ptp";
-const std::string RLLMoveIfaceServices::MOVE_PTP_ELB_SRV_NAME = "move_ptp_elb";
+const std::string RLLMoveIfaceServices::MOVE_PTP_ARMANGLE_SRV_NAME = "move_ptp_armangle";
 const std::string RLLMoveIfaceServices::MOVE_LIN_SRV_NAME = "move_lin";
-const std::string RLLMoveIfaceServices::MOVE_LIN_ELB_SRV_NAME = "move_lin_elb";
+const std::string RLLMoveIfaceServices::MOVE_LIN_ARMANGLE_SRV_NAME = "move_lin_armangle";
 const std::string RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME = "move_joints";
 const std::string RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME = "move_random";
 const std::string RLLMoveIfaceServices::PICK_PLACE_SRV_NAME = "pick_place";
@@ -65,7 +65,7 @@ bool RLLMoveIfaceServices::robotReadySrv(std_srvs::Trigger::Request& /*req*/, st
   }
 
   error_code = afterMovementServiceCall(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME, error_code);
-  resp.success = error_code.succeeded();
+  resp.success = error_code.succeededSrv();
   return true;
 }
 
@@ -158,11 +158,11 @@ RLLErrorCode RLLMoveIfaceServices::afterMovementServiceCall(const std::string& s
 
 bool RLLMoveIfaceServices::moveRandomSrv(rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_RANDOM_SRV_NAME, &RLLMoveIfaceServices::moveRandom);
+  return controlledMovementExecution(req, &resp, MOVE_RANDOM_SRV_NAME, &RLLMoveIfaceServices::moveRandom);
 }
 
-RLLErrorCode RLLMoveIfaceServices::moveRandom(rll_msgs::MoveRandom::Request& /*req*/,
-                                              rll_msgs::MoveRandom::Response& resp)
+RLLErrorCode RLLMoveIfaceServices::moveRandom(const rll_msgs::MoveRandom::Request& /*req*/,
+                                              rll_msgs::MoveRandom::Response* resp)
 {
   bool success = false;
   int retry_counter = 0;
@@ -194,7 +194,7 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(rll_msgs::MoveRandom::Request& /*r
       continue;
     }
 
-    error_code = runPTPTrajectory(manip_move_group_);
+    error_code = runPTPTrajectory(&manip_move_group_);
     // make sure nothing major went wrong. only repeat in case of non critical errors
     if (error_code.isCriticalFailure())
     {
@@ -211,7 +211,7 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(rll_msgs::MoveRandom::Request& /*r
   if (success)
   {
     ROS_INFO("moved to random position");
-    resp.pose = random_pose;
+    resp->pose = random_pose;
   }
   else
   {
@@ -224,10 +224,11 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(rll_msgs::MoveRandom::Request& /*r
 
 bool RLLMoveIfaceServices::pickPlaceSrv(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& resp)
 {
-  return controlledMovementExecution(req, resp, PICK_PLACE_SRV_NAME, &RLLMoveIfaceServices::pickPlace);
+  return controlledMovementExecution(req, &resp, PICK_PLACE_SRV_NAME, &RLLMoveIfaceServices::pickPlace);
 }
 
-RLLErrorCode RLLMoveIfaceServices::pickPlace(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::pickPlace(const rll_msgs::PickPlace::Request& req,
+                                             rll_msgs::PickPlace::Response* /*resp*/)
 {
   RLLErrorCode error_code;
 
@@ -250,7 +251,7 @@ RLLErrorCode RLLMoveIfaceServices::pickPlace(rll_msgs::PickPlace::Request& req, 
     return error_code;
   }
 
-  if (req.gripper_close != 0u)
+  if (req.gripper_close != RLL_SRV_FALSE)
   {
     attachGraspObject(req.grasp_object);
     error_code = closeGripper();
@@ -280,10 +281,10 @@ RLLErrorCode RLLMoveIfaceServices::pickPlace(rll_msgs::PickPlace::Request& req, 
 
 bool RLLMoveIfaceServices::moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_LIN_SRV_NAME, &RLLMoveIfaceServices::moveLin);
+  return controlledMovementExecution(req, &resp, MOVE_LIN_SRV_NAME, &RLLMoveIfaceServices::moveLin);
 }
 
-RLLErrorCode RLLMoveIfaceServices::moveLin(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::moveLin(const rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response* /*resp*/)
 {
   RLLErrorCode error_code = poseGoalInCollision(req.pose);
   if (error_code.failed())
@@ -294,101 +295,71 @@ RLLErrorCode RLLMoveIfaceServices::moveLin(rll_msgs::MoveLin::Request& req, rll_
   return moveToGoalLinear(req.pose);
 }
 
-bool RLLMoveIfaceServices::moveLinElbSrv(rll_msgs::MoveLinElb::Request& req, rll_msgs::MoveLinElb::Response& resp)
+bool RLLMoveIfaceServices::moveLinArmangleSrv(rll_msgs::MoveLinArmangle::Request& req,
+                                              rll_msgs::MoveLinArmangle::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_LIN_ELB_SRV_NAME, &RLLMoveIfaceServices::moveLinElb);
+  return controlledMovementExecution(req, &resp, MOVE_LIN_ARMANGLE_SRV_NAME, &RLLMoveIfaceServices::moveLinArmangle);
 }
 
-RLLErrorCode RLLMoveIfaceServices::moveLinElb(rll_msgs::MoveLinElb::Request& req,
-                                              rll_msgs::MoveLinElb::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::moveLinArmangle(const rll_msgs::MoveLinArmangle::Request& req,
+                                                   rll_msgs::MoveLinArmangle::Response* /*resp*/)
 {
   std::vector<double> seed;
-  double elb = req.elbow_angle;
+  double arm_angle_goal = req.arm_angle;
   auto dir = static_cast<int>(req.direction);
 
-  if (elb < -M_PI || elb > M_PI)
+  if (!armangleInRange(arm_angle_goal))
   {
-    ROS_WARN("requested elbow angle is out of range [-Pi,Pi]");
     return RLLErrorCode::INVALID_INPUT;
   }
-  ROS_INFO_STREAM("Linear motion requested with elbow angle: " << elb);
 
-  manip_move_group_.getCurrentState()->copyJointGroupPositions(manip_joint_model_group_, seed);
+  seed = manip_move_group_.getCurrentJointValues();
 
-  std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin> kinematics_plugin;
-  if (!getKinematicsSolver(kinematics_plugin))
-  {
-    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
-  }
-
-  // get elbow angle in start pose
-  std::vector<std::string> link_names;
-  std::vector<geometry_msgs::Pose> poses;
-  double elb_start;
-  kinematics_plugin->getPositionFKelb(link_names, seed, poses, elb_start);
+  // get arm angle in start pose
+  geometry_msgs::Pose pose;
+  double arm_angle_start;
+  int config;
+  kinematics_plugin_->getPositionFK(seed, &pose, &arm_angle_start, &config);
 
   // calculate waypoints
-  std::vector<geometry_msgs::Pose> waypoints;
-  std::vector<double> waypoints_elb;
-
-  interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, req.pose, waypoints);
-  transformPosesForIK(waypoints);
-  interpolateElbLinear(elb_start, elb, dir, waypoints.size(), waypoints_elb);
-
-  // calculate trajectory
-  std::vector<robot_state::RobotStatePtr> traj;
-  moveit_msgs::MoveItErrorCodes error_code;
-  double last_valid_percentage = 0.0;
-
-  kinematics_plugin->getPathIKelb(waypoints, waypoints_elb, seed, traj, manip_joint_model_group_, error_code,
-                                  last_valid_percentage);
-
-  // test for jump_threshold
-  moveit::core::JumpThreshold thresh(DEFAULT_LINEAR_JUMP_THRESHOLD);
-  last_valid_percentage *= robot_state::RobotState::testJointSpaceJump(manip_joint_model_group_, traj, thresh);
-
-  if (last_valid_percentage < 1 && last_valid_percentage > 0)
-  {  // TODO(updim): visualize path until collision
-    ROS_ERROR("only achieved to compute %f %% of the requested path", last_valid_percentage * 100.0);
-    return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
-  }
-  if (last_valid_percentage <= 0)
+  std::vector<geometry_msgs::Pose> waypoints_pose;
+  std::vector<double> arm_angles;
+  interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, req.pose, &waypoints_pose);
+  for (auto& waypoint : waypoints_pose)
   {
-    ROS_ERROR("path planning completely failed");
-    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
+    transformPoseForIK(&waypoint);
   }
+  interpolateArmangleLinear(arm_angle_start, arm_angle_goal, dir, waypoints_pose.size(), &arm_angles);
+  std::vector<robot_state::RobotStatePtr> path;
+  computeLinearPathArmangle(waypoints_pose, arm_angles, seed, &path);
 
   // time trajectory
   robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
-
-  for (unsigned int i = 0; i < waypoints.size(); i++)
+  for (const auto& path_pose : path)
   {
-    rt.addSuffixWayPoint(traj[i], 0.0);
+    rt.addSuffixWayPoint(path_pose, 0.0);
   }
-
-  trajectory_processing::IterativeParabolicTimeParameterization time_param;
-  time_param.computeTimeStamps(rt, DEFAULT_VELOCITY_SCALING_FACTOR, DEFAULT_ACCELERATION_SCALING_FACTOR);
-
   moveit_msgs::RobotTrajectory trajectory;
   rt.getRobotTrajectoryMsg(trajectory);
+  modifyPtpTrajectory(&trajectory);
 
   // check for collisions
   if (!planning_scene_->isPathValid(rt))
   {  // TODO(updim): maybe output collision state
-    ROS_ERROR("path colliding");
+    ROS_ERROR("There is a collision along the path");
     return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
   }
 
-  // moveLinElb service calls are disallowed to use cartesian_time_parametrization
+  // moveLinArmangle service calls are disallowed to use cartesian_time_parametrization
   return runLinearTrajectory(trajectory, false);
 }
 
 bool RLLMoveIfaceServices::movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_PTP_SRV_NAME, &RLLMoveIfaceServices::movePTP);
+  return controlledMovementExecution(req, &resp, MOVE_PTP_SRV_NAME, &RLLMoveIfaceServices::movePTP);
 }
 
-RLLErrorCode RLLMoveIfaceServices::movePTP(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::movePTP(const rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response* /*resp*/)
 {
   manip_move_group_.setStartStateToCurrentState();
   bool success = manip_move_group_.setPoseTarget(req.pose);
@@ -403,48 +374,34 @@ RLLErrorCode RLLMoveIfaceServices::movePTP(rll_msgs::MovePTP::Request& req, rll_
     return error_code;
   }
 
-  return runPTPTrajectory(manip_move_group_);
+  return runPTPTrajectory(&manip_move_group_);
 }
 
-bool RLLMoveIfaceServices::movePTPelbSrv(rll_msgs::MovePTPelb::Request& req, rll_msgs::MovePTPelb::Response& resp)
+bool RLLMoveIfaceServices::movePTPArmangleSrv(rll_msgs::MovePTPArmangle::Request& req,
+                                              rll_msgs::MovePTPArmangle::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_PTP_ELB_SRV_NAME, &RLLMoveIfaceServices::movePTPelb);
+  return controlledMovementExecution(req, &resp, MOVE_PTP_ARMANGLE_SRV_NAME, &RLLMoveIfaceServices::movePTPArmangle);
 }
 
-RLLErrorCode RLLMoveIfaceServices::movePTPelb(rll_msgs::MovePTPelb::Request& req,
-                                              rll_msgs::MovePTPelb::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::movePTPArmangle(const rll_msgs::MovePTPArmangle::Request& req,
+                                                   rll_msgs::MovePTPArmangle::Response* /*resp*/)
 {
   bool success;
+  moveit_msgs::MoveItErrorCodes error_code;
   std::vector<double> seed;
   std::vector<double> sol;
-  double elb = req.elbow_angle;
+  double arm_angle = req.arm_angle;
 
-  if (elb < -M_PI || elb > M_PI)
+  if (!armangleInRange(arm_angle))
   {
-    ROS_WARN("requested elbow angle is out of range [-Pi,Pi]");
     return RLLErrorCode::INVALID_INPUT;
   }
-  ROS_INFO_STREAM("PTP motion requested with elbow angle: " << elb);
-
-  manip_move_group_.getCurrentState()->copyJointGroupPositions(manip_joint_model_group_, seed);
-
-  std::shared_ptr<const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin> kinematics_plugin;
-  if (!getKinematicsSolver(kinematics_plugin))
-  {
-    return RLLErrorCode::MOVEIT_PLANNING_FAILED;
-  }
-
-  // Transformations between frames
-  tf::Transform world_to_ee, base_to_tip;
-  geometry_msgs::Pose pose_tip;
-
-  tf::poseMsgToTF(req.pose, world_to_ee);
-  base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
-  tf::poseTFToMsg(base_to_tip, pose_tip);
 
   // get solution
-  moveit_msgs::MoveItErrorCodes error_code;
-  if (!kinematics_plugin->getPositionIKelb(pose_tip, seed, sol, error_code, elb))
+  seed = manip_move_group_.getCurrentJointValues();
+  geometry_msgs::Pose pose_tip = req.pose;
+  transformPoseForIK(&pose_tip);
+  if (!kinematics_plugin_->getPositionIKarmangle(pose_tip, seed, &sol, &error_code, arm_angle))
   {
     ROS_ERROR("Inverse kinematics calculation failed");
     return RLLErrorCode::INVALID_TARGET_POSE;
@@ -459,19 +416,19 @@ RLLErrorCode RLLMoveIfaceServices::movePTPelb(rll_msgs::MovePTPelb::Request& req
     return RLLErrorCode::JOINT_VALUES_OUT_OF_RANGE;
   }
 
-  return runPTPTrajectory(manip_move_group_);
+  return runPTPTrajectory(&manip_move_group_);
 }
 
 bool RLLMoveIfaceServices::moveJointsSrv(rll_msgs::MoveJoints::Request& req, rll_msgs::MoveJoints::Response& resp)
 {
-  return controlledMovementExecution(req, resp, MOVE_JOINTS_SRV_NAME, &RLLMoveIfaceServices::moveJoints);
+  return controlledMovementExecution(req, &resp, MOVE_JOINTS_SRV_NAME, &RLLMoveIfaceServices::moveJoints);
 }
 
-RLLErrorCode RLLMoveIfaceServices::moveJoints(rll_msgs::MoveJoints::Request& req,
-                                              rll_msgs::MoveJoints::Response& /*resp*/)
+RLLErrorCode RLLMoveIfaceServices::moveJoints(const rll_msgs::MoveJoints::Request& req,
+                                              rll_msgs::MoveJoints::Response* /*resp*/)
 {
   bool success;
-  std::vector<double> joints(7);
+  std::vector<double> joints(RLL_NUM_JOINTS);
   moveit::planning_interface::MoveGroupInterface::Plan my_plan;
 
   joints[0] = req.joint_1;
@@ -491,7 +448,7 @@ RLLErrorCode RLLMoveIfaceServices::moveJoints(rll_msgs::MoveJoints::Request& req
     return RLLErrorCode::JOINT_VALUES_OUT_OF_RANGE;
   }
 
-  return runPTPTrajectory(manip_move_group_);
+  return runPTPTrajectory(&manip_move_group_);
 }
 
 bool RLLMoveIfaceServices::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Request& /*req*/,
@@ -513,22 +470,30 @@ bool RLLMoveIfaceServices::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Re
 
   error_code = afterNonMovementServiceCall(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME, error_code);
   resp.error_code = error_code.value();
-  resp.success = error_code.succeeded();
+  resp.success = error_code.succeededSrv();
   return true;
 }
 
 bool RLLMoveIfaceServices::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/, rll_msgs::GetPose::Response& resp)
 {
+  geometry_msgs::Pose pose;
+  double arm_angle;
+  int config;
+
   RLLErrorCode error_code = beforeNonMovementServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME);
 
   if (error_code.succeeded())
   {
-    resp.pose = manip_move_group_.getCurrentPose().pose;
+    std::vector<double> joints = manip_move_group_.getCurrentJointValues();
+    kinematics_plugin_->getPositionFK(joints, &pose, &arm_angle, &config);
+    resp.pose = pose;
+    resp.arm_angle = arm_angle;
+    resp.config = config;
   }
 
   error_code = afterNonMovementServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME, error_code);
   resp.error_code = error_code.value();
-  resp.success = error_code.succeeded();
+  resp.success = error_code.succeededSrv();
   return true;
 }
 
@@ -552,7 +517,7 @@ RLLErrorCode RLLMoveIfaceServices::resetToHome()
     manip_move_group_.setStartStateToCurrentState();
     manip_move_group_.setNamedTarget(HOME_TARGET_NAME);
 
-    RLLErrorCode error_code = runPTPTrajectory(manip_move_group_);
+    RLLErrorCode error_code = runPTPTrajectory(&manip_move_group_);
     if (error_code.failed())
     {
       return error_code;

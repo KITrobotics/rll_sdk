@@ -11,5 +11,5 @@
 	</include>
 
 	<test ns="$(arg robot)" test-name="test_move_iface" pkg="rll_move"
-		type="test_main.py" time-limit="240" />
+		type="test_main.py" time-limit="600" />
 </launch>

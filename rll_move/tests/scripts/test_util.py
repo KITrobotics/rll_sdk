@@ -40,7 +40,7 @@ class TestCaseWithRLLMoveClient(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(TestCaseWithRLLMoveClient, self).__init__(*args, **kwargs)
 
-    def assert_joint_values_lose(self, joints1, joints2):
+    def assert_joint_values_close(self, joints1, joints2):
         self.assertTrue(compare_joint_values(joints1, joints2),
                         "Mismatching joint values: %s vs %s" % (
                             joints1, joints2))
@@ -61,6 +61,14 @@ class TestCaseWithRLLMoveClient(unittest.TestCase):
         self.assertEqual(code1, code2,
                          "Error codes do not match: '%s' vs '%s'! " % (
                              RLLErrorCode(code1), RLLErrorCode(code2)))
+
+    def assert_move_lin_success(self, goal):
+        resp = self.client.move_lin(goal)
+        self.assert_last_srv_call_success(resp)
+
+    def assert_move_ptp_success(self, goal):
+        resp = self.client.move_ptp(goal)
+        self.assert_last_srv_call_success(resp)
 
     def test_0_client_available(self):
         self.assertIsNotNone(TestCaseWithRLLMoveClient.client,

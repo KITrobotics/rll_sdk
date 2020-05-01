@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOVE_CLIENT_LISTENER_H_
-#define MOVE_CLIENT_LISTENER_H_
+#ifndef RLL_MOVE_CLIENT_MOVE_CLIENT_LISTENER_H
+#define RLL_MOVE_CLIENT_MOVE_CLIENT_LISTENER_H
 
 #include <rll_move_client/move_client.h>
 
@@ -42,4 +42,4 @@ private:
   void executeCallback();
 };
 
-#endif /* MOVE_CLIENT_LISTENER_H_ */
+#endif  // RLL_MOVE_CLIENT_MOVE_CLIENT_LISTENER_H

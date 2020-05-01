@@ -17,21 +17,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_MOVE_CLIENT_H_
-#define RLL_MOVE_CLIENT_H_
+#ifndef RLL_MOVE_CLIENT_MOVE_CLIENT_H
+#define RLL_MOVE_CLIENT_MOVE_CLIENT_H
 
 #include <exception>
 #include <map>
 
-#include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
+#include <ros/ros.h>
 
-#include <rll_msgs/MoveJoints.h>
-#include <rll_msgs/MovePTP.h>
-#include <rll_msgs/MoveLin.h>
-#include <rll_msgs/MoveRandom.h>
 #include <rll_msgs/GetJointValues.h>
 #include <rll_msgs/GetPose.h>
+#include <rll_msgs/MoveJoints.h>
+#include <rll_msgs/MoveLin.h>
+#include <rll_msgs/MovePTP.h>
+#include <rll_msgs/MoveRandom.h>
 #include <rll_msgs/PickPlace.h>
 
 #include <rll_move/move_iface_services.h>
@@ -195,4 +195,4 @@ protected:
   ros::ServiceClient pick_place_;
 };
 
-#endif /* RLL_MOVE_CLIENT_H_ */
+#endif  // RLL_MOVE_CLIENT_MOVE_CLIENT_H

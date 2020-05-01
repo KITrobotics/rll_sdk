@@ -1,5 +1,5 @@
-#include <ros/ros.h>
 #include <gtest/gtest.h>
+#include <ros/ros.h>
 
 #include <rll_move/permissions.h>
 
@@ -13,9 +13,9 @@ TEST(PermissionsTest, testUpdatePermissions)
 {
   Permissions p;
   auto p1 = p.registerPermission("p1", true);
-  EXPECT_EQ(p.getCurrentPermissions(), 2);
+  EXPECT_EQ(p.getCurrentPermissions(), 2U);
   auto p2 = p.registerPermission("p2", false);
-  EXPECT_EQ(p.getCurrentPermissions(), 2);
+  EXPECT_EQ(p.getCurrentPermissions(), 2U);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
 
@@ -97,19 +97,19 @@ TEST(PermissionsTest, testRegisteredPermissionsValue)
   // register a permission, test its index, the current permission and
   // if the initial value is set correctly
   auto p1 = p.registerPermission("p1", true);
-  EXPECT_EQ(p1, 2);
-  EXPECT_EQ(p.getCurrentPermissions(), 2);
+  EXPECT_EQ(p1, 2u);
+  EXPECT_EQ(p.getCurrentPermissions(), 2U);
   EXPECT_TRUE(p.isPermitted(p1));
 
   auto p2 = p.registerPermission("p2", false);
-  EXPECT_EQ(p2, 4);
-  EXPECT_EQ(p.getCurrentPermissions(), 2);
+  EXPECT_EQ(p2, 4u);
+  EXPECT_EQ(p.getCurrentPermissions(), 2U);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
 
   auto p3 = p.registerPermission("p3", true);
-  EXPECT_EQ(p3, 8);
-  EXPECT_EQ(p.getCurrentPermissions(), 10);
+  EXPECT_EQ(p3, 8u);
+  EXPECT_EQ(p.getCurrentPermissions(), 10U);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
   EXPECT_TRUE(p.isPermitted(p3));

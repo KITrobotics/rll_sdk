@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INCLUDE_RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H_
-#define INCLUDE_RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H_
+#ifndef RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H
+#define RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H
 
 #include <mutex>
 #include <rll_move/move_iface_error.h>
@@ -140,4 +140,4 @@ private:
   RLLErrorCode override_service_call_result_;
 };
 
-#endif /* INCLUDE_RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H_ */
+#endif  // RLL_MOVE_MOVE_IFACE_STATE_MACHINE_H

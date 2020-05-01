@@ -1,5 +1,5 @@
-#include <ros/ros.h>
 #include <gtest/gtest.h>
+#include <ros/ros.h>
 
 #include <rll_move/move_iface_state_machine.h>
 

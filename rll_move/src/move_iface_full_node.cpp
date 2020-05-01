@@ -28,7 +28,7 @@ int main(int argc, char** argv)
   if (waitForMoveGroupAction())
   {
     RLLDefaultMoveIface iface(nh);
-    iface.startServicesAndRunNode(nh);
+    iface.startServicesAndRunNode(&nh);
   }
 
   return 0;

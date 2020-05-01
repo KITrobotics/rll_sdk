@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_AUTHENTICATION_H_
-#define RLL_AUTHENTICATION_H_
+#ifndef RLL_MOVE_AUTHENTICATION_H
+#define RLL_MOVE_AUTHENTICATION_H
 
 #include <string>
 
@@ -41,4 +41,4 @@ private:
   bool authentication_required_ = false;
 };
 
-#endif /* INCLUDE_RLL_MOVE_HMAC_AUTHENTICATION_H_ */
+#endif  // RLL_MOVE_AUTHENTICATION_H

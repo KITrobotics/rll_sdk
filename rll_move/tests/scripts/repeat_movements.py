@@ -50,7 +50,8 @@ class TestRepeatedMovements(TestCaseWithRLLMoveClient):
 
             if reset:
                 # reset joints to known start position
-                resp = self.client.move_joints(0, 0, 0, -pi / 2, 0, -pi / 2, 0)
+                resp = self.client.move_joints(0, pi / 100, 0, -pi / 2, 0,
+                                               -pi / 2, 0)
                 self.assert_last_srv_call_success(resp)
 
             goal_pose = Pose()
