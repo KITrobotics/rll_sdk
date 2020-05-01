@@ -19,7 +19,7 @@
   <test_depend>rosunit</test_depend>
   <exec_depend>message_runtime</exec_depend>
   <buildtool_depend>catkin</buildtool_depend>
-  <depend>rll_analytical_kinematics</depend>
+  <depend>rll_kinematics</depend>
   <depend>eigen_conversions</depend>
 
 </package>

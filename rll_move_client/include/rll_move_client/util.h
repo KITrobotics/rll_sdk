@@ -17,11 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INCLUDE_RLL_MOVE_CLIENT_UTIL_H_
-#define INCLUDE_RLL_MOVE_CLIENT_UTIL_H_
+#ifndef RLL_MOVE_CLIENT_UTIL_H
+#define RLL_MOVE_CLIENT_UTIL_H
 
-#include <tf2/LinearMath/Quaternion.h>
 #include <geometry_msgs/Quaternion.h>
+#include <tf2/LinearMath/Quaternion.h>
 
 void orientationFromRPY(double roll, double pitch, double yaw, geometry_msgs::Quaternion* orientation);
 void copyQuaternion(const tf2::Quaternion& quaternion, geometry_msgs::Quaternion* orientation);
@@ -29,4 +29,4 @@ void copyQuaternion(const tf2::Quaternion& quaternion, geometry_msgs::Quaternion
 bool compareJointValues(const std::vector<double>& joint_values1, const std::vector<double>& joint_values2,
                         double tolerance = 1.e-4);
 
-#endif /* INCLUDE_RLL_MOVE_CLIENT_UTIL_H_ */
+#endif  // RLL_MOVE_CLIENT_UTIL_H

@@ -16,16 +16,16 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-#ifndef INCLUDE_RLL_MOVE_PERMISSIONS_H_
-#define INCLUDE_RLL_MOVE_PERMISSIONS_H_
+#ifndef RLL_MOVE_PERMISSIONS_H
+#define RLL_MOVE_PERMISSIONS_H
 
-#include <string>
-#include <map>
-#include <vector>
-#include <stack>
 #include <algorithm>
 #include <cstdint>
+#include <map>
 #include <ros/ros.h>
+#include <stack>
+#include <string>
+#include <vector>
 
 /**
  * Simple permission management to verify if an operation, e.g. a service call,
@@ -94,7 +94,7 @@ public:
     if (ITER == permission_names_.end())
     {
       ROS_ERROR("No such permission '%s'", name.c_str());
-      return false;
+      return 0U;  // false
     }
     uint8_t bit_position = std::distance(permission_names_.begin(), ITER);
     return (1 << bit_position);
@@ -206,4 +206,4 @@ private:
   std::stack<Group> stored_permissions_;
 };
 
-#endif /* INCLUDE_RLL_MOVE_PERMISSIONS_H_ */
+#endif  // RLL_MOVE_PERMISSIONS_H

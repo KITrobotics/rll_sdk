@@ -1,6 +1,7 @@
+fake_interpolating_controller_rate: 60
 controller_list:
   - name: fake_manipulator_controller
-    type: via points
+    type: interpolate
     joints:
       - $(arg robot_name)_joint_1
       - $(arg robot_name)_joint_2

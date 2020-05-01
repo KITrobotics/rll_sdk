@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_MOVE_IFACE_DEFAULT_H
-#define RLL_MOVE_IFACE_DEFAULT_H
+#ifndef RLL_MOVE_MOVE_IFACE_DEFAULT_H
+#define RLL_MOVE_MOVE_IFACE_DEFAULT_H
 
 #include <rll_move/move_iface_base.h>
 
@@ -29,10 +29,10 @@ public:
   explicit RLLDefaultMoveIfaceBase(const ros::NodeHandle& nh) : RLLMoveIfaceBase(nh)
   {
   }
-  void startServicesAndRunNode(ros::NodeHandle& nh) override;
+  void startServicesAndRunNode(ros::NodeHandle* nh) override;
 };
 
-#endif  // RLL_MOVE_IFACE_DEFAULT_H
+#endif  // RLL_MOVE_MOVE_IFACE_DEFAULT_H
 
 /*
  * Local Variables:

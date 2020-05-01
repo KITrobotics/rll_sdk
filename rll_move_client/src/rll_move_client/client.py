@@ -35,7 +35,8 @@ from rll_move_client.formatting import (ansi_format, C_NAME, C_END, C_OK,
                                         override_formatting_for_ros_types)
 from rll_move_client.util import orientation_from_rpy
 from rll_msgs.srv import (MoveJoints, MovePTP, MoveLin, MoveRandom, GetPose,
-                          GetJointValues, PickPlace)
+                          GetJointValues, PickPlace, MovePTPArmangle,
+                          MoveLinArmangle)
 
 
 class RLLMoveClientBase(object):
@@ -117,7 +118,7 @@ class RLLMoveClientBase(object):
 
         return False
 
-    def _handle_resp_with_values(self, resp_handler_func):
+    def _handle_resp_with_values(self, resp_handler_func, *args):
         def handle(name, resp):
             success = self._handle_response_error_code(name, resp)
 
@@ -125,7 +126,7 @@ class RLLMoveClientBase(object):
             # therefore, swap the result, in such a fashion that the still
             # can be evaluated as truthy/falsey
             if success:
-                return resp_handler_func(resp)
+                return resp_handler_func(resp, *args)
 
             return None
 
@@ -276,11 +277,14 @@ class RLLMoveClientListener(object):
                 conn.send(b'error')  # pylint: disable=no-member
 
 
+# pylint: disable=too-many-instance-attributes
 class RLLBasicMoveClient(RLLMoveClientBase):
     MOVE_LIN_SRV_NAME = "move_lin"
     MOVE_JOINTS_SRV_NAME = "move_joints"
     MOVE_PTP_SRV_NAME = "move_ptp"
     MOVE_RANDOM_SRV_NAME = "move_random"
+    MOVE_LIN_ARMANGLE_SRV_NAME = "move_lin_armangle"
+    MOVE_PTP_ARMANGLE_SRV_NAME = "move_ptp_armangle"
     GET_POSE_SRV_NAME = "get_current_pose"
     GET_JOINT_VALUES_SRV_NAME = "get_current_joint_values"
 
@@ -296,6 +300,10 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             self.MOVE_LIN_SRV_NAME, MoveLin)
         self._move_random_service = rospy.ServiceProxy(
             self.MOVE_RANDOM_SRV_NAME, MoveRandom)
+        self._move_ptp_armangle_service = rospy.ServiceProxy(
+            self.MOVE_PTP_ARMANGLE_SRV_NAME, MovePTPArmangle)
+        self._move_lin_armangle_service = rospy.ServiceProxy(
+            self.MOVE_LIN_ARMANGLE_SRV_NAME, MoveLinArmangle)
 
         # available 'getter' -> return values
         self._get_current_pose_service = rospy.ServiceProxy(
@@ -351,6 +359,22 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             "%s requested with %s", self._handle_response_error_code,
             pose)
 
+    def move_lin_armangle(self, pose, arm_angle, direction):
+        # type: (Pose, float, bool) -> bool
+
+        return self._call_service_with_error_check(
+            self._move_lin_armangle_service, self.MOVE_LIN_ARMANGLE_SRV_NAME,
+            "%s requested with pose %s, arm angle %.2f and direction %s",
+            self._handle_response_error_code, pose, arm_angle, direction)
+
+    def move_ptp_armangle(self, pose, arm_angle):
+        # type: (Pose, float) -> bool
+
+        return self._call_service_with_error_check(
+            self._move_ptp_armangle_service, self.MOVE_PTP_ARMANGLE_SRV_NAME,
+            "%s requested with pose %s and arm angle %.2f",
+            self._handle_response_error_code, pose, arm_angle)
+
     def get_current_joint_values(self):
         # type: () -> Union[List[float], None]
 
@@ -363,13 +387,19 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             self.GET_JOINT_VALUES_SRV_NAME,
             "%s requested", self._handle_resp_with_values(handle_joint_values))
 
-    def get_current_pose(self):
-        # type: () -> Union[Pose, None]
+    def get_current_pose(self, detailed=False):
+        # type: () -> Union[Pose, List[Pose, float, bytes], None]
+
+        def handle_pose(resp, detailed):
+            if detailed:
+                return [resp.pose, resp.arm_angle, resp.config]
+
+            return resp.pose
 
         return self._call_service_with_error_check(
             self._get_current_pose_service, self.GET_POSE_SRV_NAME,
             "%s requested",
-            self._handle_resp_with_values(lambda resp: resp.pose))
+            self._handle_resp_with_values(handle_pose, detailed))
 
 
 class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place

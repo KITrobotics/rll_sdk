@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_
-#define INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_
+#ifndef RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H
+#define RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H
 
 #include <rll_move/move_iface_default.h>
 #include <rll_move/move_iface_simulation.h>
@@ -31,4 +31,4 @@
 // which provides the simulation implementation for the abstract member functions
 using RLLDefaultMoveIface = RLLCombinedMoveIface<RLLDefaultMoveIfaceBase, RLLSimulationMoveIface>;
 
-#endif /* INCLUDE_RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H_ */
+#endif  // RLL_MOVE_MOVE_IFACE_DEFAULT_SIMULATION_H

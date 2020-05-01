@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <rll_move_client/util.h>
 #include <cmath>
+#include <rll_move_client/util.h>
 
 void orientationFromRPY(double roll, double pitch, double yaw, geometry_msgs::Quaternion* const orientation)
 {

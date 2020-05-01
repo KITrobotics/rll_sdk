@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<library path="lib/librll_moveit_kinematics_plugin">
+  <class name="rll_moveit_kinematics/RLLMoveItKinematicsPlugin" type="rll_moveit_kinematics::RLLMoveItKinematicsPlugin" base_class_type="kinematics::KinematicsBase">
+    <description>
+      MoveIt Kinematics Plugin for rll_kinematics
+    </description>
+  </class>
+</library>

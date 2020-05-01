@@ -6,8 +6,7 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_compile_options(-std=c++11)
 
 # Warnings
-add_definitions(-Wall -Wextra
-  -Wwrite-strings -Wunreachable-code -Wpointer-arith -Wredundant-decls)
+add_definitions(-Wall -Wextra -Wpedantic -Wredundant-decls)
 
 find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
@@ -15,7 +14,7 @@ find_package(catkin REQUIRED COMPONENTS
   moveit_ros_move_group
   moveit_ros_planning
   moveit_ros_planning_interface
-  rll_analytical_kinematics
+  rll_kinematics
   rll_msgs
   rostest
 )
@@ -23,7 +22,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS message_runtime moveit_ros_planning_interface rll_analytical_kinematics rll_msgs
+   CATKIN_DEPENDS message_runtime moveit_ros_planning_interface rll_kinematics rll_msgs
 )
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})

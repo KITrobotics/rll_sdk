@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef MOVE_CLIENT_DEFAULT_H_
-#define MOVE_CLIENT_DEFAULT_H_
+#ifndef RLL_MOVE_CLIENT_MOVE_CLIENT_DEFAULT_H
+#define RLL_MOVE_CLIENT_MOVE_CLIENT_DEFAULT_H
 
 #include <rll_move_client/move_client.h>
 #include <rll_move_client/move_client_listener.h>
@@ -54,4 +54,4 @@ protected:
   }
 };
 
-#endif /* MOVE_CLIENT_DEFAULT_H_ */
+#endif  // RLL_MOVE_CLIENT_MOVE_CLIENT_DEFAULT_H

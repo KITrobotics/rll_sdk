@@ -70,12 +70,12 @@ melodic-build-rostests:
 
 warningbuild-linting:
   variables:
-    ADDITIONAL_DEBS: "python-pip python-typing clang-tidy-6.0 clang-6.0"
+    ADDITIONAL_DEBS: "python-pip python-typing clang-tidy-7 clang-7"
     CATKIN_LINT: "pedantic"
     CATKIN_CONFIG: "--cmake-args -DCMAKE_CXX_FLAGS=-Werror"
     NOT_TEST_BUILD: "true"
-    CLANG_TIDY_CMD: "run-clang-tidy-6.0.py -p /root/catkin_ws/build"
-    AFTER_SCRIPT: "${CLANG_TIDY_CMD}/rll_move -header-filter=rll_move/* && ${CLANG_TIDY_CMD}/rll_move_client -header-filter=rll_move_client/* && ${CLANG_TIDY_CMD}/rll_analytical_kinematics -header-filter=rll_analytical_kinematics/* && pip -q install 'pylint<2.0.0' && . /root/catkin_ws/install/setup.bash && find * -not -path 'docs/*' -iname '*.py' | xargs python -m pylint"
+    CLANG_TIDY_CMD: "run-clang-tidy-7.py -p /root/catkin_ws/build"
+    AFTER_SCRIPT: "${CLANG_TIDY_CMD}/rll_move -header-filter=rll_move/* && ${CLANG_TIDY_CMD}/rll_move_client -header-filter=rll_move_client/* && ${CLANG_TIDY_CMD}/rll_kinematics -header-filter=rll_kinematics/* && pip -q install 'pylint<2.0.0' && . /root/catkin_ws/install/setup.bash && find * -not -path 'docs/*' -iname '*.py' | xargs python -m pylint"
   # run default -> build
   script: .industrial_ci/gitlab.sh
   tags:

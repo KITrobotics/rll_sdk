@@ -23,9 +23,9 @@ add_service_files(
   GetPose.srv
   MoveJoints.srv
   MoveLin.srv
-  MoveLinElb.srv
+  MoveLinArmangle.srv
   MovePTP.srv
-  MovePTPelb.srv
+  MovePTPArmangle.srv
   MoveRandom.srv
   PickPlace.srv
 )

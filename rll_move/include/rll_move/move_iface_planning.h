@@ -1,7 +1,7 @@
 /*
  * This file is part of the Robot Learning Lab SDK
  *
- * Copyright (C) 2018-2019 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
+ * Copyright (C) 2018-2020 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
  * Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_MOVE_IFACE_PLANNING_H
-#define RLL_MOVE_IFACE_PLANNING_H
+#ifndef RLL_MOVE_MOVE_IFACE_PLANNING_H
+#define RLL_MOVE_MOVE_IFACE_PLANNING_H
 
 #include <ros/ros.h>
 
@@ -27,7 +27,7 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
-#include <rll_analytical_kinematics/rll_moveit_analytical_kinematics_plugin.h>
+#include <rll_kinematics/moveit_kinematics_plugin.h>
 #include <rll_move/move_iface_error.h>
 
 class RLLMoveIfacePlanning
@@ -36,69 +36,54 @@ public:
   explicit RLLMoveIfacePlanning();
   virtual ~RLLMoveIfacePlanning() = default;
 
-  static const std::string MANIP_PLANNING_GROUP;
-  static const std::string GRIPPER_PLANNING_GROUP;
-
 protected:
-  // internal moveit named targets
   static const std::string HOME_TARGET_NAME;
-  static const std::string GRIPPER_OPEN_TARGET_NAME;
-  static const std::string GRIPPER_CLOSE_TARGET_NAME;
 
   static const double DEFAULT_VELOCITY_SCALING_FACTOR;
   static const double DEFAULT_ACCELERATION_SCALING_FACTOR;
-  const double DEFAULT_LINEAR_EEF_STEP = 0.0005;
-  const double DEFAULT_LINEAR_JUMP_THRESHOLD = 4.5;
-  const double LINEAR_MIN_STEPS_FOR_JUMP_THRESH = 10;
 
-  std::string ns_;
+  static const double DEFAULT_LINEAR_EEF_STEP;
+  static const double DEFAULT_LINEAR_JUMP_THRESHOLD;
+  static const double LINEAR_MIN_STEPS_FOR_JUMP_THRESH;
+
+  // TODO(wolfgang): make these private
   std::string node_name_;
   moveit::planning_interface::MoveGroupInterface manip_move_group_;
-  moveit::planning_interface::MoveGroupInterface gripper_move_group_;
-  moveit::core::RobotModelConstPtr manip_model_;
   const robot_state::JointModelGroup* manip_joint_model_group_;
-  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
-  bool no_gripper_attached_ = false;
-  tf::Transform base_to_world_;
-  tf::Transform ee_to_tip_;
-
-  bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
-  bool poseGoalTooClose(const geometry_msgs::Pose& goal);
-  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
-  bool jointsGoalInCollision(const std::vector<double>& goal);
-  robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);
-  void disableCollision(const std::string& link_1, const std::string& link_2);
-
-  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+  std::shared_ptr<const rll_moveit_kinematics::RLLMoveItKinematicsPlugin> kinematics_plugin_;
   planning_scene::PlanningSceneConstPtr planning_scene_;
-  collision_detection::AllowedCollisionMatrix acm_;
+  moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
+  moveit::core::RobotModelConstPtr manip_model_;
+  bool no_gripper_attached_ = false;
 
-  RLLErrorCode checkTrajectory(moveit_msgs::RobotTrajectory& trajectory);
-  bool attachGraspObject(const std::string& object_id);
-  bool detachGraspObject(const std::string& object_id);
-  bool manipCurrentStateAvailable();
-  bool isCollisionLinkAvailable();
-  bool stateInCollision(robot_state::RobotState& state);
-
-  void interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
-                              std::vector<geometry_msgs::Pose>& waypoints);
-  void interpolateElbLinear(double start, double end, int dir, int n, std::vector<double>& elb);
-  void transformPosesForIK(std::vector<geometry_msgs::Pose>& waypoints);
-  std::vector<double> getJointValuesFromNamedTarget(const std::string& name);
-  bool getKinematicsSolver(
-      std::shared_ptr<
-          const rll_moveit_analytical_kinematics::RLLMoveItAnalyticalKinematicsPlugin>& /*kinematics_plugin*/);
-  bool initConstTransforms();  // init members base_to_world_ ee_to_tip_
-  float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
-
-  RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface& move_group, bool for_gripper = false);
+  RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface* move_group, bool for_gripper = false);
   RLLErrorCode moveToGoalLinear(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization = false);
-  RLLErrorCode computeLinearPath(const std::vector<geometry_msgs::Pose>& waypoints,
-                                 moveit_msgs::RobotTrajectory& trajectory);
   RLLErrorCode runLinearTrajectory(const moveit_msgs::RobotTrajectory& trajectory,
                                    bool cartesian_time_parametrization = false);
 
-  virtual bool modifyLinTrajectory(moveit_msgs::RobotTrajectory& trajectory);
+  RLLErrorCode computeLinearPathArmangle(const std::vector<geometry_msgs::Pose>& waypoints_pose,
+                                         const std::vector<double>& waypoints_arm_angles,
+                                         const std::vector<double>& ik_seed_state,
+                                         std::vector<robot_state::RobotStatePtr>* path);
+  RLLErrorCode computeLinearPath(const std::vector<geometry_msgs::Pose>& waypoints,
+                                 moveit_msgs::RobotTrajectory* trajectory);
+  void transformPoseForIK(geometry_msgs::Pose* pose);
+  void interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
+                              std::vector<geometry_msgs::Pose>* waypoints);
+  void interpolateArmangleLinear(double start, double end, int dir, int n, std::vector<double>* arm_angles);
+  std::vector<double> getJointValuesFromNamedTarget(const std::string& name);
+  bool armangleInRange(double arm_angle);
+
+  bool manipCurrentStateAvailable();
+  robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);
+  void disableCollision(const std::string& link_1, const std::string& link_2);
+  bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
+  bool poseGoalTooClose(const geometry_msgs::Pose& goal);
+  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
+  bool attachGraspObject(const std::string& object_id);
+  bool detachGraspObject(const std::string& object_id);
+
+  virtual bool modifyLinTrajectory(moveit_msgs::RobotTrajectory* trajectory);
   virtual RLLErrorCode closeGripper();
   virtual RLLErrorCode openGripper();
 
@@ -107,7 +92,39 @@ protected:
 
   // the following methods depend on whether we run in simulation or on the real robot
   // the actual implementation is implemented in a subclass, e.g. RLLMoveIfaceSimulation
-  virtual bool modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory) = 0;
+  virtual bool modifyPtpTrajectory(moveit_msgs::RobotTrajectory* trajectory) = 0;
+
+private:
+  static const std::string MANIP_PLANNING_GROUP;
+  static const std::string GRIPPER_PLANNING_GROUP;
+  // internal moveit named targets
+  static const std::string GRIPPER_OPEN_TARGET_NAME;
+  static const std::string GRIPPER_CLOSE_TARGET_NAME;
+
+  std::string ns_;
+  moveit::planning_interface::MoveGroupInterface gripper_move_group_;
+  tf::Transform base_to_world_;
+  tf::Transform ee_to_tip_;
+  planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
+  collision_detection::AllowedCollisionMatrix acm_;
+
+  double allowed_start_tolerance_ = 0.01;
+
+  RLLErrorCode execute(moveit::planning_interface::MoveGroupInterface* move_group,
+                       const moveit::planning_interface::MoveGroupInterface::Plan& plan);
+
+  bool jointsGoalInCollision(const std::vector<double>& goal);
+  RLLErrorCode checkTrajectory(const moveit_msgs::RobotTrajectory& trajectory);
+  bool stateInCollision(robot_state::RobotState* state);
+  float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
+
+  void getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose,
+                 const std::vector<double>& waypoints_arm_angles, const std::vector<double>& ik_seed_state,
+                 std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage);
+
+  bool getKinematicsSolver();
+  bool initConstTransforms();  // init members base_to_world_ ee_to_tip_
+  bool isCollisionLinkAvailable();
 };
 
-#endif  // RLL_MOVE_IFACE_PLANNING_H
+#endif  // RLL_MOVE_MOVE_IFACE_PLANNING_H

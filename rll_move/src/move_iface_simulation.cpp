@@ -18,23 +18,32 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <moveit/trajectory_processing/iterative_time_parameterization.h>
-
 #include <rll_move/move_iface_simulation.h>
 
-bool RLLSimulationMoveIface::modifyPtpTrajectory(moveit_msgs::RobotTrajectory& trajectory)
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+#include <moveit/trajectory_processing/time_optimal_trajectory_generation.h>
+#else
+// Kinetic does not include TOTG
+#include <moveit/trajectory_processing/iterative_time_parameterization.h>
+#endif
+
+bool RLLSimulationMoveIface::modifyPtpTrajectory(moveit_msgs::RobotTrajectory* trajectory)
 {
   robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
-  rt.setRobotTrajectoryMsg(*manip_move_group_.getCurrentState(), trajectory);
+  rt.setRobotTrajectoryMsg(*manip_move_group_.getCurrentState(), *trajectory);
 
+#if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
+  trajectory_processing::TimeOptimalTrajectoryGeneration time_param;
+#else
   trajectory_processing::IterativeParabolicTimeParameterization time_param;
+#endif
   bool success = time_param.computeTimeStamps(rt, DEFAULT_VELOCITY_SCALING_FACTOR, DEFAULT_ACCELERATION_SCALING_FACTOR);
   if (!success)
   {
     return false;
   }
 
-  rt.getRobotTrajectoryMsg(trajectory);
+  rt.getRobotTrajectoryMsg(*trajectory);
 
   return true;
 }

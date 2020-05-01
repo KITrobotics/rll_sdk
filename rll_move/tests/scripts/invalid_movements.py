@@ -50,7 +50,7 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
 
     def test_2_move_lin_sole_rotation(self):
         # move into home position
-        resp = self.client.move_joints(0, 0, 0, -pi / 2, 0, -pi / 2, 0)
+        resp = self.client.move_joints(0, pi / 100, 0, -pi / 2, 0, -pi / 2, 0)
         self.assert_last_srv_call_success(resp)
 
         goal_pose = Pose()
@@ -89,7 +89,56 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
             self.assert_error_code_equals(result.error_code,
                                           RLLErrorCode.CONCURRENT_SERVICE_CALL)
 
-    def test_4_idle_during_job_run(self):
+    def test_4_move_lin_collision(self):
+        # ensuring same global configuration for IK
+        resp = self.client.move_joints(0, -pi / 100, 0, -pi / 2, 0, pi / 2, 0)
+        self.assert_last_srv_call_success(resp)
+        goal_pose = Pose()
+        goal_pose.position = Point(-0.15, .4, .2)
+        goal_pose.orientation = orientation_from_rpy(0, pi, 0)
+        self.assert_move_ptp_success(goal_pose)
+
+        goal_pose.position.z = .1
+        self.assert_move_lin_success(goal_pose)
+
+        goal_pose.position.z = 0.0
+        resp = self.client.move_lin(goal_pose)
+        self.assert_last_srv_call_failed(resp,
+                                         RLLErrorCode.NO_IK_SOLUTION_FOUND)
+
+        goal_pose.position.y = .55
+        goal_pose.position.z = .1
+        self.assert_move_lin_success(goal_pose)
+
+        goal_pose.position.y = 0.7
+        resp = self.client.move_lin(goal_pose)
+        self.assert_last_srv_call_failed(resp, RLLErrorCode.GOAL_IN_COLLISION)
+
+    def test_5_move_armangle(self):
+        self.client.move_joints(0, pi / 100, 0, -pi / 2, 0, pi / 2, 0)
+
+        goal_pose = Pose()
+        goal_pose.position = Point(-0.4, -0.5, .3)
+        goal_pose.orientation = orientation_from_rpy(0, pi, 0)
+        goal_arm_angle = pi / 2
+        resp = self.client.move_ptp_armangle(goal_pose, goal_arm_angle)
+        self.assert_last_srv_call_failed(resp,
+                                         RLLErrorCode.MOVEIT_PLANNING_FAILED)
+
+        self.assert_move_ptp_success(goal_pose)
+        resp = self.client.move_lin_armangle(goal_pose, goal_arm_angle, True)
+        self.assert_last_srv_call_failed(
+            resp, RLLErrorCode.ONLY_PARTIAL_PATH_PLANNED)
+
+        goal_arm_angle = 3 * pi / 2
+        resp = self.client.move_lin_armangle(goal_pose, goal_arm_angle, True)
+        self.assert_last_srv_call_failed(resp,
+                                         RLLErrorCode.INVALID_INPUT)
+        resp = self.client.move_ptp_armangle(goal_pose, goal_arm_angle)
+        self.assert_last_srv_call_failed(resp,
+                                         RLLErrorCode.INVALID_INPUT)
+
+    def test_6_idle_during_job_run(self):
         # this should result in an internal error, it will also crash
         # the current run_job action
         idle_success = idle()

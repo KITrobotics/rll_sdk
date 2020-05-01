@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_MOVE_IFACE_ERROR_H
-#define RLL_MOVE_IFACE_ERROR_H
+#ifndef RLL_MOVE_MOVE_IFACE_ERROR_H
+#define RLL_MOVE_MOVE_IFACE_ERROR_H
 
 #include <ros/ros.h>
 
@@ -113,6 +113,11 @@ public:
     return value_ == SUCCESS;
   }
 
+  unsigned char succeededSrv() const noexcept
+  {
+    return static_cast<unsigned char>(succeeded());
+  }
+
   bool failed() const noexcept
   {
     return value_ != SUCCESS;
@@ -149,4 +154,4 @@ private:
 const char* stringifyMoveItErrorCodes(const moveit_msgs::MoveItErrorCodes& error_code);
 RLLErrorCode convertMoveItErrorCode(const moveit::planning_interface::MoveItErrorCode& error_code);
 
-#endif  // RLL_MOVE_IFACE_ERROR_H
+#endif  // RLL_MOVE_MOVE_IFACE_ERROR_H

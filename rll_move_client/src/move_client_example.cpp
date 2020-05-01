@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <ros/ros.h>
 #include <geometry_msgs/Pose.h>
+#include <ros/ros.h>
 
 #include <rll_move_client/move_client_default.h>
 #include <rll_move_client/util.h>

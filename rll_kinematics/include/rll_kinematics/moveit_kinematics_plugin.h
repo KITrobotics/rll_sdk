@@ -2,6 +2,7 @@
  * This file is part of the Robot Learning Lab SDK
  *
  * Copyright (C) 2019 Philipp Altoe <updim@student.kit.edu>
+ * Copyright (C) 2020 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,36 +18,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef INCLUDE_RLL_MOVEIT_ANALYTICAL_KINEMATICS_PLUGIN_H_
-#define INCLUDE_RLL_MOVEIT_ANALYTICAL_KINEMATICS_PLUGIN_H_
-
-// determine mode of inverse kinematics calculation:
-// INV_KIN_MODE == 0: redundancy resolution using e-function and hard coded config in getPositionIK()
-// INV_KIN_MODE == 1  solve for hard coded nsparam and config in getPositionIK()
-// INV_KIN_MODE == 2  general redundancy-resolution using e-function
-#define INV_KIN_MODE 2
-
-// library includes
-
-// InvKin
-#include "inverse_kinematics_library.h"
+#ifndef RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
+#define RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
 
 // ros
-#include <ros/ros.h>
-#include <urdf/model.h>
-#include <tf/transform_datatypes.h>
 #include <pluginlib/class_list_macros.h>
+#include <ros/ros.h>
+#include <tf/transform_datatypes.h>
+#include <urdf/model.h>
 
 // moveit
 #include <moveit/kinematics_base/kinematics_base.h>
 #include <moveit/robot_state/robot_state.h>
 
-namespace rll_moveit_analytical_kinematics
+#include <rll_kinematics/redundancy_resolution.h>
+
+namespace rll_moveit_kinematics
 {
-class RLLMoveItAnalyticalKinematicsPlugin : public kinematics::KinematicsBase
+class RLLMoveItKinematicsPlugin : public kinematics::KinematicsBase
 {
 public:
-  RLLMoveItAnalyticalKinematicsPlugin() = default;
+  RLLMoveItKinematicsPlugin() = default;
 
   bool getPositionIK(  // NOLINT google-default-arguments
       const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, std::vector<double>& solution,
@@ -97,32 +89,28 @@ public:
     return link_names_;
   };
 
-  bool getPositionIKelb(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
-                        std::vector<double>& solution, moveit_msgs::MoveItErrorCodes& error_code,
-                        double elbow_angle) const;
+  // TODO(wolfgang): add an interface that also returns the IK message like TARGET_TOO_CLOSE
+  //              allows for more fine-grained error reporting in move interface
 
-  bool getPositionFKelb(const std::vector<std::string>& link_names, const std::vector<double>& joint_angles,
-                        std::vector<geometry_msgs::Pose>& poses, double& elbow_angle) const;
-
-  bool getPathIKelb(const std::vector<geometry_msgs::Pose>& waypoints_pose, const std::vector<double>& waypoints_elb,
-                    const std::vector<double>& ik_seed_state, std::vector<robot_state::RobotStatePtr>& path,
-                    const moveit::core::JointModelGroup* group, moveit_msgs::MoveItErrorCodes& error_code,
-                    double& last_valid_percentage) const;
+  // solve IK with a given arm angle
+  bool getPositionIKarmangle(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                             std::vector<double>* solution, moveit_msgs::MoveItErrorCodes* error_code,
+                             const double& arm_angle) const;
+  // solve forward kinematics and get arm angle and global configuration
+  bool getPositionFK(const std::vector<double>& joint_angles, geometry_msgs::Pose* pose, double* arm_angle,
+                     int* config) const;
 
 private:
-  InvKin solver_;
-  bool initialized_{ false };  // Indicates if parameters are initialized
+  RLLRedundancyResolution solver_;
   std::vector<std::string> joint_names_;
-  std::vector<double> joint_min_vector_;
-  std::vector<double> joint_max_vector_;
-  std::vector<double> joint_origin_z_vector_;  // necessary to calculate limb lengths
   std::vector<std::string> link_names_;
-  const size_t NUM_JOINTS = 7;     // IK for 7 DOF robots
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
 #else
   moveit::core::RobotModelConstPtr robot_model_;  // add member for Kinetic
 #endif
-};
-}  // namespace rll_moveit_analytical_kinematics
 
-#endif /* INCLUDE_RLL_MOVEIT_ANALYTICAL_KINEMATICS_PLUGIN_H_ */
+  bool setLimbLengthsJointLimits();
+};
+}  // namespace rll_moveit_kinematics
+
+#endif  // RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
