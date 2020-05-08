@@ -61,9 +61,9 @@ struct RLLKinArmAngleInterval
 {
   RLLKinArmAngleInterval() = default;
 
-  RLLKinArmAngleInterval(const double lower_limit, const double upper_limit)
+  RLLKinArmAngleInterval(const double lower, const double upper)
   {
-    setLimits(lower_limit, upper_limit);
+    setLimits(lower, upper);
   }
 
   void setLimits(const double lower, const double upper)

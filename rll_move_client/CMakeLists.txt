@@ -1,12 +1,6 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rll_move_client)
 
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_compile_options(-std=c++11)
-
-# Warnings
-add_definitions(-Wall -Wextra -Wpedantic -Wredundant-decls)
-
 find_package(catkin REQUIRED COMPONENTS  
   rll_move
   rll_msgs

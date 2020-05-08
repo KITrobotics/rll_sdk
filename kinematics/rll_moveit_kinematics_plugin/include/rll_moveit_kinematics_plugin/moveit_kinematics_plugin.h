@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
-#define RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
+#ifndef RLL_MOVEIT_KINEMATICS_PLUGIN_MOVEIT_KINEMATICS_PLUGIN_H
+#define RLL_MOVEIT_KINEMATICS_PLUGIN_MOVEIT_KINEMATICS_PLUGIN_H
 
 // ros
 #include <pluginlib/class_list_macros.h>
@@ -113,4 +113,4 @@ private:
 };
 }  // namespace rll_moveit_kinematics
 
-#endif  // RLL_KINEMATICS_MOVEIT_KINEMATICS_PLUGIN_H
+#endif  // RLL_MOVEIT_KINEMATICS_PLUGIN_MOVEIT_KINEMATICS_PLUGIN_H

@@ -607,7 +607,7 @@ void RLLMoveIfacePlanning::getPathIK(const std::vector<geometry_msgs::Pose>& way
 void RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
                                                   std::vector<geometry_msgs::Pose>* waypoints)
 {
-  // most parts of code for cartesian interpolation from moveit's computeCartesianPath()
+  // most parts of code for cartesian interpolation from Moveit's computeCartesianPath()
 
   Eigen::Isometry3d start_pose;
   tf::poseMsgToEigen(start, start_pose);

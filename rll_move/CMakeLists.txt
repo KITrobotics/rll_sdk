@@ -1,20 +1,13 @@
 cmake_minimum_required(VERSION 2.8.3)
 project(rll_move)
 
-# required for clang-tidy
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
-add_compile_options(-std=c++11)
-
-# Warnings
-add_definitions(-Wall -Wextra -Wpedantic -Wredundant-decls)
-
 find_package(catkin REQUIRED COMPONENTS
   eigen_conversions
   moveit_core
   moveit_ros_move_group
   moveit_ros_planning
   moveit_ros_planning_interface
-  rll_kinematics
+  rll_moveit_kinematics_plugin  #catkin_lint: ignore_once literal_project_name
   rll_msgs
   rostest
 )
@@ -22,7 +15,11 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
    INCLUDE_DIRS include
    LIBRARIES ${PROJECT_NAME}
-   CATKIN_DEPENDS message_runtime moveit_ros_planning_interface rll_kinematics rll_msgs
+   CATKIN_DEPENDS
+   message_runtime
+   moveit_ros_planning_interface
+   rll_moveit_kinematics_plugin  #catkin_lint: ignore_once literal_project_name
+   rll_msgs
 )
 
 include_directories(SYSTEM ${catkin_INCLUDE_DIRS})

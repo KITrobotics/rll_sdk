@@ -331,7 +331,11 @@ RLLErrorCode RLLMoveIfaceServices::moveLinArmangle(const rll_msgs::MoveLinArmang
   }
   interpolateArmangleLinear(arm_angle_start, arm_angle_goal, dir, waypoints_pose.size(), &arm_angles);
   std::vector<robot_state::RobotStatePtr> path;
-  computeLinearPathArmangle(waypoints_pose, arm_angles, seed, &path);
+  RLLErrorCode error_code = computeLinearPathArmangle(waypoints_pose, arm_angles, seed, &path);
+  if (error_code.failed())
+  {
+    return error_code;
+  }
 
   // time trajectory
   robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());

@@ -32,9 +32,12 @@ public:
   static const double GLOBAL_CONFIG_DISTANCE_TOL;
 
 protected:
-  RLLKinMsg ikFixedArmAngleFixedConfig(RLLKinPoseConfig* eef_pose, RLLKinJoints* joint_angles) const;
+  RLLKinMsg ikFixedArmAngleFixedConfig(const RLLKinJoints& seed_state, RLLKinPoseConfig* eef_pose,
+                                       RLLKinJoints* joint_angles) const;
 
   RLLKinMsg computeFeasibleIntervals(RLLInvKinNsIntervals* intervals) const;
+  RLLKinMsg jointAnglesFromFixedArmAngle(double arm_angle, const RLLInvKinCoeffs& coeffs,
+                                         RLLKinJoints* joint_angles) const;
   RLLKinMsg jointAnglesFromArmAngle(double arm_angle, const RLLInvKinCoeffs& coeffs, RLLKinJoints* joint_angles,
                                     bool assert_limits = false) const;
 

@@ -21,11 +21,13 @@
 
 const double RLLInverseKinematics::GLOBAL_CONFIG_DISTANCE_TOL = 5.0 / 180.0 * M_PI;
 
-RLLKinMsg RLLInverseKinematics::ikFixedArmAngleFixedConfig(RLLKinPoseConfig* eef_pose, RLLKinJoints* joint_angles) const
+RLLKinMsg RLLInverseKinematics::ikFixedArmAngleFixedConfig(const RLLKinJoints& seed_state, RLLKinPoseConfig* eef_pose,
+                                                           RLLKinJoints* joint_angles) const
 {
   RLLInvKinCoeffs coeffs;
   RLLKinJoints& joint_angles_ref = *joint_angles;
 
+  eef_pose->config.set(seed_state);
   eef_pose->arm_angle = mapAngleInPiRange(eef_pose->arm_angle);
 
   RLLKinMsg result = setHelperMatrices(*eef_pose, &coeffs, &joint_angles_ref[3]);
@@ -36,7 +38,23 @@ RLLKinMsg RLLInverseKinematics::ikFixedArmAngleFixedConfig(RLLKinPoseConfig* eef
 
   coeffs.setGC(eef_pose->config);
 
-  return jointAnglesFromArmAngle(eef_pose->arm_angle, coeffs, joint_angles);
+  return jointAnglesFromFixedArmAngle(eef_pose->arm_angle, coeffs, joint_angles);
+}
+
+RLLKinMsg RLLInverseKinematics::jointAnglesFromFixedArmAngle(double arm_angle, const RLLInvKinCoeffs& coeffs,
+                                                             RLLKinJoints* joint_angles) const
+{
+  RLLKinMsg result = jointAnglesFromArmAngle(arm_angle, coeffs, joint_angles);
+  if (result.error() && kZero((*joint_angles)[3]))
+  {
+    // global config at joint 4 cannot be uniquely identified, also try mapped arm angle for different GC4
+    // This ensures that pivot joints are not flipped by PI
+    // force a mapping by using configs with different GC4
+    arm_angle = mapArmAngleForGC4(RLLKinGlobalConfig(0), RLLKinGlobalConfig(2), arm_angle);
+    return jointAnglesFromArmAngle(arm_angle, coeffs, joint_angles);
+  }
+
+  return result;
 }
 
 RLLKinMsg RLLInverseKinematics::jointAnglesFromArmAngle(const double arm_angle, const RLLInvKinCoeffs& coeffs,
@@ -108,8 +126,10 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
   RLLInvKinHelperMatrices hm;
 
   Eigen::Vector3d xsw;
+  Eigen::Vector3d xsw_n;
+  Eigen::Vector3d xwf_n;
   double lsw;
-  RLLKinMsg result = shoulderWristVec(eef_pose.pose, &xsw, &lsw);
+  RLLKinMsg result = shoulderWristVec(eef_pose.pose, &xsw, &xwf_n, &lsw);
   if (result.error())
   {
     return result;
@@ -117,7 +137,7 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
 
   *joint_angle_4 = joint_angles_v[3] = jointAngle4(lsw, eef_pose.config);
 
-  if (*joint_angle_4 < lowerJointLimits()(3) || *joint_angle_4 > upperJointLimits()(3))
+  if (kSmallerThan(*joint_angle_4, lowerJointLimits()(3)) || kGreaterThan(*joint_angle_4, upperJointLimits()(3)))
   {
     return RLLKinMsg::TARGET_TOO_CLOSE;
   }
@@ -125,7 +145,7 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
   joint_angles_v[0] = jointAngle1Virtual(xsw);
   joint_angles_v[1] = jointAngle2Virtual(xsw, lsw, eef_pose.config);
 
-  Eigen::Vector3d xsw_n = xsw.normalized();          // normalized shoulder to wrist vector
+  xsw_n.noalias() = xsw.normalized();                // normalized shoulder to wrist vector
   Eigen::Matrix3d xsw_n_cross = crossMatrix(xsw_n);  // cross product matrix of xsw_n
 
   // virtual upper arm pose
@@ -135,7 +155,7 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
 
   // helper matrix As, Bs, Cs to rotate mbu_v
   hm.as = xsw_n_cross * mbu_v.ori();
-  hm.bs = -xsw_n_cross * (hm.as);
+  hm.bs = -xsw_n_cross * hm.as;
   hm.cs = (xsw_n * xsw_n.transpose()) * mbu_v.ori();
 
   // elbow pose in upper arm coordinates, same as virtual elbow pose
@@ -146,7 +166,7 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
   hm.bw = mue.ori().transpose() * hm.bs.transpose() * eef_pose.pose.ori();
   hm.cw = mue.ori().transpose() * hm.cs.transpose() * eef_pose.pose.ori();
 
-  coeffs->setHelperMatrices(hm, xsw, lsw, *joint_angle_4);
+  coeffs->setHelperMatrices(hm, xsw_n, xwf_n, *joint_angle_4);
 
   return RLLKinMsg::SUCCESS;
 }
@@ -196,7 +216,7 @@ void RLLInverseKinematics::determineClosestConfigs(const RLLKinJoints& joint_ang
 void RLLInverseKinematics::addRemainingConfigs(const size_t it, const double dist_from_seed,
                                                RLLKinGlobalConfigs* configs) const
 {
-  if (it < configs->size() - 1 || configs->size() == 8 || dist_from_seed != std::numeric_limits<double>::infinity())
+  if (it < configs->size() - 1 || configs->size() == 8 || dist_from_seed < std::numeric_limits<double>::infinity())
   {
     // there are still configurations to check or all configs are already in the list or a usable solution was already
     // found
@@ -216,7 +236,7 @@ double RLLInverseKinematics::mapArmAngleForGC4(const RLLKinGlobalConfig& seed_co
                                                const RLLKinGlobalConfig& selected_config,
                                                const double seed_arm_angle) const
 {
-  if (seed_config.gc4() != selected_config.gc4())
+  if (!kIsEqual(seed_config.gc4(), selected_config.gc4()))
   {
     // seed elbow config and currently selected config differ, change arm_angle if configurations differ
     // (different reference planes for calculation of arm angle)

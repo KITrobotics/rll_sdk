@@ -169,17 +169,12 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         goal_pose.position.y = .5
         self.assert_move_lin_success(goal_pose)
 
-        # E1
-        resp = self.client.move_joints(0.357309, 0.868465, 0.0, -1.27991,
-                                       1.77188, 1.27341, -0.607802)
-        self.assert_last_srv_call_success(resp)
-        goal_pose.position = Point(.4, -0.55, .4)
-        goal_pose.orientation = Quaternion(.0, -.71, .71, .001)
-        # TODO: does not work sometimes, definitely a bug
-        resp = self.client.move_lin(goal_pose)
-        if not resp:
-            rospy.logerr("kinematics test case E1 failed, fix this!")
-        # self.assert_move_lin_success(goal_pose)
+        # new test case with heavy elbow rotation around base
+        goal_pose.position = Point(0.4, 0.4, 0.8)
+        goal_pose.orientation = Quaternion(.0, .7071068, .0, .7071068)
+        self.assert_move_ptp_success(goal_pose)
+        goal_pose.position.y = -0.3
+        self.assert_move_lin_success(goal_pose)
 
         # S0
         # move to exact start pose, this corresponds to

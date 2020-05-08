@@ -20,7 +20,7 @@
 
 #include <moveit/rdf_loader/rdf_loader.h>
 
-#include <rll_kinematics/moveit_kinematics_plugin.h>
+#include <rll_moveit_kinematics_plugin/moveit_kinematics_plugin.h>
 
 namespace rll_moveit_kinematics
 {

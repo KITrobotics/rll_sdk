@@ -40,32 +40,24 @@ int main()
 
   RLLKinMsg result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
   std::cout << "solution with redundancy resolution based on exponential function" << std::endl;
-  std::cout << "result " << result.message() << ", values: ";
-  std::copy(solution.begin(), solution.end(), std::ostream_iterator<double>(std::cout, " "));
-  std::cout << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
 
   ik_options.method = RLLInvKinOptions::ARM_ANGLE_FIXED;
   result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
   std::cout << "solution with fixed arm angle" << std::endl;
-  std::cout << "result " << result.message() << ", values: ";
-  std::copy(solution.begin(), solution.end(), std::ostream_iterator<double>(std::cout, " "));
-  std::cout << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
 
   ik_options.method = RLLInvKinOptions::POSITION_RESOLUTION_EXP;
   ik_options.keep_global_configuration = true;
   result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
   std::cout << "solution with redundancy resolution based on exponential function and fixed global configuration"
             << std::endl;
-  std::cout << "result " << result.message() << ", values: ";
-  std::copy(solution.begin(), solution.end(), std::ostream_iterator<double>(std::cout, " "));
-  std::cout << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
 
   result = solver.fk(solution, &eef_pose);
   std::cout << "forward kinematics with solution from last inverse kinematics call" << std::endl;
   std::cout << "result " << result.message() << ", position:" << std::endl;
   std::cout << eef_pose.pose.pos() << std::endl;
-
-  std::cout << std::endl << "finished" << std::endl;
 
   exit(EXIT_SUCCESS);
 }

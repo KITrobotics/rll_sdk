@@ -8,18 +8,11 @@
 
   <license>GPLv3+</license>
 
-  <author email="updim@student.kit.edu">Philipp Altoe</author>
   <author email="wolfgang.wiedmeyer@kit.edu">Wolfgang Wiedmeyer</author>
+  <author email="updim@student.kit.edu">Philipp Altoe</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <build_depend>moveit_core</build_depend>
   <build_depend>eigen</build_depend>
-  <build_depend>pluginlib</build_depend>
-  <exec_depend>moveit_core</exec_depend>
-  <exec_depend>pluginlib</exec_depend>
-
-  <export>
-    <moveit_core plugin="${prefix}/moveit_plugin.xml"/>
-  </export>
+  <depend>rll_core</depend>
 
 </package>
