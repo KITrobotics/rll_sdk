@@ -27,8 +27,8 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
-#include <rll_kinematics/moveit_kinematics_plugin.h>
 #include <rll_move/move_iface_error.h>
+#include <rll_moveit_kinematics_plugin/moveit_kinematics_plugin.h>
 
 class RLLMoveIfacePlanning
 {

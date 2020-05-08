@@ -19,8 +19,8 @@
 
 #include <rll_kinematics/inverse_kinematics_coefficients.h>
 
-void RLLInvKinCoeffs::setHelperMatrices(const RLLInvKinHelperMatrices& hm, const Eigen::Vector3d& xsw, const double lsw,
-                                        const double joint_angle_4)
+void RLLInvKinCoeffs::setHelperMatrices(const RLLInvKinHelperMatrices& hm, const Eigen::Vector3d& xsw_n,
+                                        const Eigen::Vector3d& xwf_n, const double joint_angle_4)
 {
   an_[0] = hm.as(1, 1);
   bn_[0] = hm.bs(1, 1);
@@ -57,8 +57,8 @@ void RLLInvKinCoeffs::setHelperMatrices(const RLLInvKinHelperMatrices& hm, const
   b_[1] = hm.bw(2, 2);
   c_[1] = hm.cw(2, 2);
 
-  sw_.xsw = xsw;
-  sw_.lsw = lsw;
+  sw_.xsw_n = xsw_n;
+  sw_.xwf_n = xwf_n;
 
   joint_angle_4_ = joint_angle_4;
 }
@@ -138,16 +138,31 @@ double RLLInvKinCoeffs::jointDerivativeHinge(const uint8_t i, const double arm_a
           fabs(sin(joint_angle)));  // division by zero impossible, function is only called in joint limit != 0 or Pi.
 }
 
-bool RLLInvKinCoeffs::armAngle(const JointType type, const uint8_t i, const double joint_angle, double* arm_angle_lower,
-                               double* arm_angle_upper) const
+bool RLLInvKinCoeffs::armAngleForJointLimit(const JointType type, const uint8_t i, const double joint_angle,
+                                            double* arm_angle_lower, double* arm_angle_upper) const
 {
+  bool success;
+
   switch (type)
   {
     case PIVOT_JOINT:
-      return armAnglePivot(i, joint_angle, arm_angle_lower, arm_angle_upper);
+      success = armAnglePivot(i, joint_angle, arm_angle_lower, arm_angle_upper);
+      break;
     case HINGE_JOINT:
-      return armAngleHinge(i, joint_angle, arm_angle_lower, arm_angle_upper);
+      success = armAngleHinge(i, joint_angle, arm_angle_lower, arm_angle_upper);
+      break;
   }
+
+  if (success && kIsEqual(*arm_angle_lower, *arm_angle_upper))
+  {
+    // Arm angle is at a singular position for hinge joints. The arm angle is defined at this position, but not the
+    // derivative. A single arm angle corresponds to the joint angle and the arm angle is either a global minimum or
+    // maximum. We still return false here because the arm angle interval only touches the limit here and it is not a
+    // crossing point.
+    return false;
+  }
+
+  return success;
 }
 
 bool RLLInvKinCoeffs::armAnglePivot(const uint8_t i, const double joint_angle, double* arm_angle_lower,
@@ -179,6 +194,7 @@ bool RLLInvKinCoeffs::armAngleHinge(const uint8_t i, const double joint_angle, d
 
   if (!kGreaterZero(discriminant))
   {
+    // joint angle is not reached in null space for current pose / configuration
     return false;
   }
 

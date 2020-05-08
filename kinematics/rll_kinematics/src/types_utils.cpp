@@ -17,6 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <iterator>
+
 #include <rll_kinematics/types_utils.h>
 
 const double RLLKinematicsBase::ZERO_ROUNDING_TOL = 1E-07;
@@ -76,8 +78,7 @@ bool RLLKinJoints::jointLimitsViolated(const RLLKinJoints& lower_joint_limits,
 {
   for (unsigned int i = 0; i < joints_.size(); ++i)
   {
-    if ((joints_[i] < lower_joint_limits(i) && !kZero(joints_[i] - lower_joint_limits(i))) ||
-        (joints_[i] > upper_joint_limits(i) && !kZero(joints_[i] - upper_joint_limits(i))))
+    if (kSmallerThan(joints_[i], lower_joint_limits(i)) || kGreaterThan(joints_[i], upper_joint_limits(i)))
     {
       return true;
     }
@@ -86,14 +87,43 @@ bool RLLKinJoints::jointLimitsViolated(const RLLKinJoints& lower_joint_limits,
   return false;
 }
 
+std::ostream& operator<<(std::ostream& out, const RLLKinJoints& j)
+{
+  std::copy(j.begin(), j.end(), std::ostream_iterator<double>(std::cout, " "));
+
+  return out;
+}
+
 RLLKinFrame::RLLKinFrame(const double d, const double theta, const double a, const double alpha)
 {
-  double ca = cos(alpha);
-  double sa = sin(alpha);
+  double ca, sa;
+
+  // alpha usually has these values
+  if (kIsEqual(alpha, -M_PI / 2.0))
+  {
+    ca = 0.0;
+    sa = -1.0;
+  }
+  else if (kIsEqual(alpha, 0.0))
+  {
+    ca = 1.0;
+    sa = 0.0;
+  }
+  else if (kIsEqual(alpha, M_PI / 2.0))
+  {
+    ca = 0.0;
+    sa = 1.0;
+  }
+  else
+  {
+    ca = cos(alpha);
+    sa = sin(alpha);
+  }
+
   double ct = cos(theta);
   double st = sin(theta);
 
-  ori_ << ct, -st * ca, st * sa, st, ct * ca, -ct * sa, 0, sa, ca;
+  ori_ << ct, -st * ca, st * sa, st, ct * ca, -ct * sa, 0.0, sa, ca;
 
   pos_ << a * ct, a * st, d;
 }
@@ -131,10 +161,18 @@ void RLLKinFrame::setPosition(const uint8_t index, const double value)
 RLLKinFrame RLLKinFrame::operator*(const RLLKinFrame& t) const
 {
   RLLKinFrame result;
-  result.ori_ = this->ori_ * t.ori_;
-  result.pos_ = this->ori_ * t.pos_ + this->pos_;
+  result.ori_.noalias() = this->ori_ * t.ori_;
+  result.pos_.noalias() = this->ori_ * t.pos_ + this->pos_;
 
   return result;
+}
+
+RLLKinFrame& RLLKinFrame::operator=(const RLLKinFrame& rhs)
+{
+  this->ori_.noalias() = rhs.ori_;
+  this->pos_.noalias() = rhs.pos_;
+
+  return *this;
 }
 
 void RLLKinGlobalConfig::set(const RLLKinJoints& joint_angles)
@@ -142,8 +180,9 @@ void RLLKinGlobalConfig::set(const RLLKinJoints& joint_angles)
   // The global configuration is determined by the sign of the second, fourth and sixth joint angle.
   // For example, a configuration with value 6 = 110 means that the second axis is positive and the fourth and sixth
   // ones are negative
-  config_ = (static_cast<uint8_t>(joint_angles(1) < 0) << 0) | (static_cast<uint8_t>(joint_angles(3) < 0) << 1) |
-            (static_cast<uint8_t>(joint_angles(5) < 0) << 2);
+  config_ = (static_cast<uint8_t>(joint_angles(1) < -RLLKinematicsBase::ZERO_ROUNDING_TOL) << 0) |
+            (static_cast<uint8_t>(joint_angles(3) < -RLLKinematicsBase::ZERO_ROUNDING_TOL) << 1) |
+            (static_cast<uint8_t>(joint_angles(5) < -RLLKinematicsBase::ZERO_ROUNDING_TOL) << 2);
 }
 
 double RLLKinGlobalConfig::gc2() const
@@ -186,19 +225,34 @@ uint8_t RLLKinGlobalConfig::indexGC4() const
 Eigen::Matrix3d RLLKinematicsBase::crossMatrix(const Eigen::Vector3d& vec) const
 {
   Eigen::Matrix3d result;
-  result << 0, -vec(2), vec(1), vec(2), 0, -vec(0), -vec(1), vec(0), 0;
+  result << 0.0, -vec(2), vec(1), vec(2), 0.0, -vec(0), -vec(1), vec(0), 0.0;
 
   return result;
 }
 
 bool RLLKinematicsBase::kZero(const double f) const
 {
-  return fabs(f) < ZERO_ROUNDING_TOL;
+  return fabs(f) <= ZERO_ROUNDING_TOL;
+}
+
+bool RLLKinematicsBase::kIsEqual(const double lhs, const double rhs) const
+{
+  return kZero(lhs - rhs);
 }
 
 bool RLLKinematicsBase::kGreaterZero(const double f) const
 {
-  return f > -ZERO_ROUNDING_TOL;
+  return f >= -ZERO_ROUNDING_TOL;
+}
+
+bool RLLKinematicsBase::kGreaterThan(double lhs, double rhs) const
+{
+  return lhs > rhs + ZERO_ROUNDING_TOL;
+}
+
+bool RLLKinematicsBase::kSmallerThan(double lhs, double rhs) const
+{
+  return lhs < rhs - ZERO_ROUNDING_TOL;
 }
 
 double RLLKinematicsBase::kAcos(const double f) const

@@ -13,7 +13,9 @@
   <buildtool_depend>catkin</buildtool_depend>
 
   <exec_depend>rll_kinematics</exec_depend>
+  <exec_depend>rll_moveit_kinematics_plugin</exec_depend>
   <exec_depend>rll_control</exec_depend>
+  <exec_depend>rll_core</exec_depend>
   <exec_depend>rll_description</exec_depend>
   <exec_depend>rll_gazebo</exec_depend>
   <exec_depend>rll_move</exec_depend>

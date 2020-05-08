@@ -32,6 +32,7 @@
 class RLLKinMsg
 {
 public:
+  // TODO(wolfgang): add warning message if close to joint limit
   enum Msg : uint8_t
   {
     SUCCESS = 0,
@@ -91,13 +92,17 @@ class RLLKinematicsBase
 public:
   RLLKinematicsBase() = default;
 
+  // all values in the range ]-ZERO_ROUNDING_TOL, ZERO_ROUNDING_TOL[ are considered zero
   static const double ZERO_ROUNDING_TOL;
 
 protected:
   Eigen::Matrix3d crossMatrix(const Eigen::Vector3d& vec) const;
 
   bool kZero(double f) const;
+  bool kIsEqual(double lhs, double rhs) const;
   bool kGreaterZero(double f) const;
+  bool kGreaterThan(double lhs, double rhs) const;
+  bool kSmallerThan(double lhs, double rhs) const;
   double kAcos(double f) const;
   double kSqrt(double f) const;
   double kSign(double f) const;
@@ -142,10 +147,12 @@ private:
   template <class container>
   void copyToJoints(const container& c);
 
-  std::array<double, RLL_NUM_JOINTS> joints_ = { { 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0 } };
+  std::array<double, RLL_NUM_JOINTS> joints_ = { { 0.0 } };
 };
 
-class RLLKinFrame
+std::ostream& operator<<(std::ostream& out, const RLLKinJoints& j);
+
+class RLLKinFrame : public RLLKinematicsBase
 {
 public:
   RLLKinFrame() = default;
@@ -155,10 +162,12 @@ public:
   {
     return ori_;
   }
+
   Eigen::Vector3d const& pos() const
   {
     return pos_;
   }
+
   void getQuaternion(double* w, double* x, double* y, double* z) const;
   void setQuaternion(double w, double x, double y, double z);
   void setRPY(double roll, double pitch, double yaw);
@@ -167,6 +176,7 @@ public:
   void setPosition(uint8_t index, double value);
 
   RLLKinFrame operator*(const RLLKinFrame& t) const;
+  RLLKinFrame& operator=(const RLLKinFrame& rhs);
 
 private:
   Eigen::Matrix3d ori_ = Eigen::Matrix3d::Identity();
@@ -204,6 +214,11 @@ public:
   uint8_t val() const
   {
     return config_;
+  }
+
+  int printVal() const
+  {
+    return +config_;
   }
 
   bool operator==(const RLLKinGlobalConfig& n2)

@@ -34,7 +34,7 @@ RLLKinMsg RLLRedundancyResolution::ik(const RLLKinJoints& seed_state, RLLKinPose
     case RLLInvKinOptions::ARM_ANGLE_FIXED:
       if (options.keep_global_configuration)
       {
-        return ikFixedArmAngleFixedConfig(ik_pose, solution);
+        return ikFixedArmAngleFixedConfig(seed_state, ik_pose, solution);
       }
 
       return ikFixedArmAngle(seed_state, ik_pose, solution, options);
@@ -87,37 +87,41 @@ double RLLRedundancyResolution::expResolution(const RLLInvKinOptions& options, c
 }
 
 RLLKinMsg RLLRedundancyResolution::optimizationPositionExp(const RLLInvKinCoeffs& coeffs,
-                                                           const RLLInvKinOptions& options, const double arm_angle_seed,
+                                                           const RLLInvKinOptions& options, double arm_angle_seed,
                                                            double* arm_angle_new, RLLKinJoints* solution) const
 {
   RLLKinArmAngleInterval current_interval;
-  double arm_angle_old = arm_angle_seed;
 
   RLLInvKinNsIntervals feasible_intervals(coeffs);
   computeFeasibleIntervals(&feasible_intervals);
 
-  RLLKinMsg result = feasible_intervals.intervalForArmAngle(&arm_angle_old, &current_interval);
+  RLLKinMsg result = feasible_intervals.intervalForArmAngle(&arm_angle_seed, &current_interval);
   if (result.error())
   {
-    return result;
+    // No feasible arm angle could be found. The robot could be in a singular position for the goal pose and the arm
+    // angle is not defined. Still try to return feasible joint angles by setting the arm angle to zero.
+    *arm_angle_new = 0.0;
+
+    return jointAnglesFromFixedArmAngle(*arm_angle_new, coeffs, solution);
   }
 
-  if (current_interval.lower_limit == -M_PI && current_interval.upper_limit == M_PI && current_interval.overlap)
+  if (kIsEqual(current_interval.lower_limit, -M_PI) && kIsEqual(current_interval.upper_limit, M_PI) &&
+      current_interval.overlap)
   {
     // all arm angles possible, no limits -> keep current arm angle
-    *arm_angle_new = arm_angle_old;
+    *arm_angle_new = arm_angle_seed;
 
-    return RLLKinMsg::SUCCESS;
+    return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
   }
 
-  if (current_interval.lower_limit == current_interval.upper_limit)
+  if (kIsEqual(current_interval.lower_limit, current_interval.upper_limit))
   {
     *arm_angle_new = current_interval.lower_limit;
 
-    return RLLKinMsg::SUCCESS;
+    return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
   }
 
-  *arm_angle_new = expResolution(options, arm_angle_old, current_interval.lower_limit, current_interval.upper_limit);
+  *arm_angle_new = expResolution(options, arm_angle_seed, current_interval.lower_limit, current_interval.upper_limit);
   *arm_angle_new = mapAngleInPiRange(*arm_angle_new);
 
   return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
@@ -130,7 +134,7 @@ RLLKinMsg RLLRedundancyResolution::optimizationFixedArmAngle(const RLLInvKinCoef
 {
   // arm angle is fixed, so no optimization needed
 
-  return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution);
+  return jointAnglesFromFixedArmAngle(*arm_angle_new, coeffs, solution);
 }
 
 RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
@@ -156,6 +160,7 @@ RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
 
   double dist_from_seed_last = std::numeric_limits<double>::infinity();
   double dist_from_seed = std::numeric_limits<double>::infinity();
+  RLLKinPoseConfig pose_last;
   RLLKinJoints solution_last;
   RLLKinJoints& solution_ref = *solution;
 
@@ -192,6 +197,7 @@ RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
       // choose solution with lowest distance from seed
       dist_from_seed_last = dist_from_seed;
       solution_last = solution_ref;
+      pose_last = *ik_pose;
       result_last = result;
     }
 
@@ -201,6 +207,7 @@ RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
   if (dist_from_seed_last < std::numeric_limits<double>::infinity())
   {
     solution_ref = solution_last;
+    *ik_pose = pose_last;
     return result_last;
   }
 

@@ -26,8 +26,8 @@ using RLLKinLimbs = std::array<double, 4>;
 
 struct RLLKinShoulderWristVec
 {
-  Eigen::Vector3d xsw;  // vector from shoulder to wrist
-  double lsw;           // length of the vector
+  Eigen::Vector3d xsw_n;  // vector from shoulder to wrist, normalized
+  Eigen::Vector3d xwf_n;  // vector from wrist to flange, normalized
 };
 
 class RLLForwardKinematics : public RLLKinematicsBase
@@ -45,7 +45,9 @@ public:
 protected:
   RLLKinMsg armAngle(const RLLKinJoints& joint_angles, const RLLKinGlobalConfig& config, double* arm_angle) const;
 
-  RLLKinMsg shoulderWristVec(const RLLKinFrame& eef_pose, Eigen::Vector3d* xsw, double* lsw) const;
+  // xsw: vector from shoulder to wrist, xwf_n: normalized vector from wrist to flange, lsw: length of xsw
+  RLLKinMsg shoulderWristVec(const RLLKinFrame& eef_pose, Eigen::Vector3d* xsw, Eigen::Vector3d* xwf_n,
+                             double* lsw) const;
 
   double jointAngle1Virtual(const Eigen::Vector3d& xsw) const;
   double jointAngle2Virtual(const Eigen::Vector3d& xsw, double lsw, const RLLKinGlobalConfig& config) const;
@@ -75,7 +77,7 @@ protected:
 
 private:
   RLLKinMsg armAngle(const RLLKinJoints& joint_angles, const RLLKinGlobalConfig& config, double* arm_angle,
-                     RLLKinFrame* wrist_pose, RLLKinShoulderWristVec* sw) const;
+                     RLLKinFrame* flange_pose, RLLKinShoulderWristVec* sw) const;
 
   // Robot properties
   RLLKinLimbs limb_lengths_;

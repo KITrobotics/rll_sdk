@@ -68,6 +68,12 @@ void RLLInvKinNsIntervals::feasibleIntervalsFromBlocked()
     return;
   }
 
+  if (blocked_intervals_.size() == 1 && kIsEqual(blocked_intervals_[0].lower_limit, -M_PI) &&
+      kIsEqual(blocked_intervals_[0].upper_limit, M_PI))
+  {
+    return;
+  }
+
   if ((blocked_intervals_[0].lower_limit > -M_PI))
   {
     feasible_intervals_.emplace_back(-M_PI, M_PI);
@@ -88,7 +94,8 @@ void RLLInvKinNsIntervals::feasibleIntervalsFromBlocked()
     }
   }
 
-  if ((feasible_intervals_.back().upper_limit == M_PI) && (feasible_intervals_.front().lower_limit == -M_PI))
+  if (kIsEqual(feasible_intervals_.back().upper_limit, M_PI) &&
+      kIsEqual(feasible_intervals_.front().lower_limit, -M_PI))
   {
     feasible_intervals_.back().overlap = true;
     feasible_intervals_.front().overlap = true;
@@ -144,14 +151,14 @@ void RLLInvKinNsIntervals::mapLimitsToArmAngle(const RLLInvKinCoeffs::JointType 
   double arm_angle_lower, arm_angle_upper;
 
   // map lower joint limits to arm angle
-  if (coeffs_.armAngle(type, index, lower_joint_limit, &arm_angle_lower, &arm_angle_upper))
+  if (coeffs_.armAngleForJointLimit(type, index, lower_joint_limit, &arm_angle_lower, &arm_angle_upper))
   {
     insertLimit(&interval_limits, type, lower_joint_limit, arm_angle_lower, index);
     insertLimit(&interval_limits, type, lower_joint_limit, arm_angle_upper, index);
   }
 
   // map upper joint limits to arm angle
-  if (coeffs_.armAngle(type, index, upper_joint_limit, &arm_angle_lower, &arm_angle_upper))
+  if (coeffs_.armAngleForJointLimit(type, index, upper_joint_limit, &arm_angle_lower, &arm_angle_upper))
   {
     insertLimit(&interval_limits, type, upper_joint_limit, arm_angle_lower, index);
     insertLimit(&interval_limits, type, upper_joint_limit, arm_angle_upper, index);
@@ -171,7 +178,6 @@ void RLLInvKinNsIntervals::mapLimitsToArmAngle(const RLLInvKinCoeffs::JointType 
   }
 
   std::sort(interval_limits.begin(), interval_limits.end());
-
   determineBlockedIntervals(interval_limits);
 }
 
@@ -259,12 +265,13 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
 
   if (interval_found)
   {
-    if (!current_interval->overlap || (current_interval->lower_limit == -M_PI && current_interval->upper_limit == M_PI))
+    if (!current_interval->overlap ||
+        (kIsEqual(current_interval->lower_limit, -M_PI) && kIsEqual(current_interval->upper_limit, M_PI)))
     {
       return RLLKinMsg::SUCCESS;
     }
 
-    if (current_interval->lower_limit == -M_PI)
+    if (kIsEqual(current_interval->lower_limit, -M_PI))
     {
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and take the lower limit of the last interval as lower limit
@@ -275,7 +282,7 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
       current_interval->upper_limit += 2 * M_PI;
       current_interval->lower_limit = feasible_intervals_.back().lower_limit;
     }
-    else if (current_interval->upper_limit == M_PI)
+    else if (kIsEqual(current_interval->upper_limit, M_PI))
     {
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and keep the lower limit of the current interval
@@ -297,7 +304,7 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
 RLLKinMsg RLLInvKinNsIntervals::computeFeasibleIntervals(const RLLKinJoints& lower_joint_limits,
                                                          const RLLKinJoints& upper_joint_limits)
 {
-  const double MARGIN = 0.05;  // blocked margin around singular arm angle
+  const double MARGIN_SINGULARITY = 10 * ZERO_ROUNDING_TOL;
 
   for (uint8_t i = 0; i < RLL_NUM_JOINTS_P; ++i)
   {
@@ -305,7 +312,7 @@ RLLKinMsg RLLInvKinNsIntervals::computeFeasibleIntervals(const RLLKinJoints& low
     if (coeffs_.pivotSingularity(i, &psi_singular))
     {
       // blocked interval due to singularity at psi_singular
-      blocked_intervals_.emplace_back(psi_singular - MARGIN, psi_singular + MARGIN);
+      blocked_intervals_.emplace_back(psi_singular - MARGIN_SINGULARITY, psi_singular + MARGIN_SINGULARITY);
     }
 
     mapLimitsToArmAngle(RLLInvKinCoeffs::PIVOT_JOINT, lower_joint_limits(2 * i), upper_joint_limits(2 * i), i);

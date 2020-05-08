@@ -42,7 +42,7 @@ public:
     HINGE_JOINT = true
   };
 
-  void setHelperMatrices(const RLLInvKinHelperMatrices& hm, const Eigen::Vector3d& xsw, double lsw,
+  void setHelperMatrices(const RLLInvKinHelperMatrices& hm, const Eigen::Vector3d& xsw_n, const Eigen::Vector3d& xwf_n,
                          double joint_angle_4);
   void setGC(const RLLKinGlobalConfig& config);
   void preparePivotDerivatives();
@@ -84,7 +84,8 @@ public:
   double jointDerivative(JointType type, uint8_t i, double arm_angle, double joint_angle) const;
   double jointDerivativePivot(uint8_t i, double arm_angle) const;
   double jointDerivativeHinge(uint8_t i, double arm_angle, double joint_angle) const;
-  bool armAngle(JointType type, uint8_t i, double joint_angle, double* arm_angle_lower, double* arm_angle_upper) const;
+  bool armAngleForJointLimit(JointType type, uint8_t i, double joint_angle, double* arm_angle_lower,
+                             double* arm_angle_upper) const;
   bool armAnglePivot(uint8_t i, double joint_angle, double* arm_angle_lower, double* arm_angle_upper) const;
   bool armAngleHinge(uint8_t i, double joint_angle, double* arm_angle_lower, double* arm_angle_upper) const;
 
