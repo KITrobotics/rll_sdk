@@ -31,9 +31,11 @@ def main():
 
     if not only_idle:
         success = run_project(server_timeout, auth_secret)
-        if not success:
+        if success is None:
             rospy.logfatal("Internal error when running project")
             sys.exit(1)
+        elif not success:
+            rospy.logerr("job failed")
 
     success = idle(server_timeout, auth_secret)
     if not success:
