@@ -16,6 +16,7 @@
   <build_export_depend>rll_msgs</build_export_depend>
   <build_export_depend>rospy</build_export_depend>
   <build_export_depend>std_msgs</build_export_depend>
+  <build_depend>rostest</build_depend>
   <exec_depend>rll_move</exec_depend>
   <exec_depend>rll_msgs</exec_depend>
   <exec_depend>roscpp</exec_depend>

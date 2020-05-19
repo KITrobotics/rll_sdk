@@ -4,6 +4,7 @@ project(rll_move_client)
 find_package(catkin REQUIRED COMPONENTS  
   rll_move
   rll_msgs
+  rostest
 )
 
 catkin_python_setup()
@@ -42,3 +43,9 @@ target_link_libraries(${PROJECT_NAME}
 
 add_executable(move_client_example src/move_client_example.cpp)
 target_link_libraries(move_client_example ${PROJECT_NAME} ${catkin_LIBRARIES})
+
+if(CATKIN_ENABLE_TESTING)
+  
+  add_rostest(tests/launch/unit_tests_python.test)
+  
+endif()
