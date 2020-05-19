@@ -3,7 +3,6 @@
 	<arg name="output" default="log" />
 	<arg name="headless" default="true" />
 
-	<test ns="$(arg robot)" test-name="unit_test" pkg="rll_move"
-		type="unit_test" time-limit="60" />
-
+	<test ns="$(arg robot)" test-name="unit_tests_main" pkg="rll_move_client"
+		type="unit_tests_main.py" time-limit="240" />
 </launch>

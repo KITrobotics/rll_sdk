@@ -17,26 +17,21 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
+import unittest
+import numpy as np
 
-import rospy
-from std_srvs.srv import Trigger, TriggerRequest
-
-from rll_move_client.error import RLLErrorCode
-
-from test_util import TestCaseWithRLLMoveClient
+from rll_move_client.util import (
+    quaternion_to_array,
+    orientation_from_rpy
+)
 
 
-class TestBeforeProjectRun(TestCaseWithRLLMoveClient):
-
+class TestUtilFunctions(unittest.TestCase):
     def __init__(self, *args, **kwargs):
-        super(TestBeforeProjectRun, self).__init__(*args, **kwargs)
-        self.robot_ready_service = rospy.ServiceProxy("robot_ready", Trigger)
+        super(TestUtilFunctions, self).__init__(*args, **kwargs)
 
-    def test_0_call_service(self):
-        resp = self.client.move_random()
-        self.assert_last_srv_call_failed(
-            resp, RLLErrorCode.SERVICE_CALL_NOT_ALLOWED)
+    def test_0_orientation(self):
+        ori = orientation_from_rpy(0, 0, 0)
+        self.assertTrue(np.allclose(quaternion_to_array(ori), [0, 0, 0, 1]))
 
-        # robot ready should be allowed even outside project run
-        resp = self.robot_ready_service.call(TriggerRequest())
-        self.assertTrue(resp)
+        # TODO(mark): add tests

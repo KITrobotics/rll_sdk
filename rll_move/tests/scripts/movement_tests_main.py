@@ -25,7 +25,7 @@ import rospy
 from rll_move_client.client import RLLDefaultMoveClient
 from rll_tools.run import run_project_in_background
 
-from test_util import generate_test_callback
+from test_util import generate_test_callback, shutdown, TestData
 from invalid_movements import TestInvalidMovements
 from basic_movements import TestBasicMovements
 from repeat_movements import TestRepeatedMovements
@@ -33,21 +33,23 @@ from before_project_run import TestBeforeProjectRun
 
 
 def main():
-    tests = [('move_basic', TestBasicMovements),
-             ('move_repetition', TestRepeatedMovements),
-             ('move_invalid', TestInvalidMovements)]
+    tests = [TestData('move_basic', TestBasicMovements),
+             TestData('move_repetition', TestRepeatedMovements),
+             TestData('move_invalid', TestInvalidMovements)]
 
-    tests_before = [('move_before', TestBeforeProjectRun)]
+    tests_before = TestData('move_before', TestBeforeProjectRun)
 
-    execute = generate_test_callback("rll_move", tests)
     execute_before = generate_test_callback("rll_move_before", tests_before,
-                                            -1)
+                                            shutdown_func=None)
+    execute = generate_test_callback("rll_move", tests, shutdown_func=shutdown)
+
+    # wait for the move_iface to start and previous clients to exit
+    time.sleep(8)
 
     # setup a regular move client and run the tests in the execute callback
     rospy.init_node("test_move_iface_client")
     client = RLLDefaultMoveClient(execute)
-    # wait for the move_iface to start
-    time.sleep(8)
+
     execute_before(client)
     run_project_in_background(2)
     client.spin()

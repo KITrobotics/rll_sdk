@@ -57,10 +57,12 @@ target_link_libraries(move_iface_full ${PROJECT_NAME} ${catkin_LIBRARIES})
 install(TARGETS move_iface_full
         RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
 
-if(CATKIN_ENABLE_TESTING)
-  add_rostest(tests/launch/move_iface_movement.test)
 
-  add_rostest_gtest(unit_test tests/launch/move_iface_unit.test tests/src/test_permissions.cpp tests/src/test_state_machine.cpp)
+if(CATKIN_ENABLE_TESTING)
   
-  target_link_libraries(unit_test ${PROJECT_NAME} ${catkin_LIBRARIES})
+  add_rostest(tests/launch/movement_tests.test)
+  
+  add_rostest_gtest(unit_tests_cpp tests/launch/unit_tests_cpp.test tests/src/test_permissions.cpp tests/src/test_state_machine.cpp)
+  target_link_libraries(unit_tests_cpp ${PROJECT_NAME} ${catkin_LIBRARIES})
+
 endif()
