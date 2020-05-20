@@ -68,7 +68,7 @@ void RLLKinJoints::setJoints(const std::vector<double>& v)
   copyToJoints(v);
 }
 
-void RLLKinJoints::getJoints(std::vector<double>* v)
+void RLLKinJoints::getJoints(std::vector<double>* v) const
 {
   v->assign(joints_.begin(), joints_.end());
 }
@@ -76,7 +76,7 @@ void RLLKinJoints::getJoints(std::vector<double>* v)
 bool RLLKinJoints::jointLimitsViolated(const RLLKinJoints& lower_joint_limits,
                                        const RLLKinJoints& upper_joint_limits) const
 {
-  for (unsigned int i = 0; i < joints_.size(); ++i)
+  for (size_t i = 0; i < joints_.size(); ++i)
   {
     if (kSmallerThan(joints_[i], lower_joint_limits(i)) || kGreaterThan(joints_[i], upper_joint_limits(i)))
     {
@@ -85,6 +85,11 @@ bool RLLKinJoints::jointLimitsViolated(const RLLKinJoints& lower_joint_limits,
   }
 
   return false;
+}
+
+bool RLLKinJoints::allFinite() const
+{
+  return allValuesFinite(joints_);
 }
 
 std::ostream& operator<<(std::ostream& out, const RLLKinJoints& j)
@@ -169,6 +174,11 @@ RLLKinFrame RLLKinFrame::operator*(const RLLKinFrame& t) const
 
 RLLKinFrame& RLLKinFrame::operator=(const RLLKinFrame& rhs)
 {
+  if (this == &rhs)
+  {
+    return *this;
+  }
+
   this->ori_.noalias() = rhs.ori_;
   this->pos_.noalias() = rhs.pos_;
 
@@ -222,7 +232,7 @@ uint8_t RLLKinGlobalConfig::indexGC4() const
   return 1;
 }
 
-Eigen::Matrix3d RLLKinematicsBase::crossMatrix(const Eigen::Vector3d& vec) const
+Eigen::Matrix3d RLLKinematicsBase::crossMatrix(const Eigen::Vector3d& vec)
 {
   Eigen::Matrix3d result;
   result << 0.0, -vec(2), vec(1), vec(2), 0.0, -vec(0), -vec(1), vec(0), 0.0;
@@ -230,32 +240,32 @@ Eigen::Matrix3d RLLKinematicsBase::crossMatrix(const Eigen::Vector3d& vec) const
   return result;
 }
 
-bool RLLKinematicsBase::kZero(const double f) const
+bool RLLKinematicsBase::kZero(const double f)
 {
   return fabs(f) <= ZERO_ROUNDING_TOL;
 }
 
-bool RLLKinematicsBase::kIsEqual(const double lhs, const double rhs) const
+bool RLLKinematicsBase::kIsEqual(const double lhs, const double rhs)
 {
   return kZero(lhs - rhs);
 }
 
-bool RLLKinematicsBase::kGreaterZero(const double f) const
+bool RLLKinematicsBase::kGreaterZero(const double f)
 {
   return f >= -ZERO_ROUNDING_TOL;
 }
 
-bool RLLKinematicsBase::kGreaterThan(double lhs, double rhs) const
+bool RLLKinematicsBase::kGreaterThan(double lhs, double rhs)
 {
   return lhs > rhs + ZERO_ROUNDING_TOL;
 }
 
-bool RLLKinematicsBase::kSmallerThan(double lhs, double rhs) const
+bool RLLKinematicsBase::kSmallerThan(double lhs, double rhs)
 {
   return lhs < rhs - ZERO_ROUNDING_TOL;
 }
 
-double RLLKinematicsBase::kAcos(const double f) const
+double RLLKinematicsBase::kAcos(const double f)
 {
   if (f <= -1.0)
   {
@@ -274,7 +284,7 @@ double RLLKinematicsBase::kAcos(const double f) const
   return acos(f);
 }
 
-double RLLKinematicsBase::kSqrt(const double f) const
+double RLLKinematicsBase::kSqrt(const double f)
 {
   assert(kGreaterZero(f));
 
@@ -286,7 +296,7 @@ double RLLKinematicsBase::kSqrt(const double f) const
   return sqrt(f);
 }
 
-double RLLKinematicsBase::kSign(const double f) const
+double RLLKinematicsBase::kSign(const double f)
 {
   if (f > 0.0)
   {
@@ -301,7 +311,7 @@ double RLLKinematicsBase::kSign(const double f) const
   return 0.0;
 }
 
-double RLLKinematicsBase::mapAngleInPiRange(double angle) const
+double RLLKinematicsBase::mapAngleInPiRange(double angle)
 {
   // map to [-M_PI, M_PI] range
 

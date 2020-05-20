@@ -95,6 +95,9 @@ RLLErrorCode convertMoveItErrorCode(const moveit::planning_interface::MoveItErro
     case moveit_msgs::MoveItErrorCodes::INVALID_MOTION_PLAN:
       return RLLErrorCode::MOVEIT_PLANNING_FAILED;
 
+    case moveit_msgs::MoveItErrorCodes::GOAL_IN_COLLISION:
+      return RLLErrorCode::GOAL_IN_COLLISION;
+
     default:
       // treat all not explicitly handled cases as critical
       return RLLErrorCode::CRITICAL_FAILURE;

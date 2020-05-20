@@ -28,6 +28,7 @@
 #include <vector>
 
 #define RLL_NUM_JOINTS 7
+#define RLL_NUM_GLOBAL_CONFIGS 8
 
 class RLLKinMsg
 {
@@ -44,7 +45,8 @@ public:
 
     // errors
     ERRORS_BEGIN = 64,
-    INVALID_INPUT = ERRORS_BEGIN,
+    NOT_INITIALIZED = ERRORS_BEGIN,
+    INVALID_INPUT,
     JOINT_LIMIT_VIOLATED,
     TARGET_TOO_FAR,
     TARGET_TOO_CLOSE,
@@ -96,18 +98,21 @@ public:
   static const double ZERO_ROUNDING_TOL;
 
 protected:
-  Eigen::Matrix3d crossMatrix(const Eigen::Vector3d& vec) const;
+  static Eigen::Matrix3d crossMatrix(const Eigen::Vector3d& vec);
 
-  bool kZero(double f) const;
-  bool kIsEqual(double lhs, double rhs) const;
-  bool kGreaterZero(double f) const;
-  bool kGreaterThan(double lhs, double rhs) const;
-  bool kSmallerThan(double lhs, double rhs) const;
-  double kAcos(double f) const;
-  double kSqrt(double f) const;
-  double kSign(double f) const;
+  static bool kZero(double f);
+  static bool kIsEqual(double lhs, double rhs);
+  static bool kGreaterZero(double f);
+  static bool kGreaterThan(double lhs, double rhs);
+  static bool kSmallerThan(double lhs, double rhs);
+  static double kAcos(double f);
+  static double kSqrt(double f);
+  static double kSign(double f);
 
-  double mapAngleInPiRange(double angle) const;
+  static double mapAngleInPiRange(double angle);
+
+  template <class container>
+  bool allValuesFinite(const container& c) const;
 };
 
 class RLLKinJoints : public RLLKinematicsBase
@@ -139,7 +144,8 @@ public:
     return joints_.end();
   }
 
-  void getJoints(std::vector<double>* v);
+  void getJoints(std::vector<double>* v) const;
+  bool allFinite() const;
 
   bool jointLimitsViolated(const RLLKinJoints& lower_joint_limits, const RLLKinJoints& upper_joint_limits) const;
 
@@ -177,6 +183,11 @@ public:
 
   RLLKinFrame operator*(const RLLKinFrame& t) const;
   RLLKinFrame& operator=(const RLLKinFrame& rhs);
+
+  bool allFinite()
+  {
+    return pos_.allFinite() && ori_.allFinite();
+  }
 
 private:
   Eigen::Matrix3d ori_ = Eigen::Matrix3d::Identity();
@@ -226,13 +237,18 @@ public:
     return config_ == n2.config_;
   }
 
+  bool valid() const
+  {
+    return config_ < RLL_NUM_GLOBAL_CONFIGS;
+  }
+
 private:
   uint8_t config_ = 0;
 
   double configAtJoint(uint8_t bit) const;
 };
 
-using RLLKinGlobalConfigs = boost::container::static_vector<RLLKinGlobalConfig, 8>;
+using RLLKinGlobalConfigs = boost::container::static_vector<RLLKinGlobalConfig, RLL_NUM_GLOBAL_CONFIGS>;
 
 struct RLLKinPoseConfig
 {
@@ -240,6 +256,20 @@ struct RLLKinPoseConfig
   double arm_angle = 0.0;
   RLLKinGlobalConfig config;
 };
+
+template <class container>
+bool RLLKinematicsBase::allValuesFinite(const container& c) const
+{
+  for (size_t i = 0; i < c.size(); ++i)
+  {
+    if (!std::isfinite(c[i]))
+    {
+      return false;
+    }
+  }
+
+  return true;
+}
 
 template <class container>
 void RLLKinJoints::copyToJoints(const container& c)

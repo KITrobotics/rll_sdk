@@ -79,7 +79,7 @@ protected:
   void disableCollision(const std::string& link_1, const std::string& link_2);
   bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
   bool poseGoalTooClose(const geometry_msgs::Pose& goal);
-  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
+  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal, std::vector<double>* goal_joint_values);
   bool attachGraspObject(const std::string& object_id);
   bool detachGraspObject(const std::string& object_id);
 

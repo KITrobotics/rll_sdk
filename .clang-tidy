@@ -1,6 +1,6 @@
 # several checks are disabled because various core templates or base classes throw these warnings
 # cppcoreguidelines and hicpp are not very useful. They rather are recommendations than rules that should be enforced.
-Checks: 'boost-*,bugprone-*,cert-*,mpi-*,openmp-*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,google-*,llvm-*,misc-*,readability-*,modernize-*,performance-*,-modernize-use-equals-delete,-cert-err58-cpp'
+Checks: 'boost-*,bugprone-*,cert-*,mpi-*,openmp-*,clang-diagnostic-*,clang-analyzer-*,-clang-analyzer-alpha*,google-*,llvm-*,misc-*,readability-*,modernize-*,performance-*,-modernize-use-trailing-return-type,-readability-isolate-declaration,-readability-magic-numbers,-modernize-use-equals-delete,-cert-err58-cpp'
 
 WarningsAsErrors: '*'
 HeaderFilterRegex: ''

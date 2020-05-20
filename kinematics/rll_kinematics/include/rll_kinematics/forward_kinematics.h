@@ -38,8 +38,8 @@ public:
   // a warning is returned if the distance to a singularity is below this value
   static const double SINGULARITY_CHECK_DISTANCE_TOL;
 
-  bool initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
-                  const RLLKinJoints& upper_joint_limits);
+  RLLKinMsg initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
+                       const RLLKinJoints& upper_joint_limits);
   RLLKinMsg fk(const RLLKinJoints& joint_angles, RLLKinPoseConfig* eef_pose) const;
 
 protected:
@@ -49,7 +49,7 @@ protected:
   RLLKinMsg shoulderWristVec(const RLLKinFrame& eef_pose, Eigen::Vector3d* xsw, Eigen::Vector3d* xwf_n,
                              double* lsw) const;
 
-  double jointAngle1Virtual(const Eigen::Vector3d& xsw) const;
+  static double jointAngle1Virtual(const Eigen::Vector3d& xsw);
   double jointAngle2Virtual(const Eigen::Vector3d& xsw, double lsw, const RLLKinGlobalConfig& config) const;
   double jointAngle4(double lsw, const RLLKinGlobalConfig& config) const;
 
@@ -58,7 +58,7 @@ protected:
     return joint_angles.jointLimitsViolated(lower_joint_limits_, upper_joint_limits_);
   }
 
-  RLLKinMsg checkSingularities(const RLLKinJoints& joint_angles, const RLLKinShoulderWristVec& sw) const;
+  static RLLKinMsg checkSingularities(const RLLKinJoints& joint_angles, const RLLKinShoulderWristVec& sw);
 
   RLLKinJoints const& lowerJointLimits() const
   {
@@ -70,9 +70,14 @@ protected:
     return upper_joint_limits_;
   }
 
-  double limbLength(const uint8_t index) const
+  double limbLength(const size_t index) const
   {
     return limb_lengths_[index];
+  }
+
+  bool initialized() const
+  {
+    return initialized_;
   }
 
 private:
@@ -83,6 +88,8 @@ private:
   RLLKinLimbs limb_lengths_;
   RLLKinJoints lower_joint_limits_;
   RLLKinJoints upper_joint_limits_;
+
+  bool initialized_ = false;
 };
 
 #endif  // RLL_KINEMATICS_FORWARD_KINEMATICS_H

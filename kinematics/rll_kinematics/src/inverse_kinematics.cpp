@@ -22,15 +22,15 @@
 const double RLLInverseKinematics::GLOBAL_CONFIG_DISTANCE_TOL = 5.0 / 180.0 * M_PI;
 
 RLLKinMsg RLLInverseKinematics::ikFixedArmAngleFixedConfig(const RLLKinJoints& seed_state, RLLKinPoseConfig* eef_pose,
-                                                           RLLKinJoints* joint_angles) const
+                                                           RLLKinSolutions* solutions) const
 {
   RLLInvKinCoeffs coeffs;
-  RLLKinJoints& joint_angles_ref = *joint_angles;
+  RLLKinJoints solution;
 
   eef_pose->config.set(seed_state);
   eef_pose->arm_angle = mapAngleInPiRange(eef_pose->arm_angle);
 
-  RLLKinMsg result = setHelperMatrices(*eef_pose, &coeffs, &joint_angles_ref[3]);
+  RLLKinMsg result = setHelperMatrices(*eef_pose, &coeffs, &solution[3]);
   if (result.error())
   {
     return result;
@@ -38,7 +38,10 @@ RLLKinMsg RLLInverseKinematics::ikFixedArmAngleFixedConfig(const RLLKinJoints& s
 
   coeffs.setGC(eef_pose->config);
 
-  return jointAnglesFromFixedArmAngle(eef_pose->arm_angle, coeffs, joint_angles);
+  result = jointAnglesFromFixedArmAngle(eef_pose->arm_angle, coeffs, &solution);
+  solutions->push_back(solution);
+
+  return result;
 }
 
 RLLKinMsg RLLInverseKinematics::jointAnglesFromFixedArmAngle(double arm_angle, const RLLInvKinCoeffs& coeffs,
@@ -176,65 +179,29 @@ RLLKinMsg RLLInverseKinematics::computeFeasibleIntervals(RLLInvKinNsIntervals* i
   return intervals->computeFeasibleIntervals(lowerJointLimits(), upperJointLimits());
 }
 
-// TODO(wolfgang): add a mode for collision checking with PTP movements where all remaining configs are added right
-// away,
-//                then all configs are checked, but in the order of closeness
-void RLLInverseKinematics::determineClosestConfigs(const RLLKinJoints& joint_angles, RLLKinGlobalConfigs* configs) const
-{
-  RLLKinGlobalConfigs& configs_ref = *configs;
-
-  assert(configs_ref.empty());
-
-  configs_ref.emplace_back(joint_angles);  // keep in current config (preferred)
-
-  // only check for different configurations if respective seed joint angle is close to zero
-
-  if (fabs(joint_angles(1)) < GLOBAL_CONFIG_DISTANCE_TOL)
-  {
-    configs_ref.emplace_back(configs_ref.front().val() ^ (1 << 0));  // toggle first bit
-  }
-
-  if (fabs(joint_angles(3)) < GLOBAL_CONFIG_DISTANCE_TOL)
-  {
-    size_t current_size = configs_ref.size();
-    for (size_t i = 0; i < current_size; ++i)
-    {
-      configs_ref.emplace_back(configs_ref[i].val() ^ (1 << 1));  // toggle second bit
-    }
-  }
-
-  if (fabs(joint_angles(5)) < GLOBAL_CONFIG_DISTANCE_TOL)
-  {
-    size_t current_size = configs_ref.size();
-    for (size_t i = 0; i < current_size; ++i)
-    {
-      configs_ref.emplace_back(configs_ref[i].val() ^ (1 << 2));  // toggle third bit
-    }
-  }
-}
-
 void RLLInverseKinematics::addRemainingConfigs(const size_t it, const double dist_from_seed,
-                                               RLLKinGlobalConfigs* configs) const
+                                               RLLKinGlobalConfigs* configs)
 {
-  if (it < configs->size() - 1 || configs->size() == 8 || dist_from_seed < std::numeric_limits<double>::infinity())
+  if (it < configs->size() - 1 || configs->size() == RLL_NUM_GLOBAL_CONFIGS ||
+      dist_from_seed < std::numeric_limits<double>::infinity())
   {
     // there are still configurations to check or all configs are already in the list or a usable solution was already
     // found
     return;
   }
 
-  for (uint8_t i = 0; i < 8; ++i)
+  for (uint8_t i = 0; i < RLL_NUM_GLOBAL_CONFIGS; ++i)
   {
     if (std::find(configs->begin(), configs->end(), RLLKinGlobalConfig(i)) == configs->end())
     {
+      // config not yet added, so add it
       configs->emplace_back(i);
     }
   }
 }
 
 double RLLInverseKinematics::mapArmAngleForGC4(const RLLKinGlobalConfig& seed_config,
-                                               const RLLKinGlobalConfig& selected_config,
-                                               const double seed_arm_angle) const
+                                               const RLLKinGlobalConfig& selected_config, const double seed_arm_angle)
 {
   if (!kIsEqual(seed_config.gc4(), selected_config.gc4()))
   {

@@ -57,8 +57,9 @@ private:
 
 using RLLInvKinIntervalLimits = boost::container::static_vector<RLLInvKinIntervalLimit, 4>;
 
-struct RLLKinArmAngleInterval
+class RLLKinArmAngleInterval : public RLLKinematicsBase
 {
+public:
   RLLKinArmAngleInterval() = default;
 
   RLLKinArmAngleInterval(const double lower, const double upper)
@@ -66,20 +67,33 @@ struct RLLKinArmAngleInterval
     setLimits(lower, upper);
   }
 
-  void setLimits(const double lower, const double upper)
-  {
-    lower_limit = lower;
-    upper_limit = upper;
-  };
-
+  void setLimits(double lower, double upper);
+  void setLowerLimit(double lower);
+  void setUpperLimit(double upper);
   // compares lower_limit
   bool operator<(const RLLKinArmAngleInterval& rhs) const;
 
+  double lowerLimit() const
+  {
+    return lower_limit_;
+  }
+
+  double upperLimit() const
+  {
+    return upper_limit_;
+  }
+
+  bool overlapping() const
+  {
+    return overlap_;
+  }
+
+private:
   // TODO(wolfgang): use a custom data type for the limits that has an enum specifying the limit type (singularity,
   //                 joint limit)
-  double lower_limit = 0.0;
-  double upper_limit = 0.0;
-  bool overlap = false;  // determines if interval is overlapping from Pi to -Pi
+  double lower_limit_ = 0.0;
+  double upper_limit_ = 0.0;
+  bool overlap_ = false;  // determines if interval is overlapping from Pi to -Pi
 };
 
 class RLLInvKinNsIntervals : public RLLKinematicsBase
