@@ -19,42 +19,58 @@
 
 #include <rll_kinematics/redundancy_resolution.h>
 
-RLLKinMsg RLLRedundancyResolution::ik(const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose, RLLKinJoints* solution,
-                                      const RLLInvKinOptions& options) const
+RLLKinMsg RLLRedundancyResolution::ik(const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose,
+                                      RLLKinSolutions* solutions, const RLLInvKinOptions& options) const
 {
+  solutions->clear();
+
+  if (!initialized())
+  {
+    return RLLKinMsg::NOT_INITIALIZED;
+  }
+
+  if (!ik_pose->pose.allFinite() || !std::isfinite(ik_pose->arm_angle) || !ik_pose->config.valid() ||
+      !seed_state.allFinite())
+  {
+    return RLLKinMsg::INVALID_INPUT;
+  }
+
   switch (options.method)
   {
     case RLLInvKinOptions::POSITION_RESOLUTION_EXP:
-      if (options.keep_global_configuration)
+      switch (options.global_configuration_mode)
       {
-        return ikExpFixedConfig(seed_state, ik_pose, solution, options);
+        case RLLInvKinOptions::KEEP_CURRENT_GLOBAL_CONFIG:
+          return ikExpFixedConfig(seed_state, ik_pose, solutions, options);
+        default:
+          return ikClosestConfig(seed_state, ik_pose, solutions, options,
+                                 &RLLRedundancyResolution::optimizationPositionExp);
       }
-
-      return ikClosestConfig(seed_state, ik_pose, solution, options, &RLLRedundancyResolution::optimizationPositionExp);
     case RLLInvKinOptions::ARM_ANGLE_FIXED:
-      if (options.keep_global_configuration)
+      switch (options.global_configuration_mode)
       {
-        return ikFixedArmAngleFixedConfig(seed_state, ik_pose, solution);
+        case RLLInvKinOptions::KEEP_CURRENT_GLOBAL_CONFIG:
+          return ikFixedArmAngleFixedConfig(seed_state, ik_pose, solutions);
+        default:
+          return ikFixedArmAngle(seed_state, ik_pose, solutions, options);
       }
-
-      return ikFixedArmAngle(seed_state, ik_pose, solution, options);
   }
 
   return RLLKinMsg::INVALID_INPUT;
 }
 
 RLLKinMsg RLLRedundancyResolution::ikFixedArmAngle(const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose,
-                                                   RLLKinJoints* solution, const RLLInvKinOptions& options) const
+                                                   RLLKinSolutions* solutions, const RLLInvKinOptions& options) const
 {
   ik_pose->arm_angle = mapAngleInPiRange(ik_pose->arm_angle);
 
-  return ikClosestConfig(seed_state, ik_pose, solution, options, &RLLRedundancyResolution::optimizationFixedArmAngle);
+  return ikClosestConfig(seed_state, ik_pose, solutions, options, &RLLRedundancyResolution::optimizationFixedArmAngle);
 }
 
 RLLKinMsg RLLRedundancyResolution::ikExpFixedConfig(const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose,
-                                                    RLLKinJoints* solution, const RLLInvKinOptions& options) const
+                                                    RLLKinSolutions* solutions, const RLLInvKinOptions& options) const
 {
-  RLLKinJoints& solution_ref = *solution;
+  RLLKinJoints solution;
 
   ik_pose->config.set(seed_state);
 
@@ -66,17 +82,20 @@ RLLKinMsg RLLRedundancyResolution::ikExpFixedConfig(const RLLKinJoints& seed_sta
   }
 
   RLLInvKinCoeffs coeffs;
-  result = setCoeffsWithInitCheck(*ik_pose, &coeffs, &solution_ref[3]);
+  result = setCoeffsWithInitCheck(*ik_pose, &coeffs, &solution[3]);
   if (result.error())
   {
     return result;
   }
 
-  return optimizationPositionExp(coeffs, options, seed_arm_angle, &ik_pose->arm_angle, solution);
+  result = optimizationPositionExp(coeffs, options, seed_arm_angle, &ik_pose->arm_angle, &solution);
+  solutions->push_back(solution);
+
+  return result;
 }
 
 double RLLRedundancyResolution::expResolution(const RLLInvKinOptions& options, const double arm_angle_old,
-                                              const double lower_limit, const double upper_limit) const
+                                              const double lower_limit, const double upper_limit)
 {
   double k = options.position_exp_k;
   double alpha = options.position_exp_alpha;
@@ -105,8 +124,8 @@ RLLKinMsg RLLRedundancyResolution::optimizationPositionExp(const RLLInvKinCoeffs
     return jointAnglesFromFixedArmAngle(*arm_angle_new, coeffs, solution);
   }
 
-  if (kIsEqual(current_interval.lower_limit, -M_PI) && kIsEqual(current_interval.upper_limit, M_PI) &&
-      current_interval.overlap)
+  if (kIsEqual(current_interval.lowerLimit(), -M_PI) && kIsEqual(current_interval.upperLimit(), M_PI) &&
+      current_interval.overlapping())
   {
     // all arm angles possible, no limits -> keep current arm angle
     *arm_angle_new = arm_angle_seed;
@@ -114,14 +133,14 @@ RLLKinMsg RLLRedundancyResolution::optimizationPositionExp(const RLLInvKinCoeffs
     return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
   }
 
-  if (kIsEqual(current_interval.lower_limit, current_interval.upper_limit))
+  if (kIsEqual(current_interval.lowerLimit(), current_interval.upperLimit()))
   {
-    *arm_angle_new = current_interval.lower_limit;
+    *arm_angle_new = current_interval.lowerLimit();
 
     return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
   }
 
-  *arm_angle_new = expResolution(options, arm_angle_seed, current_interval.lower_limit, current_interval.upper_limit);
+  *arm_angle_new = expResolution(options, arm_angle_seed, current_interval.lowerLimit(), current_interval.upperLimit());
   *arm_angle_new = mapAngleInPiRange(*arm_angle_new);
 
   return jointAnglesFromArmAngle(*arm_angle_new, coeffs, solution, true);
@@ -138,18 +157,18 @@ RLLKinMsg RLLRedundancyResolution::optimizationFixedArmAngle(const RLLInvKinCoef
 }
 
 RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
-    const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose, RLLKinJoints* solution, const RLLInvKinOptions& options,
+    const RLLKinJoints& seed_state, RLLKinPoseConfig* ik_pose, RLLKinSolutions* solutions,
+    const RLLInvKinOptions& options,
     RLLKinMsg (RLLRedundancyResolution::*optimize)(const RLLInvKinCoeffs&, const RLLInvKinOptions& options,
                                                    const double, double*, RLLKinJoints*) const) const
 {
-  RLLKinMsg result_last;
   RLLKinMsg result;
   // helper matrices for elbow angle >= 0 and < 0
   std::array<RLLInvKinCoeffs, 2> coeffs;
   std::array<double, 2> joint_angle_4;
 
   RLLKinGlobalConfigs configs;
-  determineClosestConfigs(seed_state, &configs);
+  determineClosestConfigs(seed_state, &configs, options);
 
   double seed_arm_angle;
   result = armAngle(seed_state, configs.front(), &seed_arm_angle);
@@ -158,11 +177,8 @@ RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
     return result;
   }
 
-  double dist_from_seed_last = std::numeric_limits<double>::infinity();
   double dist_from_seed = std::numeric_limits<double>::infinity();
-  RLLKinPoseConfig pose_last;
-  RLLKinJoints solution_last;
-  RLLKinJoints& solution_ref = *solution;
+  boost::container::static_vector<ClosestConfigsSolution, RLL_NUM_GLOBAL_CONFIGS> solutions_data;
 
   for (size_t i = 0; i < configs.size(); ++i)
   {
@@ -177,39 +193,78 @@ RLLKinMsg RLLRedundancyResolution::ikClosestConfig(
 
     double arm_angle_start = mapArmAngleForGC4(configs[0], configs[i], seed_arm_angle);
     ik_pose->arm_angle = mapArmAngleForGC4(configs[0], configs[i], ik_pose->arm_angle);
-    solution_ref[3] = joint_angle_4[index];
-    result = (this->*optimize)(coeffs[index], options, arm_angle_start, &ik_pose->arm_angle, solution);
-    if (result.error())
-    {
-      dist_from_seed = std::numeric_limits<double>::infinity();
-    }
-    else
+    RLLKinJoints solution;
+    solution[3] = joint_angle_4[index];
+    result = (this->*optimize)(coeffs[index], options, arm_angle_start, &ik_pose->arm_angle, &solution);
+    if (result.success())
     {
       dist_from_seed = 0.0;
       for (size_t j = 0; j < RLL_NUM_JOINTS; ++j)
       {
-        dist_from_seed += fabs(solution_ref[j] - seed_state(j));
+        dist_from_seed += fabs(solution[j] - seed_state(j));
       }
+
+      solutions_data.emplace_back(solution, dist_from_seed, *ik_pose, result);
     }
 
-    if (dist_from_seed_last > dist_from_seed)
-    {
-      // choose solution with lowest distance from seed
-      dist_from_seed_last = dist_from_seed;
-      solution_last = solution_ref;
-      pose_last = *ik_pose;
-      result_last = result;
-    }
-
-    addRemainingConfigs(i, dist_from_seed_last, &configs);
+    addRemainingConfigs(i, dist_from_seed, &configs);
   }
 
-  if (dist_from_seed_last < std::numeric_limits<double>::infinity())
+  std::sort(solutions_data.begin(), solutions_data.end());
+
+  if (!solutions_data.empty())
   {
-    solution_ref = solution_last;
-    *ik_pose = pose_last;
-    return result_last;
+    std::transform(solutions_data.begin(), solutions_data.end(), std::back_inserter(*solutions),
+                   [](ClosestConfigsSolution const& ccs) { return ccs.solution(); });
+    *ik_pose = solutions_data.front().pose();
+    return solutions_data.front().result();
   }
 
   return result;
+}
+
+void RLLRedundancyResolution::determineClosestConfigs(const RLLKinJoints& joint_angles, RLLKinGlobalConfigs* configs,
+                                                      const RLLInvKinOptions& options)
+{
+  RLLKinGlobalConfigs& configs_ref = *configs;
+
+  assert(configs_ref.empty());
+
+  if (options.global_configuration_mode == RLLInvKinOptions::RETURN_ALL_GLOBAL_CONFIGS)
+  {
+    // insert all possible configs
+    for (uint8_t i = 0; i < RLL_NUM_GLOBAL_CONFIGS; ++i)
+    {
+      configs_ref.emplace_back(i);
+    }
+
+    return;
+  }
+
+  configs_ref.emplace_back(joint_angles);  // keep in current config (preferred)
+
+  // only check for different configurations if respective seed joint angle is close to zero
+
+  if (fabs(joint_angles(1)) < GLOBAL_CONFIG_DISTANCE_TOL)
+  {
+    configs_ref.emplace_back(configs_ref.front().val() ^ (1 << 0));  // toggle first bit
+  }
+
+  if (fabs(joint_angles(3)) < GLOBAL_CONFIG_DISTANCE_TOL)
+  {
+    size_t current_size = configs_ref.size();
+    for (size_t i = 0; i < current_size; ++i)
+    {
+      configs_ref.emplace_back(configs_ref[i].val() ^ (1 << 1));  // toggle second bit
+    }
+  }
+
+  if (fabs(joint_angles(5)) < GLOBAL_CONFIG_DISTANCE_TOL)
+  {
+    size_t current_size = configs_ref.size();
+    for (size_t i = 0; i < current_size; ++i)
+    {
+      configs_ref.emplace_back(configs_ref[i].val() ^ (1 << 2));  // toggle third bit
+    }
+  }
 }

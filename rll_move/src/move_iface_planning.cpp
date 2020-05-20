@@ -386,25 +386,39 @@ bool RLLMoveIfacePlanning::jointsGoalInCollision(const std::vector<double>& goal
   return false;
 }
 
-RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose& goal)
+RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose& goal,
+                                                       std::vector<double>* goal_joint_values)
 {
-  robot_state::RobotState goal_state = getCurrentRobotState();
-  // TODO(wolfgang): pass a GroupStateValidityCallbackFn function. Otherwise the inverse cannot verify
-  //                 if pose is in collision
-  //                 wrap stateInCollision() as GroupStateValidityCallbackFn
-  if (!goal_state.setFromIK(manip_joint_model_group_, goal, manip_move_group_.getEndEffectorLink()))
+  RLLInvKinOptions ik_options;
+  RLLKinSolutions ik_solutions;
+  std::vector<double> current_joint_values(RLL_NUM_JOINTS);
+
+  robot_state::RobotState current_state = getCurrentRobotState();
+  current_state.copyJointGroupPositions(manip_joint_model_group_, current_joint_values);
+
+  ik_options.global_configuration_mode = RLLInvKinOptions::RETURN_ALL_GLOBAL_CONFIGS;
+  geometry_msgs::Pose goal_ik = goal;
+  transformPoseForIK(&goal_ik);
+  RLLKinMsg result = kinematics_plugin_->callRLLIK(goal_ik, current_joint_values, &ik_solutions, ik_options);
+  if (result.error())
   {
     ROS_WARN("no IK solution found for given goal pose");
     return RLLErrorCode::NO_IK_SOLUTION_FOUND;
   }
 
-  if (stateInCollision(&goal_state))
+  robot_state::RobotState goal_state = current_state;
+  for (size_t i = 0; i < ik_solutions.size(); ++i)
   {
-    ROS_WARN("robot would be in collision for given goal pose");
-    return RLLErrorCode::GOAL_IN_COLLISION;
+    ik_solutions[i].getJoints(goal_joint_values);
+    goal_state.setJointGroupPositions(manip_joint_model_group_, *goal_joint_values);
+    if (!stateInCollision(&goal_state))
+    {
+      return RLLErrorCode::SUCCESS;
+    }
   }
 
-  return RLLErrorCode::SUCCESS;
+  ROS_WARN("robot would be in collision for given goal pose");
+  return RLLErrorCode::GOAL_IN_COLLISION;
 }
 
 robot_state::RobotState RLLMoveIfacePlanning::getCurrentRobotState(bool wait_for_state)

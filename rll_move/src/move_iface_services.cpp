@@ -167,6 +167,7 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(const rll_msgs::MoveRandom::Reques
   bool success = false;
   int retry_counter = 0;
   geometry_msgs::Pose random_pose;
+  std::vector<double> goal_joint_values(RLL_NUM_JOINTS);
 
   while (!success && retry_counter < 30)
   {
@@ -179,7 +180,7 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(const rll_msgs::MoveRandom::Reques
       ROS_INFO("last random pose too close to start pose, retrying...");
       continue;
     }
-    RLLErrorCode error_code = poseGoalInCollision(random_pose);
+    RLLErrorCode error_code = poseGoalInCollision(random_pose, &goal_joint_values);
     if (error_code.failed())
     {
       success = false;
@@ -187,12 +188,7 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(const rll_msgs::MoveRandom::Reques
       continue;
     }
 
-    success = manip_move_group_.setPoseTarget(random_pose);
-    if (!success)
-    {
-      ROS_INFO("last random pose could not be set as target, retrying...");
-      continue;
-    }
+    manip_move_group_.setJointValueTarget(goal_joint_values);
 
     error_code = runPTPTrajectory(&manip_move_group_);
     // make sure nothing major went wrong. only repeat in case of non critical errors
@@ -286,12 +282,16 @@ bool RLLMoveIfaceServices::moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs:
 
 RLLErrorCode RLLMoveIfaceServices::moveLin(const rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response* /*resp*/)
 {
-  RLLErrorCode error_code = poseGoalInCollision(req.pose);
+  std::vector<double> goal_joint_values(RLL_NUM_JOINTS);
+
+  RLLErrorCode error_code = poseGoalInCollision(req.pose, &goal_joint_values);
   if (error_code.failed())
   {
     return error_code;
   }
 
+  // TODO(wolfgang): it would be better if we could ensure that goal_joint_values will be used in moveToGoalLinear(),
+  // but this will only work when we use our own computeCartesianPath() and not the one from Moveit
   return moveToGoalLinear(req.pose);
 }
 
@@ -365,18 +365,17 @@ bool RLLMoveIfaceServices::movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs:
 
 RLLErrorCode RLLMoveIfaceServices::movePTP(const rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response* /*resp*/)
 {
-  manip_move_group_.setStartStateToCurrentState();
-  bool success = manip_move_group_.setPoseTarget(req.pose);
-  if (!success)
-  {
-    return RLLErrorCode::INVALID_TARGET_POSE;
-  }
+  std::vector<double> goal_joint_values(RLL_NUM_JOINTS);
 
-  RLLErrorCode error_code = poseGoalInCollision(req.pose);
+  manip_move_group_.setStartStateToCurrentState();
+
+  RLLErrorCode error_code = poseGoalInCollision(req.pose, &goal_joint_values);
   if (error_code.failed())
   {
     return error_code;
   }
+
+  manip_move_group_.setJointValueTarget(goal_joint_values);
 
   return runPTPTrajectory(&manip_move_group_);
 }

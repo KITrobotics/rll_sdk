@@ -19,9 +19,35 @@
 
 #include <rll_kinematics/arm_angle_intervals.h>
 
+void RLLKinArmAngleInterval::setLimits(const double lower, const double upper)
+{
+  setLowerLimit(lower);
+  setUpperLimit(upper);
+}
+
+void RLLKinArmAngleInterval::setLowerLimit(const double lower)
+{
+  lower_limit_ = lower;
+
+  if (!overlap_)
+  {
+    overlap_ = kIsEqual(lower, -M_PI);
+  }
+}
+
+void RLLKinArmAngleInterval::setUpperLimit(const double upper)
+{
+  upper_limit_ = upper;
+
+  if (!overlap_)
+  {
+    overlap_ = kIsEqual(upper, M_PI);
+  }
+}
+
 bool RLLKinArmAngleInterval::operator<(const RLLKinArmAngleInterval& rhs) const
 {
-  return lower_limit < rhs.lower_limit;
+  return lower_limit_ < rhs.lower_limit_;
 }
 
 bool RLLInvKinIntervalLimit::operator<(const RLLInvKinIntervalLimit& rhs) const
@@ -44,15 +70,15 @@ void RLLInvKinNsIntervals::mergeSortedBlockedIntervals()
   {
     RLLKinArmAngleInterval back = sorted_intervals.back();
 
-    if (back.upper_limit < blocked_intervals_[i].lower_limit)
+    if (back.upperLimit() < blocked_intervals_[i].lowerLimit())
     {
       // there is a feasible interval between back and i, so a new blocked interval starts
       sorted_intervals.push_back(blocked_intervals_[i]);
     }
-    else if (back.upper_limit < blocked_intervals_[i].upper_limit)
+    else if (back.upperLimit() < blocked_intervals_[i].upperLimit())
     {
       // intervals overlap, but new interval is larger, extend last sorted interval to upper limit of interval i
-      back.upper_limit = blocked_intervals_[i].upper_limit;
+      back.setUpperLimit(blocked_intervals_[i].upperLimit());
       sorted_intervals.back() = back;
     }
   }
@@ -68,13 +94,13 @@ void RLLInvKinNsIntervals::feasibleIntervalsFromBlocked()
     return;
   }
 
-  if (blocked_intervals_.size() == 1 && kIsEqual(blocked_intervals_[0].lower_limit, -M_PI) &&
-      kIsEqual(blocked_intervals_[0].upper_limit, M_PI))
+  if (blocked_intervals_.size() == 1 && kIsEqual(blocked_intervals_[0].lowerLimit(), -M_PI) &&
+      kIsEqual(blocked_intervals_[0].upperLimit(), M_PI))
   {
     return;
   }
 
-  if ((blocked_intervals_[0].lower_limit > -M_PI))
+  if ((blocked_intervals_[0].lowerLimit() > -M_PI))
   {
     feasible_intervals_.emplace_back(-M_PI, M_PI);
   }
@@ -85,20 +111,13 @@ void RLLInvKinNsIntervals::feasibleIntervalsFromBlocked()
 
     if (!feasible_intervals_.empty())
     {
-      feasible_intervals_.back().upper_limit = blocked_interval.lower_limit;
+      feasible_intervals_.back().setUpperLimit(blocked_interval.lowerLimit());
     }
 
-    if (blocked_interval.upper_limit < M_PI)
+    if (blocked_interval.upperLimit() < M_PI)
     {
-      feasible_intervals_.emplace_back(blocked_interval.upper_limit, M_PI);
+      feasible_intervals_.emplace_back(blocked_interval.upperLimit(), M_PI);
     }
-  }
-
-  if (kIsEqual(feasible_intervals_.back().upper_limit, M_PI) &&
-      kIsEqual(feasible_intervals_.front().lower_limit, -M_PI))
-  {
-    feasible_intervals_.back().overlap = true;
-    feasible_intervals_.front().overlap = true;
   }
 }
 
@@ -188,51 +207,52 @@ void RLLInvKinNsIntervals::closestFeasibleintervalForArmAngle(const int index, c
   if (index > 0)
   {  // arm angle between two feasible interval and upper interval is at index, set to middle of closest interval
     double middle_upper_interval =
-        (feasible_intervals_[index].upper_limit + feasible_intervals_[index].lower_limit) / 2;
+        (feasible_intervals_[index].upperLimit() + feasible_intervals_[index].lowerLimit()) / 2;
     double middle_lower_interval =
-        (feasible_intervals_[index - 1].upper_limit + feasible_intervals_[index - 1].lower_limit) / 2;
+        (feasible_intervals_[index - 1].upperLimit() + feasible_intervals_[index - 1].lowerLimit()) / 2;
 
     if (middle_upper_interval - arm_angle <= arm_angle - middle_lower_interval)
     {
-      closest_interval.lower_limit = middle_upper_interval;
+      closest_interval.setLowerLimit(middle_upper_interval);
     }
     else
     {
-      closest_interval.lower_limit = middle_lower_interval;
+      closest_interval.setLowerLimit(middle_lower_interval);
     }
   }
   else
   {  // arm angle either below first feasible interval or above last feasible interval
     double middle_first_interval =
-        (feasible_intervals_.front().upper_limit + feasible_intervals_.front().lower_limit) / 2;
-    double middle_last_interval = (feasible_intervals_.back().upper_limit + feasible_intervals_.back().lower_limit) / 2;
+        (feasible_intervals_.front().upperLimit() + feasible_intervals_.front().lowerLimit()) / 2;
+    double middle_last_interval =
+        (feasible_intervals_.back().upperLimit() + feasible_intervals_.back().lowerLimit()) / 2;
 
     if (index == 0)
     {  // arm angle in overlap region below lowest feasible angle
       if (middle_first_interval - arm_angle <= ((arm_angle + M_PI) + (M_PI - middle_last_interval)))
       {
-        closest_interval.lower_limit = middle_first_interval;
+        closest_interval.setLowerLimit(middle_first_interval);
       }
       else
       {
-        closest_interval.lower_limit = middle_last_interval;
+        closest_interval.setLowerLimit(middle_last_interval);
       }
     }
     else
     {  // arm angle greater than last feasible angle
       if (arm_angle - middle_last_interval <= ((M_PI - arm_angle) + (middle_first_interval + M_PI)))
       {
-        closest_interval.lower_limit = middle_last_interval;
+        closest_interval.setLowerLimit(middle_last_interval);
       }
       else
       {
-        closest_interval.lower_limit = middle_first_interval;
+        closest_interval.setLowerLimit(middle_first_interval);
       }
     }
   }
 
   // only one arm angle admissible at this point
-  closest_interval.upper_limit = closest_interval.lower_limit;
+  closest_interval.setUpperLimit(closest_interval.lowerLimit());
   *current_interval = closest_interval;
 }
 
@@ -248,9 +268,9 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
 
   for (size_t i = 0; i < feasible_intervals_.size(); ++i)
   {
-    if (*arm_angle <= feasible_intervals_[i].upper_limit)
+    if (*arm_angle <= feasible_intervals_[i].upperLimit())
     {
-      if (*arm_angle >= feasible_intervals_[i].lower_limit)
+      if (*arm_angle >= feasible_intervals_[i].lowerLimit())
       {
         interval_found = true;
         *current_interval = feasible_intervals_[i];
@@ -265,29 +285,29 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
 
   if (interval_found)
   {
-    if (!current_interval->overlap ||
-        (kIsEqual(current_interval->lower_limit, -M_PI) && kIsEqual(current_interval->upper_limit, M_PI)))
+    if (!current_interval->overlapping() ||
+        (kIsEqual(current_interval->lowerLimit(), -M_PI) && kIsEqual(current_interval->upperLimit(), M_PI)))
     {
       return RLLKinMsg::SUCCESS;
     }
 
-    if (kIsEqual(current_interval->lower_limit, -M_PI))
+    if (kIsEqual(current_interval->lowerLimit(), -M_PI))
     {
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and take the lower limit of the last interval as lower limit
-      if (*arm_angle < current_interval->upper_limit)
+      if (*arm_angle < current_interval->upperLimit())
       {
         *arm_angle += 2 * M_PI;
       }
-      current_interval->upper_limit += 2 * M_PI;
-      current_interval->lower_limit = feasible_intervals_.back().lower_limit;
+      current_interval->setUpperLimit(current_interval->upperLimit() + 2 * M_PI);
+      current_interval->setLowerLimit(feasible_intervals_.back().lowerLimit());
     }
-    else if (kIsEqual(current_interval->upper_limit, M_PI))
+    else if (kIsEqual(current_interval->upperLimit(), M_PI))
     {
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and keep the lower limit of the current interval
-      current_interval->upper_limit = 2 * M_PI + feasible_intervals_.front().upper_limit;
-      if (*arm_angle < feasible_intervals_.front().upper_limit)
+      current_interval->setUpperLimit(2 * M_PI + feasible_intervals_.front().upperLimit());
+      if (*arm_angle < feasible_intervals_.front().upperLimit())
       {
         *arm_angle += 2 * M_PI;
       }
@@ -318,7 +338,7 @@ RLLKinMsg RLLInvKinNsIntervals::computeFeasibleIntervals(const RLLKinJoints& low
     mapLimitsToArmAngle(RLLInvKinCoeffs::PIVOT_JOINT, lower_joint_limits(2 * i), upper_joint_limits(2 * i), i);
   }
 
-  for (size_t i = 0; i < RLL_NUM_JOINTS_H; ++i)
+  for (uint8_t i = 0; i < RLL_NUM_JOINTS_H; ++i)
   {
     mapLimitsToArmAngle(RLLInvKinCoeffs::HINGE_JOINT, lower_joint_limits(4 * i + 1), upper_joint_limits(4 * i + 1), i);
   }

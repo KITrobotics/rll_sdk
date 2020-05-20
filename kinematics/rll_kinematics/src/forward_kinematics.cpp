@@ -21,19 +21,38 @@
 
 const double RLLForwardKinematics::SINGULARITY_CHECK_DISTANCE_TOL = 10.0 / 180.0 * M_PI;
 
-bool RLLForwardKinematics::initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
-                                      const RLLKinJoints& upper_joint_limits)
+RLLKinMsg RLLForwardKinematics::initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
+                                           const RLLKinJoints& upper_joint_limits)
 {
+  if (!allValuesFinite(limb_lengths) || !lower_joint_limits.allFinite() || !upper_joint_limits.allFinite())
+  {
+    initialized_ = false;
+
+    return RLLKinMsg::INVALID_INPUT;
+  }
+
   limb_lengths_ = limb_lengths;
 
   lower_joint_limits_ = lower_joint_limits;
   upper_joint_limits_ = upper_joint_limits;
 
-  return true;
+  initialized_ = true;
+
+  return RLLKinMsg::SUCCESS;
 }
 
 RLLKinMsg RLLForwardKinematics::fk(const RLLKinJoints& joint_angles, RLLKinPoseConfig* eef_pose) const
 {
+  if (!initialized())
+  {
+    return RLLKinMsg::NOT_INITIALIZED;
+  }
+
+  if (!joint_angles.allFinite())
+  {
+    return RLLKinMsg::INVALID_INPUT;
+  }
+
   eef_pose->config.set(joint_angles);
 
   RLLKinShoulderWristVec sw;
@@ -141,7 +160,7 @@ RLLKinMsg RLLForwardKinematics::shoulderWristVec(const RLLKinFrame& eef_pose, Ei
   return RLLKinMsg::SUCCESS;
 }
 
-double RLLForwardKinematics::jointAngle1Virtual(const Eigen::Vector3d& xsw) const
+double RLLForwardKinematics::jointAngle1Virtual(const Eigen::Vector3d& xsw)
 {
   double dist_z_1 = kSqrt(pow(xsw(0), 2) + pow(xsw(1), 2));
   if (kZero(dist_z_1))
@@ -171,8 +190,7 @@ double RLLForwardKinematics::jointAngle4(const double lsw, const RLLKinGlobalCon
                               (2 * limb_lengths_[1] * limb_lengths_[2]));
 }
 
-RLLKinMsg RLLForwardKinematics::checkSingularities(const RLLKinJoints& joint_angles,
-                                                   const RLLKinShoulderWristVec& sw) const
+RLLKinMsg RLLForwardKinematics::checkSingularities(const RLLKinJoints& joint_angles, const RLLKinShoulderWristVec& sw)
 {
   // check hinge joints
   for (int j = 1; j <= 5; j += 2)

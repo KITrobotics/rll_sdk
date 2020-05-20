@@ -100,7 +100,12 @@ public:
   bool getPositionFK(const std::vector<double>& joint_angles, geometry_msgs::Pose* pose, double* arm_angle,
                      int* config) const;
 
+  RLLKinMsg callRLLIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+                      RLLKinSolutions* solutions, RLLInvKinOptions ik_options) const;
+
 private:
+  bool setLimbLengthsJointLimits();
+
   RLLRedundancyResolution solver_;
   std::vector<std::string> joint_names_;
   std::vector<std::string> link_names_;
@@ -108,8 +113,6 @@ private:
 #else
   moveit::core::RobotModelConstPtr robot_model_;  // add member for Kinetic
 #endif
-
-  bool setLimbLengthsJointLimits();
 };
 }  // namespace rll_moveit_kinematics
 

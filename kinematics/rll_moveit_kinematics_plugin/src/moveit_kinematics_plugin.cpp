@@ -94,23 +94,17 @@ bool RLLMoveItKinematicsPlugin::getPositionIK(  // NOLINT google-default-argumen
     const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, std::vector<double>& solution,
     moveit_msgs::MoveItErrorCodes& error_code, const kinematics::KinematicsQueryOptions& /*options*/) const
 {
-  RLLKinPoseConfig cart_pose;
-  RLLKinJoints seed_state, ik_solution;
   RLLInvKinOptions ik_options;
+  RLLKinSolutions ik_solutions;
 
-  cart_pose.pose.setPosition(ik_pose.position.x, ik_pose.position.y, ik_pose.position.z);
-  cart_pose.pose.setQuaternion(ik_pose.orientation.w, ik_pose.orientation.x, ik_pose.orientation.y,
-                               ik_pose.orientation.z);
-  seed_state.setJoints(ik_seed_state);
-
-  RLLKinMsg result = solver_.ik(seed_state, &cart_pose, &ik_solution, ik_options);
+  RLLKinMsg result = callRLLIK(ik_pose, ik_seed_state, &ik_solutions, ik_options);
   if (result.error())
   {
     error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
 
-  ik_solution.getJoints(&solution);
+  ik_solutions.front().getJoints(&solution);
   error_code.val = error_code.SUCCESS;
 
   return true;
@@ -135,23 +129,41 @@ bool RLLMoveItKinematicsPlugin::searchPositionIK(  // NOLINT google-default-argu
 bool RLLMoveItKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
     const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state, double /*timeout*/,
     std::vector<double>& solution, const IKCallbackFn& solution_callback, moveit_msgs::MoveItErrorCodes& error_code,
-    const kinematics::KinematicsQueryOptions& options) const
+    const kinematics::KinematicsQueryOptions& /*options*/) const
 {
-  bool success = getPositionIK(ik_pose, ik_seed_state, solution, error_code, options);
-  if (!success)
+  RLLInvKinOptions ik_options;
+  RLLKinSolutions ik_solutions;
+
+  RLLKinMsg result = callRLLIK(ik_pose, ik_seed_state, &ik_solutions, ik_options);
+  if (result.error())
   {
+    error_code.val = error_code.NO_IK_SOLUTION;
     return false;
   }
 
   if (solution_callback.empty())
   {
+    ik_solutions.front().getJoints(&solution);
+    error_code.val = error_code.SUCCESS;
+
     return true;
   }
 
-  // check for collisions if a callback is provided
-  solution_callback(ik_pose, solution, error_code);
+  for (size_t i = 0; i < ik_solutions.size(); ++i)
+  {
+    ik_solutions[i].getJoints(&solution);
 
-  return error_code.val == error_code.SUCCESS;
+    // check for collisions
+    solution_callback(ik_pose, solution, error_code);
+    if (error_code.val == error_code.SUCCESS)
+    {
+      return true;
+    }
+  }
+
+  error_code.val = error_code.GOAL_IN_COLLISION;
+
+  return false;
 }
 
 bool RLLMoveItKinematicsPlugin::searchPositionIK(  // NOLINT google-default-arguments
@@ -180,7 +192,8 @@ bool RLLMoveItKinematicsPlugin::getPositionIKarmangle(const geometry_msgs::Pose&
                                                       const double& arm_angle) const
 {
   RLLKinPoseConfig cart_pose;
-  RLLKinJoints seed_state, ik_solution;
+  RLLKinJoints seed_state;
+  RLLKinSolutions ik_solutions;
   RLLInvKinOptions ik_options;
 
   cart_pose.arm_angle = arm_angle;
@@ -190,14 +203,14 @@ bool RLLMoveItKinematicsPlugin::getPositionIKarmangle(const geometry_msgs::Pose&
   seed_state.setJoints(ik_seed_state);
 
   ik_options.method = RLLInvKinOptions::ARM_ANGLE_FIXED;
-  RLLKinMsg result = solver_.ik(seed_state, &cart_pose, &ik_solution, ik_options);
+  RLLKinMsg result = solver_.ik(seed_state, &cart_pose, &ik_solutions, ik_options);
   if (result.error())
   {
     error_code->val = error_code->NO_IK_SOLUTION;
     return false;
   }
 
-  ik_solution.getJoints(solution);
+  ik_solutions.front().getJoints(solution);
   error_code->val = error_code->SUCCESS;
 
   return true;
@@ -305,9 +318,23 @@ bool RLLMoveItKinematicsPlugin::setLimbLengthsJointLimits()
   RLLKinJoints rllkin_lower_joint_limits = lower_joint_limits;
   RLLKinJoints rllkin_upper_joint_limits = upper_joint_limits;
 
-  solver_.initialize(limb_lengths, rllkin_lower_joint_limits, rllkin_upper_joint_limits);
+  RLLKinMsg result = solver_.initialize(limb_lengths, rllkin_lower_joint_limits, rllkin_upper_joint_limits);
+  return !result.error();
+}
 
-  return true;
+RLLKinMsg RLLMoveItKinematicsPlugin::callRLLIK(const geometry_msgs::Pose& ik_pose,
+                                               const std::vector<double>& ik_seed_state, RLLKinSolutions* solutions,
+                                               RLLInvKinOptions ik_options) const
+{
+  RLLKinPoseConfig cart_pose;
+  RLLKinJoints seed_state;
+
+  cart_pose.pose.setPosition(ik_pose.position.x, ik_pose.position.y, ik_pose.position.z);
+  cart_pose.pose.setQuaternion(ik_pose.orientation.w, ik_pose.orientation.x, ik_pose.orientation.y,
+                               ik_pose.orientation.z);
+  seed_state.setJoints(ik_seed_state);
+
+  return solver_.ik(seed_state, &cart_pose, solutions, ik_options);
 }
 
 }  // namespace rll_moveit_kinematics

@@ -30,31 +30,35 @@ int main()
   RLLKinJoints joint_limits_min = { -2.93215, -2.05949, -2.93215, -2.05949, -2.93215, -2.05949, -3.01942 };
   RLLKinJoints joint_limits_max = { 2.93215, 2.05949, 2.93215, 2.05949, 2.93215, 2.05949, 3.01942 };
 
-  solver.initialize(limb_lengths, joint_limits_min, joint_limits_max);
+  RLLKinMsg result = solver.initialize(limb_lengths, joint_limits_min, joint_limits_max);
+  if (result.error())
+  {
+    std::cout << "error: failed to initialize the kinematics solver" << std::endl;
+  }
 
-  RLLKinJoints solution;
+  RLLKinSolutions solutions;
   RLLKinPoseConfig eef_pose;
   eef_pose.pose.setPosition(0.5, -0.2, 0.2);
   eef_pose.pose.setRPY(0.0, M_PI, M_PI / 2);
   RLLKinJoints seed_state = { 0.0, 0.03, 0.0, -M_PI / 2, 0.0, M_PI / 2, 0.0 };
 
-  RLLKinMsg result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
+  result = solver.ik(seed_state, &eef_pose, &solutions, ik_options);
   std::cout << "solution with redundancy resolution based on exponential function" << std::endl;
-  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solutions.front() << std::endl << std::endl;
 
   ik_options.method = RLLInvKinOptions::ARM_ANGLE_FIXED;
-  result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
+  result = solver.ik(seed_state, &eef_pose, &solutions, ik_options);
   std::cout << "solution with fixed arm angle" << std::endl;
-  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solutions.front() << std::endl << std::endl;
 
   ik_options.method = RLLInvKinOptions::POSITION_RESOLUTION_EXP;
-  ik_options.keep_global_configuration = true;
-  result = solver.ik(seed_state, &eef_pose, &solution, ik_options);
+  ik_options.global_configuration_mode = RLLInvKinOptions::KEEP_CURRENT_GLOBAL_CONFIG;
+  result = solver.ik(seed_state, &eef_pose, &solutions, ik_options);
   std::cout << "solution with redundancy resolution based on exponential function and fixed global configuration"
             << std::endl;
-  std::cout << "result " << result.message() << ", values: " << solution << std::endl << std::endl;
+  std::cout << "result " << result.message() << ", values: " << solutions.front() << std::endl << std::endl;
 
-  result = solver.fk(solution, &eef_pose);
+  result = solver.fk(solutions.front(), &eef_pose);
   std::cout << "forward kinematics with solution from last inverse kinematics call" << std::endl;
   std::cout << "result " << result.message() << ", position:" << std::endl;
   std::cout << eef_pose.pose.pos() << std::endl;

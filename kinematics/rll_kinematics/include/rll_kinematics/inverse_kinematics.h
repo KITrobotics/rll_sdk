@@ -22,6 +22,8 @@
 
 #include <rll_kinematics/arm_angle_intervals.h>
 
+using RLLKinSolutions = boost::container::static_vector<RLLKinJoints, RLL_NUM_GLOBAL_CONFIGS>;
+
 class RLLInverseKinematics : public RLLForwardKinematics
 {
 public:
@@ -33,7 +35,7 @@ public:
 
 protected:
   RLLKinMsg ikFixedArmAngleFixedConfig(const RLLKinJoints& seed_state, RLLKinPoseConfig* eef_pose,
-                                       RLLKinJoints* joint_angles) const;
+                                       RLLKinSolutions* solutions) const;
 
   RLLKinMsg computeFeasibleIntervals(RLLInvKinNsIntervals* intervals) const;
   RLLKinMsg jointAnglesFromFixedArmAngle(double arm_angle, const RLLInvKinCoeffs& coeffs,
@@ -45,10 +47,9 @@ protected:
   RLLKinMsg setCoeffsWithInitCheck(const RLLKinPoseConfig& eef_pose, RLLInvKinCoeffs* coeffs, double* joint_angle_4,
                                    bool set_derivatives = true) const;
 
-  void determineClosestConfigs(const RLLKinJoints& joint_angles, RLLKinGlobalConfigs* configs) const;
-  double mapArmAngleForGC4(const RLLKinGlobalConfig& seed_config, const RLLKinGlobalConfig& selected_config,
-                           double seed_arm_angle) const;
-  void addRemainingConfigs(size_t it, double dist_from_seed, RLLKinGlobalConfigs* configs) const;
+  static double mapArmAngleForGC4(const RLLKinGlobalConfig& seed_config, const RLLKinGlobalConfig& selected_config,
+                                  double seed_arm_angle);
+  static void addRemainingConfigs(size_t it, double dist_from_seed, RLLKinGlobalConfigs* configs);
 
 private:
   RLLKinMsg setHelperMatrices(const RLLKinPoseConfig& eef_pose, RLLInvKinCoeffs* coeffs, double* joint_angle_4) const;
