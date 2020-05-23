@@ -4,7 +4,7 @@
     <arg name="hardware_interface" default="PositionJointInterface" />
     <arg name="robot_name" default="iiwa" />
     <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
-    <arg name="headless" default="false"/>
+    <arg name="headless" default="true"/>
     <arg name="gazebo_port" default="11345"/>
 
     <env name="GAZEBO_MASTER_URI" value="http://localhost:$(arg gazebo_port)"/>
