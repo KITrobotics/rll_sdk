@@ -6,65 +6,20 @@
 
     <!-- Link Table -->
     <gazebo reference="table">
-      <mu1>100.0</mu1>
-      <mu2>100.0</mu2>
-      <kp>1000000.0</kp>
-      <kd>1.0</kd>
-      <fdir1>1 0 0</fdir1>
-      <minDepth>0.001</minDepth>
-      <!-- <static>true</static> -->
-    </gazebo>
-    <gazebo reference="$(arg robot_name)_link_0">
-      <static>true</static>
-    </gazebo>
-    <gazebo reference="$(arg robot_name)_gripper_waggon_right">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <!-- <kp>1000000.0</kp> -->
-      <!-- <kd>1.0</kd> -->
-      <!-- <fdir1>1 0 0</fdir1> -->
-      <!-- <minDepth>0.002</minDepth> -->
-      <!-- <maxContacts>2</maxContacts> -->
-      <!-- <maxVel>0</maxVel> -->
-    </gazebo>
-    <gazebo reference="$(arg robot_name)_gripper_waggon_left">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <!-- <kp>1000000.0</kp> -->
-      <!-- <kd>1.0</kd> -->
-      <!-- <fdir1>1 0 0</fdir1> -->
-      <!-- <minDepth>0.002</minDepth> -->
-      <!-- <maxContacts>2</maxContacts> -->
-      <!-- <maxVel>0</maxVel> -->
-    </gazebo>
-    <gazebo reference="$(arg robot_name)_gripper_finger_right">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <!-- <kp>1000000.0</kp> -->
-      <!-- <kd>1.0</kd> -->
-      <!-- <fdir1>1 0 0</fdir1> -->
-      <!-- <minDepth>0.002</minDepth> -->
-      <!-- <maxContacts>2</maxContacts> -->
-      <!-- <maxVel>0</maxVel> -->
-    </gazebo>
-    <gazebo reference="$(arg robot_name)_gripper_finger_left">
-      <mu1>1.0</mu1>
-      <mu2>1.0</mu2>
-      <!-- <kp>1000000.0</kp> -->
-      <!-- <kd>1.0</kd> -->
-      <!-- <fdir1>1 0 0</fdir1> -->
-      <!-- <minDepth>0.002</minDepth> -->
-      <!-- <maxContacts>2</maxContacts> -->
-      <!-- <maxVel>0</maxVel> -->
+      <mu1>10.0</mu1>
+      <mu2>10.0</mu2>
     </gazebo>
 
-    <!-- Link profile_cams -->
-    <gazebo reference="profile_cams">
-      <static>true</static>
+    <gazebo reference="$(arg robot_name)_gripper_waggon_right">
+      <mu1>10.0</mu1>
+      <mu2>10.0</mu2>
+    </gazebo>
+    <gazebo reference="$(arg robot_name)_gripper_waggon_left">
+      <mu1>10.0</mu1>
+      <mu2>10.0</mu2>
     </gazebo>
 
     <!-- grasp plugin -->
-
     <gazebo>
       <plugin name="gazebo_grasp_fix" filename="libgazebo_grasp_fix.so">
         <arm>
@@ -74,10 +29,10 @@
           <gripper_link>$(arg robot_name)_gripper_waggon_left</gripper_link>
         </arm>
         <forces_angle_tolerance>100</forces_angle_tolerance>
-        <update_rate>100</update_rate>
-        <grip_count_threshold>4</grip_count_threshold>
-        <max_grip_count>8</max_grip_count>
-        <release_tolerance>0.0005</release_tolerance>
+        <update_rate>20</update_rate>
+        <grip_count_threshold>1</grip_count_threshold>
+        <max_grip_count>2</max_grip_count>
+        <release_tolerance>0.005</release_tolerance>
         <disable_collisions_on_attach>false</disable_collisions_on_attach>
         <contact_topic>__default_topic__</contact_topic>
       </plugin>
