@@ -75,9 +75,9 @@
     </joint>
     <link name="profile_cams">
       <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.1"/>
-        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
+        <origin xyz="0.58 0.82 0.17" rpy="0 0 0"/>
+        <mass value="5"/>
+        <inertia ixx="1.67" ixy="0" ixz="0" iyy="1.67" iyz="0" izz="0.002"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
