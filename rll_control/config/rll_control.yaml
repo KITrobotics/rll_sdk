@@ -2,7 +2,7 @@
   # Publish all joint states -----------------------------------
   joint_state_controller:
     type: joint_state_controller/JointStateController
-    publish_rate: 1000
+    publish_rate: 30
 
   # Trajectory Controllers --------------------------------------
   #
@@ -22,8 +22,6 @@
       goal_time: 2.0                   # Override default
       stopped_velocity_tolerance: 0.03
 
-    state_publish_rate:  1000            # Override default
-    action_monitor_rate: 30            # Override default
     stop_trajectory_duration: 0.5        # Override default
 
   # Gripper controller ------------------------------------------
