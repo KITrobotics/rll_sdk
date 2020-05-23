@@ -1,5 +1,9 @@
 <?xml version="1.0"?>
 <robot name="egl90" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.gazebo.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.transmission.xacro" />
+
   <xacro:property name="finger_visual_mesh_path" value="package://rll_description/meshes/egl90/visual/gripper_finger.dae" />
   <xacro:property name="finger_collision_mesh_path" value="package://rll_description/meshes/egl90/collision/gripper_finger.stl" />
   <xacro:property name="finger_mass" value="0.1" />
@@ -146,6 +150,17 @@
         </geometry>
       </collision>
     </link>
+
+    <!-- TCP link -->
+    <joint name="gripper_ee_joint" type="fixed">
+      <parent link="$(arg robot_name)_link_ee" />
+      <child link="$(arg robot_name)_gripper_link_ee" />
+      <origin xyz="0 0 0.248" rpy="0 0 0"/>
+    </joint>
+    <link name="$(arg robot_name)_gripper_link_ee"/>
+
+    <xacro:egl90_gazebo robot_name="${robot_name}" />
+    <xacro:egl90_transmission robot_name="${robot_name}" />
 
   </xacro:macro>
 
