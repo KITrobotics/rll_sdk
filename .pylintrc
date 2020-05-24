@@ -1,3 +1,13 @@
+[MASTER]
+
+# Python code to execute, usually for sys.path manipulation such as
+# pygtk.require().
+init-hook='import sys;from rospkg import RosPack;
+           sys.path.extend(
+             list(map(lambda path: path + "/src/",
+                      filter(lambda path: "rll_" in path.split("/")[-1],
+                             RosPack().get_ros_paths()))))'
+
 [MESSAGES CONTROL]
 
 disable=missing-docstring,locally-disabled,locally-enabled
