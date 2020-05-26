@@ -42,7 +42,7 @@
 
 
     <joint name="base_adapter_joint" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="$(arg robot_name)_base_adapter" />
       <origin xyz="-0.2 0 0" rpy="0 0 0"/>
     </joint>
@@ -69,7 +69,7 @@
     <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_" />
 
     <joint name="profile_cams_joint" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="profile_cams" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>

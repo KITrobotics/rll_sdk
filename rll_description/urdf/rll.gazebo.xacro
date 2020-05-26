@@ -11,19 +11,6 @@
       <selfCollide>true</selfCollide>
     </gazebo>
 
-    <!-- profile_cams link includes the cameras in Gazebo -->
-    <!-- These settings ensure that the collision object has maximum stiffness -->
-    <!-- and collisions are immediately detected -->
-    <gazebo reference="profile_cams">
-      <mu1>10.0</mu1>
-      <mu2>10.0</mu2>
-      <selfCollide>true</selfCollide>
-      <maxVel>0.0</maxVel>
-      <minDepth>0.0</minDepth>
-      <kp>1000000.0</kp>
-      <kd>1.0</kd>
-    </gazebo>
-
   </xacro:macro>
 
 </robot>
