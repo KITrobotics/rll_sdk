@@ -9,6 +9,7 @@
   <xacro:property name="finger_mass" value="0.1" />
   <xacro:property name="joint_lower_limit" value="0.0" />
   <xacro:property name="joint_upper_limit" value="0.055" />
+  <xacro:property name="joint_damping" value="0.5" />
 
   <xacro:macro name="egl90" params="parent prefix">
 
@@ -63,6 +64,7 @@
       <origin xyz="0.02985 0.0255 0.1063" rpy="0 0 ${180 * pi / 180}"/>
       <axis xyz="1 0 0"/>
       <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1"/>
+      <dynamics damping="${joint_damping}"/>
     </joint>
     <link name="${prefix}gripper_waggon_left">
       <visual>
@@ -110,6 +112,7 @@
       <origin xyz="-0.02985 -0.0255 0.1063" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
       <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1"/>
+      <dynamics damping="${joint_damping}"/>
     </joint>
     <link name="${prefix}gripper_waggon_right">
       <visual>
