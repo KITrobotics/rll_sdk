@@ -34,9 +34,9 @@
       $(arg robot_name)_egl_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
       $(arg robot_name)_egl_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
     constraints:
-      goal_time: 0.5
+      goal_time: 2.0
       stopped_velocity_tolerance: 0.03
       $(arg robot_name)_egl_position_left:
-        goal: 0.04
+        goal: 0.045
       $(arg robot_name)_egl_position_right:
-        goal: 0.04
+        goal: 0.045
