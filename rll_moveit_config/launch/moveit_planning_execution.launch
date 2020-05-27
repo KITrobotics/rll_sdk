@@ -3,6 +3,7 @@
   <arg name="hardware_interface" default="PositionJointInterface"/>
   <arg name="robot_name" default="iiwa"/>
   <arg name="headless" default="false"/>
+  <arg name="gazebo_gui" default="false"/>
   <arg name="use_sim" default="true"/>
   <arg name="gazebo_port" default="11345"/>
   <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
@@ -32,7 +33,7 @@
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)" />
       <arg name="description_file" value="$(arg description_file)" />
-      <arg name="headless" value="$(arg headless)" />
+      <arg name="headless" value="$(eval not arg('gazebo_gui'))" unless="$(arg headless)" />
       <arg name="gazebo_port" value="$(arg gazebo_port)"/>
     </include>
 

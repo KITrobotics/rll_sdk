@@ -177,6 +177,11 @@ RLLErrorCode RLLMoveIfacePlanning::execute(moveit::planning_interface::MoveGroup
     return error_code;
   }
 
+  if (move_group->getName() == GRIPPER_PLANNING_GROUP)
+  {
+    return RLLErrorCode::SUCCESS;
+  }
+
   std::vector<double> last_point = plan.trajectory_.joint_trajectory.points.back().positions;
   bool identical = false;
   std::vector<double> current_point;

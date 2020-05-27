@@ -1,10 +1,15 @@
 <?xml version="1.0"?>
 <robot name="egl90" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.gazebo.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.transmission.xacro" />
+
   <xacro:property name="finger_visual_mesh_path" value="package://rll_description/meshes/egl90/visual/gripper_finger.dae" />
   <xacro:property name="finger_collision_mesh_path" value="package://rll_description/meshes/egl90/collision/gripper_finger.stl" />
   <xacro:property name="finger_mass" value="0.1" />
   <xacro:property name="joint_lower_limit" value="0.0" />
   <xacro:property name="joint_upper_limit" value="0.055" />
+  <xacro:property name="joint_damping" value="0.5" />
 
   <xacro:macro name="egl90" params="parent prefix">
 
@@ -36,8 +41,8 @@
     <link name="${prefix}gripper_base">
       <inertial>
         <origin xyz="0 0 0.0465291" rpy="0 0 0"/>
-        <mass value="1.8"/>
-        <inertia ixx="0.0024631" ixy="0" ixz="0" iyy="0.0032423" iyz="0" izz="0.0030708"/>
+        <mass value="2.57"/>
+	<inertia ixx="0.003" ixy="0" ixz="0" iyy="0.004" iyz="0" izz="0.004"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 0" />
@@ -59,6 +64,7 @@
       <origin xyz="0.02985 0.0255 0.1063" rpy="0 0 ${180 * pi / 180}"/>
       <axis xyz="1 0 0"/>
       <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1"/>
+      <dynamics damping="${joint_damping}"/>
     </joint>
     <link name="${prefix}gripper_waggon_left">
       <visual>
@@ -106,6 +112,7 @@
       <origin xyz="-0.02985 -0.0255 0.1063" rpy="0 0 0"/>
       <axis xyz="1 0 0"/>
       <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1"/>
+      <dynamics damping="${joint_damping}"/>
     </joint>
     <link name="${prefix}gripper_waggon_right">
       <visual>
@@ -146,6 +153,17 @@
         </geometry>
       </collision>
     </link>
+
+    <!-- TCP link -->
+    <joint name="gripper_ee_joint" type="fixed">
+      <parent link="$(arg robot_name)_link_ee" />
+      <child link="$(arg robot_name)_gripper_link_ee" />
+      <origin xyz="0 0 0.248" rpy="0 0 0"/>
+    </joint>
+    <link name="$(arg robot_name)_gripper_link_ee"/>
+
+    <xacro:egl90_gazebo robot_name="${robot_name}" />
+    <xacro:egl90_transmission robot_name="${robot_name}" />
 
   </xacro:macro>
 

@@ -1,25 +1,25 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
-  <xacro:macro name="rll_transmission" params="hardware_interface robot_name">
+  <xacro:macro name="egl90_transmission" params="robot_name">
 
     <!-- gripper right transmissions -->
-    <transmission name="$(arg robot_name)_tran_8">
+    <transmission name="$(arg robot_name)_tran_egl_position_left">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="$(arg robot_name)_egl_position_left">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
-      <actuator name="$(arg robot_name)_motor_8">
+      <actuator name="$(arg robot_name)_motor_egl_position_left">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
     <!-- gripper left transmissions -->
-    <transmission name="$(arg robot_name)_tran_9">
+    <transmission name="$(arg robot_name)_tran_egl_position_right">
       <type>transmission_interface/SimpleTransmission</type>
       <joint name="$(arg robot_name)_egl_position_right">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
-      <actuator name="$(arg robot_name)_motor_9">
+      <actuator name="$(arg robot_name)_motor_egl_position_right">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       <mechanicalReduction>1</mechanicalReduction>
     </actuator>

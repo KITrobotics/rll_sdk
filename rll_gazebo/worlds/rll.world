@@ -6,33 +6,15 @@
       <background>0.9 0.9 0.9 1</background>
       <shadows>false</shadows>
     </scene>
-    <physics type="ode">
-      <gravity>0 0 -9.81</gravity>
-      <ode>
-        <solver>
-          <type>quick</type>
-          <iters>10</iters>
-          <sor>1.3</sor>
-        </solver>
-        <constraints>
-          <cfm>0.0</cfm>
-          <erp>0.2</erp>
-          <contact_max_correcting_vel>10</contact_max_correcting_vel>
-          <contact_surface_layer>0.001</contact_surface_layer>
-        </constraints>
-      </ode>
-      <max_step_size>0.001</max_step_size>
-    </physics>
     <light type="point" name="point_light_0">
       <pose>0 0 3 0 0 0</pose>
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <constant>1</constant>
-        <linear>0.01</linear>
-        <range>20</range>
+	<constant>1</constant>
+	<linear>0.01</linear>
+	<range>20</range>
       </attenuation>
-      <!--direction>0.1 0.1 -1</direction-->
       <cast_shadows>false</cast_shadows>
     </light>
     <light type="point" name="point_light_1">
@@ -40,11 +22,10 @@
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <constant>1</constant>
-        <linear>0.01</linear>
-        <range>20</range>
+	<constant>1</constant>
+	<linear>0.01</linear>
+	<range>20</range>
       </attenuation>
-      <!--direction>0.1 0.1 -1</direction-->
       <cast_shadows>false</cast_shadows>
     </light>
     <light type="point" name="point_light_2">
@@ -52,11 +33,10 @@
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <constant>1</constant>
-        <linear>0.01</linear>
-        <range>20</range>
+	<constant>1</constant>
+	<linear>0.01</linear>
+	<range>20</range>
       </attenuation>
-      <!--direction>0.1 0.1 -1</direction-->
       <cast_shadows>false</cast_shadows>
     </light>
     <light type="point" name="point_light_3">
@@ -64,11 +44,10 @@
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <constant>1</constant>
-        <linear>0.01</linear>
-        <range>20</range>
+	<constant>1</constant>
+	<linear>0.01</linear>
+	<range>20</range>
       </attenuation>
-      <!--direction>0.1 0.1 -1</direction-->
       <cast_shadows>false</cast_shadows>
     </light>
     <light type="point" name="point_light_4">
@@ -76,46 +55,11 @@
       <diffuse>0.5 0.5 0.5 1</diffuse>
       <specular>0.1 0.1 0.1 1</specular>
       <attenuation>
-        <constant>1</constant>
-        <linear>0.01</linear>
-        <range>20</range>
+	<constant>1</constant>
+	<linear>0.01</linear>
+	<range>20</range>
       </attenuation>
-      <!--direction>0.1 0.1 -1</direction-->
       <cast_shadows>false</cast_shadows>
-    </light>   
-    
-    <!--<model name='camera'>
-      <static>true</static>
-      <pose>2.30251 -0.402436 0.811422 0 0.323643 3.00419</pose>
-      <link name='link'>
-        <visual name='visual'>
-          <geometry>
-            <box>
-              <size>0.1 0.1 0.1</size>
-            </box>
-          </geometry>
-        </visual>
-        <sensor name='my_camera' type='camera'>
-          <camera>
-            <save enabled="true">
-              <path>/home/sani/cap1</path>
-            </save>
-            <horizontal_fov>1.047</horizontal_fov>
-            <image>
-              <width>800</width>
-              <height>600</height>
-            </image>
-            <clip>
-              <near>0.1</near>
-              <far>100</far>
-            </clip>
-          </camera>
-          <always_on>1</always_on>
-          <update_rate>20</update_rate>
-        </sensor>
-      </link>
-    </model>-->
-
-    
+    </light>
   </world>
 </sdf>

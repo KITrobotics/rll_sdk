@@ -1,17 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-  <!-- Import all Gazebo-customization elements, including Gazebo colors -->
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa.gazebo.xacro" />
-  <!-- Import Transmissions -->
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa.transmission.xacro" />
 
-  <!-- some constants -->
-  <xacro:property name="safety_controller_k_pos" value="100" />
-  <xacro:property name="safety_controller_k_vel" value="2" />
+  <xacro:property name="safety_controller_k_pos" value="15" />
+  <xacro:property name="safety_controller_k_vel" value="10" />
   <xacro:property name="joint_damping" value="0.5" />
-  <!-- TODO: set the correct individual effort values for every joint -->
-  <xacro:property name="max_effort" value="300"/>
 
   <xacro:macro name="iiwa7" params="parent hardware_interface robot_name *origin">
 
@@ -28,26 +23,17 @@
         <mass value="5"/>
         <inertia ixx="0.05"  ixy="0"  ixz="0" iyy="0.06" iyz="0" izz="0.03" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/base.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 0 0.0785"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/base.stl"/>
+	  <cylinder length="0.157" radius="0.135"/>
         </geometry>
       </collision>
-
-      <self_collision_checking>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <geometry>
-          <capsule radius="0.15" length="0.25"/>
-        </geometry>
-      </self_collision_checking>
-
     </link>
 
     <!-- joint between link_0 and link_1 -->
@@ -57,7 +43,7 @@
       <origin xyz="0 0 0.157" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="${max_effort}" velocity="${98 * pi / 180}" />
+             effort="176" velocity="${98 * pi / 180}" />
       <safety_controller soft_lower_limit="${-167 * pi / 180}"
                          soft_upper_limit="${167 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -77,8 +63,9 @@
         </geometry>
       </visual>
       <collision>
+	<origin xyz="0 -0.01 0.06"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link1.stl"/>
+	  <cylinder length="0.12" radius="0.1"/>
         </geometry>
       </collision>
     </link>
@@ -89,7 +76,7 @@
       <origin xyz="0 0 0.183" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="${max_effort}" velocity="${98 * pi / 180}" />
+             effort="176" velocity="${98 * pi / 180}" />
       <safety_controller soft_lower_limit="${-117 * pi / 180}"
                          soft_upper_limit="${117 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -108,10 +95,10 @@
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link2.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link2.stl"/>
+	  <sphere radius="0.125"/>
         </geometry>
       </collision>
     </link>
@@ -122,7 +109,7 @@
       <origin xyz="0 0 0.185" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="${max_effort}" velocity="${100 * pi / 180}" />
+             effort="110" velocity="${100 * pi / 180}" />
       <safety_controller soft_lower_limit="${-167 * pi / 180}"
                          soft_upper_limit="${167 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -136,19 +123,17 @@
         <mass value="4.05623"/>
         <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.03044" iyz="-0.006231" izz="0.009726" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link3.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 0.01 0.02"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link3.stl"/>
+	  <cylinder length="0.28" radius="0.1"/>
         </geometry>
       </collision>
-
     </link>
 
     <joint name="${robot_name}_joint_4" type="revolute">
@@ -157,7 +142,7 @@
       <origin xyz="0 0 0.215" rpy="0 0 0"/>
       <axis xyz="0 -1 0"/>
       <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="${max_effort}" velocity="${130 * pi / 180}" />
+             effort="110" velocity="${130 * pi / 180}" />
       <safety_controller soft_lower_limit="${-117 * pi / 180}"
                          soft_upper_limit="${117 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -171,16 +156,15 @@
         <mass value="3.4822"/>
         <inertia ixx="0.021775"  ixy="0"  ixz="0" iyy="0.02075" iyz="-0.003621" izz="0.007783" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link4.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 0 0"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link4.stl"/>
+	  <sphere radius="0.125"/>
         </geometry>
       </collision>
     </link>
@@ -191,7 +175,7 @@
       <origin xyz="0 0 0.4" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="${max_effort}" velocity="${140 * pi / 180}" />
+             effort="110" velocity="${140 * pi / 180}" />
       <safety_controller soft_lower_limit="${-167 * pi / 180}"
                          soft_upper_limit="${167 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -205,16 +189,15 @@
         <mass value="2.1633"/>
         <inertia ixx="0.01287"  ixy="0"  ixz="0" iyy="0.01112" iyz="0.003943" izz="0.0057128" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link5.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 -0.01 -0.18"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link5.stl"/>
+	  <cylinder length="0.3" radius="0.1"/>
         </geometry>
       </collision>
     </link>
@@ -225,7 +208,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
       <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="${max_effort}" velocity="${180 * pi / 180}" />
+             effort="40" velocity="${180 * pi / 180}" />
       <safety_controller soft_lower_limit="${-117 * pi / 180}"
                          soft_upper_limit="${117 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -239,16 +222,15 @@
         <mass value="2.3466"/>
         <inertia ixx="0.006522"  ixy="0"  ixz="0" iyy="0.006270" iyz="0.00032280" izz="0.0045345" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link6.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 -0.03 0"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link6.stl"/>
+	  <sphere radius="0.08"/>
         </geometry>
       </collision>
     </link>
@@ -259,7 +241,7 @@
       <origin xyz="0 0 0" rpy="0 0 0"/>
       <axis xyz="0 0 1"/>
       <limit lower="${-174 * pi / 180}" upper="${174 * pi / 180}"
-             effort="${max_effort}" velocity="${180 * pi / 180}" />
+             effort="40" velocity="${180 * pi / 180}" />
       <safety_controller soft_lower_limit="${-172 * pi / 180}"
                          soft_upper_limit="${172 * pi / 180}"
                          k_position="${safety_controller_k_pos}"
@@ -270,19 +252,18 @@
     <link name="${robot_name}_link_7">
       <inertial>
         <origin xyz="0 0 0.1" rpy="0 0 0"/>
-        <mass value="3.129"/>
+        <mass value="0.34217"/>
         <inertia ixx="0.0022711"  ixy="0.0000221"  ixz="0" iyy="0.0022807" iyz="0" izz="0.002872" />
       </inertial>
-
       <visual>
         <geometry>
           <mesh filename="package://rll_description/meshes/iiwa7/visual/link7.dae"/>
         </geometry>
       </visual>
-
       <collision>
+	<origin xyz="0 0 -0.01"/>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/collision/link7.stl"/>
+	  <sphere radius="0.085"/>
         </geometry>
       </collision>
     </link>
@@ -294,11 +275,17 @@
     </joint>
 
     <link name="${robot_name}_link_ee">
+      <collision>
+	<origin xyz="0 0 -0.046"/>
+        <geometry>
+	  <sphere radius="0.065"/>
+        </geometry>
+      </collision>
     </link>
 
-    <!--Extensions -->
     <xacro:iiwa_gazebo robot_name="${robot_name}" />
-    <xacro:iiwa_transmission hardware_interface="${hardware_interface}"/>
+    <xacro:iiwa_transmission robot_name="${robot_name}"
+			     hardware_interface="${hardware_interface}"/>
 
   </xacro:macro>
 

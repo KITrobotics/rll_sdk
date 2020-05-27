@@ -3,12 +3,10 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cell">
 
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90_macro.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/rll_virtual.xacro"/>
   <xacro:include filename="$(find rll_description)/urdf/rll.gazebo.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/rll.transmission.xacro"/>
-
 
   <!--  Arguments for the iiwa7 macro  -->
   <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
@@ -24,9 +22,9 @@
     </joint>
     <link name="table">
       <inertial>
-        <origin xyz="0 0 -0.18746" rpy="0 0 0"/>
-        <mass value="600"/>
-        <inertia ixx="152.284" ixy="0" ixz="0" iyy="207.558" iyz="0" izz="288.142"/>
+        <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+        <mass value="500"/>
+        <inertia ixx="108" ixy="0" ixz="0" iyy="62" iyz="0" izz="167"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
@@ -37,9 +35,6 @@
       <collision>
         <origin xyz="0 0 -0.1" rpy="0 0 0"/>
         <geometry>
-          <!-- for disallowing eef positions below joint 1 -->
-          <!-- <box size="1.2 1.6 0.49"/> -->
-          <!-- for grasping objects on table -->
           <box size="1.2 1.6 0.2"/>
         </geometry>
       </collision>
@@ -47,7 +42,7 @@
 
 
     <joint name="base_adapter_joint" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="$(arg robot_name)_base_adapter" />
       <origin xyz="-0.2 0 0" rpy="0 0 0"/>
     </joint>
@@ -73,25 +68,16 @@
     <!-- Here we insert a Schunk gripper in the scene -->
     <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_" />
 
-    <!-- TCP link -->
-    <joint name="gripper_ee_joint" type="fixed">
-      <parent link="$(arg robot_name)_link_ee" />
-      <child link="$(arg robot_name)_gripper_link_ee" />
-      <origin xyz="0 0 0.248" rpy="0 0 0"/>
-    </joint>
-    <link name="$(arg robot_name)_gripper_link_ee"/>
-
-
     <joint name="profile_cams_joint" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="profile_cams" />
       <origin xyz="0 0 0" rpy="0 0 0"/>
     </joint>
     <link name="profile_cams">
       <inertial>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
-        <mass value="0.1"/>
-        <inertia ixx="0.0001" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0001"/>
+        <origin xyz="0.58 0.82 0.17" rpy="0 0 0"/>
+        <mass value="5"/>
+        <inertia ixx="1.67" ixy="0" ixz="0" iyy="1.67" iyz="0" izz="0.002"/>
       </inertial>
       <visual>
         <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
@@ -155,7 +141,6 @@
     <!--Extensions -->
     <xacro:rll_virtual />
     <xacro:rll_gazebo robot_name="$(arg robot_name)" />
-    <xacro:rll_transmission hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)"/>
 
 </xacro:macro>
 

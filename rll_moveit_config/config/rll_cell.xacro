@@ -70,13 +70,14 @@
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="profile_cams" reason="Adjacent" />
     <disable_collisions link1="axis_cam_base" link2="table" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="wall_back" reason="Never" />
-    <disable_collisions link1="axis_cam_base" link2="wall_front" reason="Never" />
+    <disable_collisions link1="axis_cam_base" link2="wall_front" reason="Default" />
     <disable_collisions link1="axis_cam_base" link2="wall_left" reason="Never" />
     <disable_collisions link1="axis_cam_base" link2="wall_right" reason="Default" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_base_adapter" reason="Never" />
@@ -94,6 +95,7 @@
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
@@ -102,7 +104,7 @@
     <disable_collisions link1="axis_cam_top" link2="wall_back" reason="Never" />
     <disable_collisions link1="axis_cam_top" link2="wall_front" reason="Default" />
     <disable_collisions link1="axis_cam_top" link2="wall_left" reason="Never" />
-    <disable_collisions link1="axis_cam_top" link2="wall_right" reason="Never" />
+    <disable_collisions link1="axis_cam_top" link2="wall_right" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_base_adapter" link2="$(arg robot_name)_link_0" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_base_adapter" link2="$(arg robot_name)_link_1" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_base_adapter" link2="$(arg robot_name)_link_2" reason="Never" />
@@ -122,14 +124,14 @@
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_gripper_finger_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_gripper_waggon_left" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_gripper_waggon_right" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_0" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_1" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_2" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_4" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_6" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_7" reason="Adjacent" />
+    <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_link_ee" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_adapter" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
@@ -138,32 +140,32 @@
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_gripper_finger_right" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_gripper_waggon_left" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_gripper_waggon_right" reason="Adjacent" />
-    <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_1" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_2" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_4" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_base" link2="profile_cams" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_gripper_finger_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_gripper_waggon_left" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_gripper_waggon_right" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_4" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_left" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_gripper_waggon_left" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_gripper_waggon_right" reason="Adjacent" />
-    <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_4" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_link_ee" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_finger_right" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_gripper_waggon_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_1" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_2" reason="Never" />
@@ -172,16 +174,18 @@
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_left" link2="profile_cams" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_1" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_2" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_4" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_gripper_waggon_right" link2="profile_cams" reason="Never" />
@@ -189,7 +193,6 @@
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_link_2" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_link_3" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_link_4" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_link_7" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_0" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
@@ -205,6 +208,7 @@
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_1" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
@@ -219,6 +223,7 @@
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_link_5" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
@@ -229,42 +234,46 @@
     <disable_collisions link1="$(arg robot_name)_link_2" link2="wall_left" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_2" link2="wall_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_4" reason="Adjacent" />
-    <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_5" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_5" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="profile_cams" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_3" link2="table" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_3" link2="wall_front" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_3" link2="wall_left" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_3" link2="wall_right" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_link_5" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_link_6" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_link_7" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_link_ee" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_4" link2="profile_cams" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_4" link2="wall_front" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_4" link2="wall_left" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_link_4" link2="wall_right" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_4" link2="table" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_6" reason="Adjacent" />
-    <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_7" reason="Adjacent" />
+    <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_7" reason="Default" />
+    <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_link_ee" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_5" link2="profile_cams" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_6" link2="$(arg robot_name)_link_7" reason="Adjacent" />
+    <disable_collisions link1="$(arg robot_name)_link_6" link2="$(arg robot_name)_link_ee" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_link_6" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_6" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_6" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_6" link2="profile_cams" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_7" link2="$(arg robot_name)_link_ee" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_link_7" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_7" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_7" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_link_7" link2="profile_cams" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_ee" link2="$(arg robot_name)_roboception_adapter" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_ee" link2="$(arg robot_name)_roboception_camera_uncal" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_ee" link2="$(arg robot_name)_roboception_gusset" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_link_ee" link2="profile_cams" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="$(arg robot_name)_roboception_camera_uncal" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="$(arg robot_name)_roboception_gusset" reason="Adjacent" />
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="profile_cams" reason="Never" />
@@ -272,7 +281,7 @@
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="wall_back" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="wall_front" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="wall_left" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="wall_right" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_roboception_adapter" link2="wall_right" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_roboception_camera_uncal" link2="$(arg robot_name)_roboception_gusset" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_roboception_camera_uncal" link2="profile_cams" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_roboception_camera_uncal" link2="table" reason="Never" />
@@ -285,7 +294,7 @@
     <disable_collisions link1="$(arg robot_name)_roboception_gusset" link2="wall_back" reason="Never" />
     <disable_collisions link1="$(arg robot_name)_roboception_gusset" link2="wall_front" reason="Default" />
     <disable_collisions link1="$(arg robot_name)_roboception_gusset" link2="wall_left" reason="Never" />
-    <disable_collisions link1="$(arg robot_name)_roboception_gusset" link2="wall_right" reason="Never" />
+    <disable_collisions link1="$(arg robot_name)_roboception_gusset" link2="wall_right" reason="Default" />
     <disable_collisions link1="profile_cams" link2="table" reason="Adjacent" />
     <disable_collisions link1="profile_cams" link2="wall_back" reason="Adjacent" />
     <disable_collisions link1="profile_cams" link2="wall_front" reason="Adjacent" />

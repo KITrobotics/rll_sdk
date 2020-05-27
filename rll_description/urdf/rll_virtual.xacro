@@ -5,73 +5,101 @@
   <xacro:macro name="rll_virtual">
 
     <!-- virtual walls -->
-    <!-- the front wall is exactly at the border of the table while the other -->
-    <!-- walls are moved 7cm away from the table border towards the world frame. -->
-    <!-- The Sunrise collision model uses spheres which is a lot less accurate -->
-    <!-- than the MoveIt collision model. To account for the differences, this -->
-    <!-- 7cm offset is introduced. -->
-    <!-- TODO: The front wall stays at the border because otherwise current Playground -->
-    <!--       project code would break. But the wall also needs to be moved inside when -->
-    <!--       something gets mounted to the front part of the table. -->
 
     <joint name="wall_joint1" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="wall_front" />
-      <origin xyz="0.605 0 0.7" rpy="0 0 0"/>
+      <origin xyz="${wall_origin_x_long_side} 0 ${wall_origin_z}" rpy="0 0 0"/>
     </joint>
     <joint name="wall_joint2" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="wall_back" />
-      <origin xyz="-0.535 0 0.7" rpy="0 0 0"/>
+      <origin xyz="-${wall_origin_x_long_side} 0 ${wall_origin_z}" rpy="0 0 0"/>
     </joint>
     <joint name="wall_joint3" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="wall_left" />
-      <origin xyz="0 -0.735 0.7" rpy="0 0 0"/>
+      <origin xyz="0 -${wall_origin_y_short_side} ${wall_origin_z}" rpy="0 0 0"/>
     </joint>
     <joint name="wall_joint4" type="fixed">
-      <parent link="world" />
+      <parent link="table" />
       <child link="wall_right" />
-      <origin xyz="0 0.735 0.7" rpy="0 0 0"/>
+      <origin xyz="0 ${wall_origin_y_short_side} ${wall_origin_z}" rpy="0 0 0"/>
     </joint>
 
     <link name="wall_front">
+      <inertial>
+          <xacro:insert_block name="wall_inertia_long_side" />
+      </inertial>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <box size="0.01 1.6 1.4" rpy="0 0 0"/>
+          <xacro:insert_block name="collision_geometry_wall_long_side" />
         </geometry>
       </collision>
     </link>
     <link name="wall_back">
+      <inertial>
+          <xacro:insert_block name="wall_inertia_long_side" />
+      </inertial>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <box size="0.01 1.6 1.4" rpy="0 0 0"/>
+          <xacro:insert_block name="collision_geometry_wall_long_side" />
         </geometry>
       </collision>
     </link>
     <link name="wall_left">
+      <inertial>
+          <xacro:insert_block name="wall_inertia_short_side" />
+      </inertial>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <box size="1.2 0.01 1.4" rpy="0 0 0"/>
+          <xacro:insert_block name="collision_geometry_wall_short_side" />
         </geometry>
       </collision>
     </link>
     <link name="wall_right">
+      <inertial>
+          <xacro:insert_block name="wall_inertia_short_side" />
+      </inertial>
       <collision>
         <origin xyz="0 0 0" rpy="0 0 0"/>
         <geometry>
-          <box size="1.2 0.01 1.4" rpy="0 0 0"/>
+          <xacro:insert_block name="collision_geometry_wall_short_side" />
         </geometry>
       </collision>
     </link>
 
-      <material name="transparent">
-        <color rgba="0.8784 0.8745 0.8588 0.3"/>
-      </material>
+    <material name="transparent">
+      <color rgba="0.8784 0.8745 0.8588 0.3"/>
+    </material>
 
   </xacro:macro>
+
+  <xacro:property name="wall_origin_x_long_side" value="0.605" />
+  <xacro:property name="wall_origin_y_short_side" value="0.805" />
+  <xacro:property name="wall_origin_z" value="0.7" />
+
+  <xacro:property name="collision_geometry_wall_long_side">
+    <box size="0.01 1.6 1.4" rpy="0 0 0"/>
+  </xacro:property>
+
+  <xacro:property name="collision_geometry_wall_short_side">
+    <box size="1.2 0.01 1.4" rpy="0 0 0"/>
+  </xacro:property>
+
+  <xacro:property name="wall_inertia_long_side">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="5"/>
+      <inertia ixx="1.88" ixy="0" ixz="0" iyy="0.82" iyz="0" izz="1.07"/>
+  </xacro:property>
+
+  <xacro:property name="wall_inertia_short_side">
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <mass value="4"/>
+      <inertia ixx="0.65" ixy="0" ixz="0" iyy="1.13" iyz="0" izz="0.48"/>
+  </xacro:property>
 
 </robot>

@@ -2,7 +2,7 @@
 <launch>
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="false"/> <!-- set by us in the robot's namespace -->
-  <arg name="headless" default="false"/>
+  <arg name="headless" default="true"/>
   <arg name="debug" default="false"/>
   <arg name="hardware_interface" default="PositionJointInterface"/>
   <arg name="robot_name" default="iiwa" />
