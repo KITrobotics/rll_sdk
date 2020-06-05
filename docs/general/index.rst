@@ -17,6 +17,7 @@ KUKA Robot Learning Lab at KIT Documentation
    job_processing
    manual_installation
    vm_setup
+   contributing
    publications
    faq
 

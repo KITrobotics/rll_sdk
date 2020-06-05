@@ -24,3 +24,5 @@ The documentation at https://rll-doc.ipr.kit.edu can be updated with
 ```bash
 make upload
 ```
+
+The deployment can only be done by project maintainers who have the required access rights.
