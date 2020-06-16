@@ -2,4 +2,3 @@ geometry_msgs/Pose pose
 ---
 bool success
 uint8 error_code
-
