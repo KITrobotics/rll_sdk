@@ -4,4 +4,3 @@ bool direction
 ---
 bool success
 uint8 error_code
-
