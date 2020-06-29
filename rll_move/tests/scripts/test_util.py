@@ -184,6 +184,8 @@ def generate_test_callback(package, tests, shutdown_func=shutdown, timeout=3):
                 lambda _: shutdown_func(), oneshot=True,
             )
 
+        return True
+
     return execute
 
 

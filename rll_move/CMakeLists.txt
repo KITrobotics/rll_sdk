@@ -59,9 +59,9 @@ install(TARGETS move_iface_full
 
 
 if(CATKIN_ENABLE_TESTING)
-  
+
   add_rostest(tests/launch/movement_tests.test)
-  
+
   add_rostest_gtest(unit_tests_cpp tests/launch/unit_tests_cpp.test tests/src/test_permissions.cpp tests/src/test_state_machine.cpp)
   target_link_libraries(unit_tests_cpp ${PROJECT_NAME} ${catkin_LIBRARIES})
 

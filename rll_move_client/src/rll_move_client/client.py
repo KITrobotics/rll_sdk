@@ -189,7 +189,8 @@ class RLLMoveClientListener(object):
                          ansi_format(get_exception_raising_function(), C_NAME))
         except KeyboardInterrupt:
             rospy.logwarn("The client routine was interrupted by the user.")
-
+        except AssertionError:
+            raise  # re-raise AssertionError for rostest
         except Exception:  # pylint: disable=broad-except
             # catch all exceptions to ensure that the interface is informed
             # about the job result, but still log the full stack trace
