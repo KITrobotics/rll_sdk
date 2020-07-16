@@ -144,7 +144,7 @@ class RLLMoveClientListener(object):
         # there may or may not be a leading and trailing slash
         # and on the real robots the ns will have a _<number> suffix
         ns = rospy.get_namespace().strip("/")
-        ns_regex = r"^(iiwa(_\d)?|sim(_\d)?)$"
+        ns_regex = r"^(iiwa(_\d+)?|sim(_\d+)?)$"
 
         if not bool(re.match(ns_regex, ns)):
             rospy.logerr("You are running your code in the namespace '%s' "
