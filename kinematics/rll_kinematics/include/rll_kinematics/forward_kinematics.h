@@ -24,6 +24,12 @@
 
 using RLLKinLimbs = std::array<double, 4>;
 
+struct RLLKinJointLimits
+{
+  RLLKinJoints lower;
+  RLLKinJoints upper;
+};
+
 struct RLLKinShoulderWristVec
 {
   Eigen::Vector3d xsw_n;  // vector from shoulder to wrist, normalized
@@ -38,8 +44,10 @@ public:
   // a warning is returned if the distance to a singularity is below this value
   static const double SINGULARITY_CHECK_DISTANCE_TOL;
 
-  RLLKinMsg initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
-                       const RLLKinJoints& upper_joint_limits);
+  RLLKinMsg initialize(const RLLKinLimbs& limb_lengths, const RLLKinJointLimits& joint_position_limits);
+  RLLKinMsg initialize(const RLLKinLimbs& limb_lengths, const RLLKinJointLimits& joint_position_limits,
+                       const RLLKinJoints& joint_velocity_limits, const RLLKinJoints& joint_acceleration_limits);
+
   RLLKinMsg fk(const RLLKinJoints& joint_angles, RLLKinPoseConfig* eef_pose) const;
 
 protected:
@@ -55,19 +63,29 @@ protected:
 
   bool jointLimitsViolated(const RLLKinJoints& joint_angles) const
   {
-    return joint_angles.jointLimitsViolated(lower_joint_limits_, upper_joint_limits_);
+    return joint_angles.jointLimitsViolated(joint_position_limits_.lower, joint_position_limits_.upper);
   }
 
   static RLLKinMsg checkSingularities(const RLLKinJoints& joint_angles, const RLLKinShoulderWristVec& sw);
 
-  RLLKinJoints const& lowerJointLimits() const
+  RLLKinJoints const& lowerJointPositionLimits() const
   {
-    return lower_joint_limits_;
+    return joint_position_limits_.lower;
   }
 
-  RLLKinJoints const& upperJointLimits() const
+  RLLKinJoints const& upperJointPositionLimits() const
   {
-    return upper_joint_limits_;
+    return joint_position_limits_.upper;
+  }
+
+  RLLKinJoints const& jointVelocityLimits() const
+  {
+    return joint_velocity_limits_;
+  }
+
+  RLLKinJoints const& jointAccelerationLimits() const
+  {
+    return joint_acceleration_limits_;
   }
 
   double limbLength(const size_t index) const
@@ -80,14 +98,21 @@ protected:
     return initialized_;
   }
 
+  bool dynamicLimitsSet() const
+  {
+    return dynamic_limits_set_;
+  }
+
 private:
   RLLKinMsg armAngle(const RLLKinJoints& joint_angles, const RLLKinGlobalConfig& config, double* arm_angle,
                      RLLKinFrame* flange_pose, RLLKinShoulderWristVec* sw) const;
 
   // Robot properties
   RLLKinLimbs limb_lengths_;
-  RLLKinJoints lower_joint_limits_;
-  RLLKinJoints upper_joint_limits_;
+  RLLKinJointLimits joint_position_limits_;
+  RLLKinJoints joint_velocity_limits_;
+  RLLKinJoints joint_acceleration_limits_;
+  bool dynamic_limits_set_ = false;  // are joint velocity and acceleration limits set?
 
   bool initialized_ = false;
 };

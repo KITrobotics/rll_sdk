@@ -282,16 +282,6 @@ bool RLLMoveIfaceServices::moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs:
 
 RLLErrorCode RLLMoveIfaceServices::moveLin(const rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response* /*resp*/)
 {
-  std::vector<double> goal_joint_values(RLL_NUM_JOINTS);
-
-  RLLErrorCode error_code = poseGoalInCollision(req.pose, &goal_joint_values);
-  if (error_code.failed())
-  {
-    return error_code;
-  }
-
-  // TODO(wolfgang): it would be better if we could ensure that goal_joint_values will be used in moveToGoalLinear(),
-  // but this will only work when we use our own computeCartesianPath() and not the one from Moveit
   return moveToGoalLinear(req.pose);
 }
 
@@ -304,7 +294,6 @@ bool RLLMoveIfaceServices::moveLinArmangleSrv(rll_msgs::MoveLinArmangle::Request
 RLLErrorCode RLLMoveIfaceServices::moveLinArmangle(const rll_msgs::MoveLinArmangle::Request& req,
                                                    rll_msgs::MoveLinArmangle::Response* /*resp*/)
 {
-  std::vector<double> seed;
   double arm_angle_goal = req.arm_angle;
   auto dir = static_cast<int>(req.direction);
 
@@ -313,31 +302,37 @@ RLLErrorCode RLLMoveIfaceServices::moveLinArmangle(const rll_msgs::MoveLinArmang
     return RLLErrorCode::INVALID_INPUT;
   }
 
-  seed = manip_move_group_.getCurrentJointValues();
+  std::vector<double> seed = manip_move_group_.getCurrentJointValues();
 
   // get arm angle in start pose
-  geometry_msgs::Pose pose;
+  geometry_msgs::Pose pose_tmp;
   double arm_angle_start;
   int config;
-  kinematics_plugin_->getPositionFK(seed, &pose, &arm_angle_start, &config);
+  kinematics_plugin_->getPositionFK(seed, &pose_tmp, &arm_angle_start, &config);
 
   // calculate waypoints
   std::vector<geometry_msgs::Pose> waypoints_pose;
   std::vector<double> arm_angles;
-  interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, req.pose, &waypoints_pose);
+  size_t steps_arm_angle = numStepsArmAngle(arm_angle_start, arm_angle_goal);
+  RLLErrorCode error_code =
+      interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, req.pose, &waypoints_pose, steps_arm_angle);
+  if (error_code.failed())
+  {
+    return error_code;
+  }
+
   for (auto& waypoint : waypoints_pose)
   {
     transformPoseForIK(&waypoint);
   }
   interpolateArmangleLinear(arm_angle_start, arm_angle_goal, dir, waypoints_pose.size(), &arm_angles);
   std::vector<robot_state::RobotStatePtr> path;
-  RLLErrorCode error_code = computeLinearPathArmangle(waypoints_pose, arm_angles, seed, &path);
+  error_code = computeLinearPathArmangle(waypoints_pose, arm_angles, seed, &path);
   if (error_code.failed())
   {
     return error_code;
   }
 
-  // time trajectory
   robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
   for (const auto& path_pose : path)
   {
@@ -345,7 +340,6 @@ RLLErrorCode RLLMoveIfaceServices::moveLinArmangle(const rll_msgs::MoveLinArmang
   }
   moveit_msgs::RobotTrajectory trajectory;
   rt.getRobotTrajectoryMsg(trajectory);
-  modifyPtpTrajectory(&trajectory);
 
   // check for collisions
   if (!planning_scene_->isPathValid(rt))
@@ -479,7 +473,7 @@ bool RLLMoveIfaceServices::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Re
 
 bool RLLMoveIfaceServices::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/, rll_msgs::GetPose::Response& resp)
 {
-  geometry_msgs::Pose pose;
+  geometry_msgs::Pose pose_tmp;
   double arm_angle;
   int config;
 
@@ -488,8 +482,8 @@ bool RLLMoveIfaceServices::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/
   if (error_code.succeeded())
   {
     std::vector<double> joints = manip_move_group_.getCurrentJointValues();
-    kinematics_plugin_->getPositionFK(joints, &pose, &arm_angle, &config);
-    resp.pose = pose;
+    resp.pose = manip_move_group_.getCurrentPose().pose;
+    kinematics_plugin_->getPositionFK(joints, &pose_tmp, &arm_angle, &config);
     resp.arm_angle = arm_angle;
     resp.config = config;
   }

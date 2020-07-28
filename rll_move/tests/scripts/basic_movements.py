@@ -115,14 +115,14 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         # similar to maze movements from the Path Planning project
 
         # ensuring same global configuration for IK
-        resp = self.client.move_joints(0, pi / 100, 0, -pi / 2, 0, pi / 2, 0)
+        resp = self.client.move_joints(0, pi / 20, 0, -pi / 2, 0, pi / 2, 0)
         self.assert_last_srv_call_success(resp)
         goal_pose = Pose()
         goal_pose.position = Point(-0.4, -0.5, .3)
         goal_pose.orientation = orientation_from_rpy(0, pi, 0)
         self.assert_move_ptp_success(goal_pose)
 
-        goal_pose.position.z = .005
+        goal_pose.position.z = .01
         self.assert_move_lin_success(goal_pose)
 
         goal_pose.position.x = -0.3
@@ -170,10 +170,12 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
         self.assert_move_lin_success(goal_pose)
 
         # new test case with heavy elbow rotation around base
-        goal_pose.position = Point(0.4, 0.4, 0.8)
+        # E 0 test case (former) final pose, enforces GC 6
+        self.client.move_joints(0.5, 1.01, 0.68, -1.21, 0.78, -1.24, -1.1)
+        goal_pose.position = Point(0.4, 0.35, 0.8)
         goal_pose.orientation = Quaternion(.0, .7071068, .0, .7071068)
         self.assert_move_ptp_success(goal_pose)
-        goal_pose.position.y = -0.3
+        goal_pose.position.y = -0.33
         self.assert_move_lin_success(goal_pose)
 
         # S0
@@ -222,7 +224,7 @@ class TestBasicMovements(TestCaseWithRLLMoveClient):
 
         goal_pose.position.z = .7
         self.assert_move_lin_success(goal_pose)
-        goal_pose.position.y = -0.2
+        goal_pose.position.y = -0.25
         self.assert_move_lin_success(goal_pose)
         goal_pose.position.y = -0.6
         goal_pose.position.z = .3

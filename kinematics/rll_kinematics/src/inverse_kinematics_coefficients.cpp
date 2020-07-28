@@ -133,9 +133,9 @@ double RLLInvKinCoeffs::jointDerivativePivot(const uint8_t i, const double arm_a
 double RLLInvKinCoeffs::jointDerivativeHinge(const uint8_t i, const double arm_angle, const double joint_angle) const
 {
   // fabs is needed because sin(joint_angle) is actually sqrt(1 - pow(cos(joint_angle), 2))
-  return -gc_h_[i] *
-         ((a_[i] * cos(arm_angle) - b_[i] * sin(arm_angle)) /
-          fabs(sin(joint_angle)));  // division by zero impossible, function is only called in joint limit != 0 or Pi.
+  return -gc_h_[i] * ((a_[i] * cos(arm_angle) - b_[i] * sin(arm_angle)) /
+                      fabs(sin(joint_angle)));  // Division by zero possible (singularity)! Not an issue if function is
+                                                // only called in joint limit != 0 or Pi.
 }
 
 bool RLLInvKinCoeffs::armAngleForJointLimit(const JointType type, const uint8_t i, const double joint_angle,

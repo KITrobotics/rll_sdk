@@ -25,6 +25,11 @@
 #define RLL_NUM_JOINTS_P 4
 #define RLL_NUM_JOINTS_H 2  // excluding the elbow joint, elbow joint is always treated differently
 
+// seed state contains maximum of two past states (to compute velocity and acceleration with finite differences)
+#define RLL_MAX_NUM_SEED_TIME_STEPS 2
+
+using RLLKinSeedState = boost::container::static_vector<RLLKinJoints, RLL_MAX_NUM_SEED_TIME_STEPS>;
+
 struct RLLInvKinHelperMatrices
 {
   Eigen::Matrix3d as, bs, cs;
@@ -36,11 +41,20 @@ class RLLInvKinCoeffs : public RLLKinematicsBase
 public:
   RLLInvKinCoeffs() = default;
 
+  explicit RLLInvKinCoeffs(RLLKinSeedState seed_state) : seed_state_(std::move(seed_state))
+  {
+  }
+
   enum JointType : bool
   {
     PIVOT_JOINT = false,
     HINGE_JOINT = true
   };
+
+  void setSeedState(const RLLKinSeedState& seed_state)
+  {
+    seed_state_ = seed_state;
+  }
 
   void setHelperMatrices(const RLLInvKinHelperMatrices& hm, const Eigen::Vector3d& xsw_n, const Eigen::Vector3d& xwf_n,
                          double joint_angle_4);
@@ -61,6 +75,11 @@ public:
   RLLKinShoulderWristVec const& sw() const
   {
     return sw_;
+  }
+
+  RLLKinSeedState const& seedState() const
+  {
+    return seed_state_;
   }
 
   bool initialized() const
@@ -105,6 +124,8 @@ private:
   RLLKinShoulderWristVec sw_;
 
   double joint_angle_4_;
+
+  RLLKinSeedState seed_state_;
 
   bool initialized_ = false;
   RLLKinMsg init_error_ = RLLKinMsg::SUCCESS;

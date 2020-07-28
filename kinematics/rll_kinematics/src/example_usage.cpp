@@ -27,10 +27,11 @@ int main()
   RLLInvKinOptions ik_options;
 
   RLLKinLimbs limb_lengths = { 0.34, 0.4, 0.4, 0.126 };
-  RLLKinJoints joint_limits_min = { -2.93215, -2.05949, -2.93215, -2.05949, -2.93215, -2.05949, -3.01942 };
-  RLLKinJoints joint_limits_max = { 2.93215, 2.05949, 2.93215, 2.05949, 2.93215, 2.05949, 3.01942 };
+  RLLKinJointLimits joint_position_limits;
+  joint_position_limits.lower = { -2.93215, -2.05949, -2.93215, -2.05949, -2.93215, -2.05949, -3.01942 };
+  joint_position_limits.upper = { 2.93215, 2.05949, 2.93215, 2.05949, 2.93215, 2.05949, 3.01942 };
 
-  RLLKinMsg result = solver.initialize(limb_lengths, joint_limits_min, joint_limits_max);
+  RLLKinMsg result = solver.initialize(limb_lengths, joint_position_limits);
   if (result.error())
   {
     std::cout << "error: failed to initialize the kinematics solver" << std::endl;
@@ -40,7 +41,8 @@ int main()
   RLLKinPoseConfig eef_pose;
   eef_pose.pose.setPosition(0.5, -0.2, 0.2);
   eef_pose.pose.setRPY(0.0, M_PI, M_PI / 2);
-  RLLKinJoints seed_state = { 0.0, 0.03, 0.0, -M_PI / 2, 0.0, M_PI / 2, 0.0 };
+  RLLKinSeedState seed_state;
+  seed_state.front() = { 0.0, 0.03, 0.0, -M_PI / 2, 0.0, M_PI / 2, 0.0 };
 
   result = solver.ik(seed_state, &eef_pose, &solutions, ik_options);
   std::cout << "solution with redundancy resolution based on exponential function" << std::endl;

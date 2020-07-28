@@ -140,7 +140,8 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
 
   *joint_angle_4 = joint_angles_v[3] = jointAngle4(lsw, eef_pose.config);
 
-  if (kSmallerThan(*joint_angle_4, lowerJointLimits()(3)) || kGreaterThan(*joint_angle_4, upperJointLimits()(3)))
+  if (kSmallerThan(*joint_angle_4, lowerJointPositionLimits()(3)) ||
+      kGreaterThan(*joint_angle_4, upperJointPositionLimits()(3)))
   {
     return RLLKinMsg::TARGET_TOO_CLOSE;
   }
@@ -176,7 +177,7 @@ RLLKinMsg RLLInverseKinematics::setHelperMatrices(const RLLKinPoseConfig& eef_po
 
 RLLKinMsg RLLInverseKinematics::computeFeasibleIntervals(RLLInvKinNsIntervals* intervals) const
 {
-  return intervals->computeFeasibleIntervals(lowerJointLimits(), upperJointLimits());
+  return intervals->computeFeasibleIntervals(lowerJointPositionLimits(), upperJointPositionLimits());
 }
 
 void RLLInverseKinematics::addRemainingConfigs(const size_t it, const double dist_from_seed,

@@ -19,24 +19,58 @@
 
 #include <rll_kinematics/forward_kinematics.h>
 
-const double RLLForwardKinematics::SINGULARITY_CHECK_DISTANCE_TOL = 10.0 / 180.0 * M_PI;
+const double RLLForwardKinematics::SINGULARITY_CHECK_DISTANCE_TOL = 5.0 / 180.0 * M_PI;
 
-RLLKinMsg RLLForwardKinematics::initialize(const RLLKinLimbs& limb_lengths, const RLLKinJoints& lower_joint_limits,
-                                           const RLLKinJoints& upper_joint_limits)
+RLLKinMsg RLLForwardKinematics::initialize(const RLLKinLimbs& limb_lengths,
+                                           const RLLKinJointLimits& joint_position_limits)
 {
-  if (!allValuesFinite(limb_lengths) || !lower_joint_limits.allFinite() || !upper_joint_limits.allFinite())
+  if (!allValuesFinite(limb_lengths) || !joint_position_limits.lower.allFinite() ||
+      !joint_position_limits.upper.allFinite())
   {
     initialized_ = false;
-
     return RLLKinMsg::INVALID_INPUT;
   }
 
   limb_lengths_ = limb_lengths;
 
-  lower_joint_limits_ = lower_joint_limits;
-  upper_joint_limits_ = upper_joint_limits;
+  joint_position_limits_ = joint_position_limits;
 
   initialized_ = true;
+
+  return RLLKinMsg::SUCCESS;
+}
+
+RLLKinMsg RLLForwardKinematics::initialize(const RLLKinLimbs& limb_lengths,
+                                           const RLLKinJointLimits& joint_position_limits,
+                                           const RLLKinJoints& joint_velocity_limits,
+                                           const RLLKinJoints& joint_acceleration_limits)
+{
+  RLLKinMsg result = initialize(limb_lengths, joint_position_limits);
+  if (result.error())
+  {
+    return result;
+  }
+
+  if (!joint_velocity_limits.allFinite() || !joint_acceleration_limits.allFinite())
+  {
+    initialized_ = false;
+    dynamic_limits_set_ = false;
+    return RLLKinMsg::INVALID_INPUT;
+  }
+
+  for (size_t i = 0; i < RLL_NUM_JOINTS; ++i)
+  {
+    if (joint_velocity_limits(i) <= 0.0 || joint_acceleration_limits(i) <= 0.0)
+    {
+      initialized_ = false;
+      dynamic_limits_set_ = false;
+      return RLLKinMsg::INVALID_INPUT;
+    }
+  }
+
+  joint_velocity_limits_ = joint_velocity_limits;
+  joint_acceleration_limits_ = joint_acceleration_limits;
+  dynamic_limits_set_ = true;
 
   return RLLKinMsg::SUCCESS;
 }

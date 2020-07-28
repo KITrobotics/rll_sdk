@@ -104,7 +104,8 @@ public:
   }
 
   RLLKinMsg computeFeasibleIntervals(const RLLKinJoints& lower_joint_limits, const RLLKinJoints& upper_joint_limits);
-  RLLKinMsg intervalForArmAngle(double* arm_angle, RLLKinArmAngleInterval* current_interval) const;
+  RLLKinMsg intervalForArmAngle(double* query_arm_angle, RLLKinArmAngleInterval* current_interval,
+                                double* fallback_arm_angle) const;
 
 private:
   void mergeSortedBlockedIntervals();
@@ -116,8 +117,8 @@ private:
   void insertLimit(RLLInvKinIntervalLimits* interval_limits, RLLInvKinCoeffs::JointType type, double joint_angle,
                    double arm_angle, int index);
 
-  // used when seed arm angle is in a blocked interval, sets arm angle to middle of closest feasible interval
-  void closestFeasibleintervalForArmAngle(int index, double arm_angle, RLLKinArmAngleInterval* current_interval) const;
+  // used when query arm angle is in a blocked interval, sets fallback arm angle to middle of closest feasible interval
+  RLLKinMsg closestFeasibleArmAngle(int index, double query_arm_angle, double* fallback_arm_angle) const;
 
   RLLInvKinCoeffs coeffs_;
   RLLKinJoints lower_joint_limits_;
