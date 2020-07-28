@@ -89,9 +89,6 @@ public:
     return link_names_;
   };
 
-  // TODO(wolfgang): add an interface that also returns the IK message like TARGET_TOO_CLOSE
-  //              allows for more fine-grained error reporting in move interface
-
   // solve IK with a given arm angle
   bool getPositionIKarmangle(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
                              std::vector<double>* solution, moveit_msgs::MoveItErrorCodes* error_code,
@@ -100,8 +97,12 @@ public:
   bool getPositionFK(const std::vector<double>& joint_angles, geometry_msgs::Pose* pose, double* arm_angle,
                      int* config) const;
 
-  RLLKinMsg callRLLIK(const geometry_msgs::Pose& ik_pose, const std::vector<double>& ik_seed_state,
+  RLLKinMsg callRLLIK(const geometry_msgs::Pose& ros_pose, const RLLKinSeedState& ik_seed_state,
                       RLLKinSolutions* solutions, RLLInvKinOptions ik_options) const;
+  RLLKinMsg callRLLIK(const RLLKinSeedState& ik_seed_state, RLLKinPoseConfig* ik_pose, RLLKinSolutions* solutions,
+                      RLLInvKinOptions ik_options) const;
+
+  static void transformPose(const geometry_msgs::Pose& ros_pose, RLLKinPoseConfig* ik_pose);
 
 private:
   bool setLimbLengthsJointLimits();

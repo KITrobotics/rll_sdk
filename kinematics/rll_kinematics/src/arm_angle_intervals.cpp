@@ -186,8 +186,8 @@ void RLLInvKinNsIntervals::mapLimitsToArmAngle(const RLLInvKinCoeffs::JointType 
   if (interval_limits.empty())
   {
     // any arm angle can be used to check if the whole interval is feasible or not
-    double arm_angle_test = coeffs_.jointAngle(type, index, 0.0);
-    if (arm_angle_test >= upper_joint_limit || arm_angle_test <= lower_joint_limit)
+    double joint_angle_test = coeffs_.jointAngle(type, index, 0.0);
+    if (kGreaterThan(joint_angle_test, upper_joint_limit) || kSmallerThan(joint_angle_test, lower_joint_limit))
     {
       // all angles blocked
       blocked_intervals_.emplace_back(-M_PI, M_PI);
@@ -200,10 +200,9 @@ void RLLInvKinNsIntervals::mapLimitsToArmAngle(const RLLInvKinCoeffs::JointType 
   determineBlockedIntervals(interval_limits);
 }
 
-void RLLInvKinNsIntervals::closestFeasibleintervalForArmAngle(const int index, const double arm_angle,
-                                                              RLLKinArmAngleInterval* current_interval) const
+RLLKinMsg RLLInvKinNsIntervals::closestFeasibleArmAngle(const int index, const double query_arm_angle,
+                                                        double* fallback_arm_angle) const
 {
-  RLLKinArmAngleInterval closest_interval;
   if (index > 0)
   {  // arm angle between two feasible interval and upper interval is at index, set to middle of closest interval
     double middle_upper_interval =
@@ -211,13 +210,13 @@ void RLLInvKinNsIntervals::closestFeasibleintervalForArmAngle(const int index, c
     double middle_lower_interval =
         (feasible_intervals_[index - 1].upperLimit() + feasible_intervals_[index - 1].lowerLimit()) / 2;
 
-    if (middle_upper_interval - arm_angle <= arm_angle - middle_lower_interval)
+    if (middle_upper_interval - query_arm_angle <= query_arm_angle - middle_lower_interval)
     {
-      closest_interval.setLowerLimit(middle_upper_interval);
+      *fallback_arm_angle = middle_upper_interval;
     }
     else
     {
-      closest_interval.setLowerLimit(middle_lower_interval);
+      *fallback_arm_angle = middle_lower_interval;
     }
   }
   else
@@ -229,48 +228,52 @@ void RLLInvKinNsIntervals::closestFeasibleintervalForArmAngle(const int index, c
 
     if (index == 0)
     {  // arm angle in overlap region below lowest feasible angle
-      if (middle_first_interval - arm_angle <= ((arm_angle + M_PI) + (M_PI - middle_last_interval)))
+      if (middle_first_interval - query_arm_angle <= ((query_arm_angle + M_PI) + (M_PI - middle_last_interval)))
       {
-        closest_interval.setLowerLimit(middle_first_interval);
+        *fallback_arm_angle = middle_first_interval;
       }
       else
       {
-        closest_interval.setLowerLimit(middle_last_interval);
+        *fallback_arm_angle = middle_last_interval;
       }
     }
     else
     {  // arm angle greater than last feasible angle
-      if (arm_angle - middle_last_interval <= ((M_PI - arm_angle) + (middle_first_interval + M_PI)))
+      if (query_arm_angle - middle_last_interval <= ((M_PI - query_arm_angle) + (middle_first_interval + M_PI)))
       {
-        closest_interval.setLowerLimit(middle_last_interval);
+        *fallback_arm_angle = middle_last_interval;
       }
       else
       {
-        closest_interval.setLowerLimit(middle_first_interval);
+        *fallback_arm_angle = middle_first_interval;
       }
     }
   }
 
-  // only one arm angle admissible at this point
-  closest_interval.setUpperLimit(closest_interval.lowerLimit());
-  *current_interval = closest_interval;
+  return RLLKinMsg::ARMANGLE_NOT_IN_SAME_INTERVAL;
 }
 
-RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArmAngleInterval* current_interval) const
+RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* query_arm_angle, RLLKinArmAngleInterval* current_interval,
+                                                    double* fallback_arm_angle) const
 {
   bool interval_found = false;
   int index = -1;
 
   if (feasible_intervals_.empty())
   {
+    // No feasible arm angle could be found. The robot could be in a singular position for the goal pose and the arm
+    // angle is not defined. Set the fallback arm angle to zero as this could still allow to return feasible joint
+    // angles.
+    *fallback_arm_angle = 0.0;
+
     return RLLKinMsg::NO_SOLUTION_FOR_ARMANGLE;
   }
 
   for (size_t i = 0; i < feasible_intervals_.size(); ++i)
   {
-    if (*arm_angle <= feasible_intervals_[i].upperLimit())
+    if (*query_arm_angle <= feasible_intervals_[i].upperLimit())
     {
-      if (*arm_angle >= feasible_intervals_[i].lowerLimit())
+      if (*query_arm_angle >= feasible_intervals_[i].lowerLimit())
       {
         interval_found = true;
         *current_interval = feasible_intervals_[i];
@@ -295,9 +298,9 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
     {
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and take the lower limit of the last interval as lower limit
-      if (*arm_angle < current_interval->upperLimit())
+      if (*query_arm_angle < current_interval->upperLimit())
       {
-        *arm_angle += 2 * M_PI;
+        *query_arm_angle += 2 * M_PI;
       }
       current_interval->setUpperLimit(current_interval->upperLimit() + 2 * M_PI);
       current_interval->setLowerLimit(feasible_intervals_.back().lowerLimit());
@@ -307,18 +310,16 @@ RLLKinMsg RLLInvKinNsIntervals::intervalForArmAngle(double* arm_angle, RLLKinArm
       // overlapping at -M_PI, map everything smaller as or equal the upper limit of the first interval to the
       // [pi, 3*pi] range and keep the lower limit of the current interval
       current_interval->setUpperLimit(2 * M_PI + feasible_intervals_.front().upperLimit());
-      if (*arm_angle < feasible_intervals_.front().upperLimit())
+      if (*query_arm_angle < feasible_intervals_.front().upperLimit())
       {
-        *arm_angle += 2 * M_PI;
+        *query_arm_angle += 2 * M_PI;
       }
     }
 
     return RLLKinMsg::SUCCESS;
   }
 
-  closestFeasibleintervalForArmAngle(index, *arm_angle, current_interval);
-
-  return RLLKinMsg::SUCCESS;
+  return closestFeasibleArmAngle(index, *query_arm_angle, fallback_arm_angle);
 }
 
 RLLKinMsg RLLInvKinNsIntervals::computeFeasibleIntervals(const RLLKinJoints& lower_joint_limits,

@@ -63,8 +63,9 @@ class TestRepeatedMovements(TestCaseWithRLLMoveClient):
             self.assert_last_srv_call_success(resp)
 
             if cause_failure:
-                # only change the orientation, no linear motion -> should fail
-                goal_pose.orientation = orientation_from_rpy(0, 0, 0)
+                # only change the orientation a little,
+                # no linear motion -> should fail
+                goal_pose.orientation = orientation_from_rpy(-pi / 1.9, 0, 0)
                 success = self.client.move_lin(goal_pose)
                 self.assert_last_srv_call_failed(
                     success, RLLErrorCode.TOO_FEW_WAYPOINTS)

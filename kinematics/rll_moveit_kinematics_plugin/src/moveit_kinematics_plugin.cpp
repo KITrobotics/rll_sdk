@@ -18,7 +18,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <moveit/rdf_loader/rdf_loader.h>
+#include <moveit/robot_model_loader/robot_model_loader.h>
 
 #include <rll_moveit_kinematics_plugin/moveit_kinematics_plugin.h>
 
@@ -66,18 +66,8 @@ bool RLLMoveItKinematicsPlugin::initialize(
 
   setValues(robot_description, group_name, base_frame, tip_frame, search_discretization);
 
-  rdf_loader::RDFLoader rdf_loader(robot_description_);
-  const srdf::ModelSharedPtr& srdf = rdf_loader.getSRDF();
-  const urdf::ModelInterfaceSharedPtr& urdf_model = rdf_loader.getURDF();
-
-  if (!urdf_model || !srdf)
-  {
-    ROS_ERROR("URDF and SRDF must be loaded for kinematics solver to work.");
-    return false;
-  }
-
-  static moveit::core::RobotModel robot_model_instance(urdf_model, srdf);
-  robot_model_ = moveit::core::RobotModelConstPtr(&robot_model_instance, &noDeleter);
+  robot_model_loader::RobotModelLoader robot_model_loader(robot_description_, false);
+  robot_model_ = robot_model_loader.getModel();
 #endif
 
   const moveit::core::JointModelGroup* jmg = robot_model_->getJointModelGroup(group_name);
@@ -96,8 +86,12 @@ bool RLLMoveItKinematicsPlugin::getPositionIK(  // NOLINT google-default-argumen
 {
   RLLInvKinOptions ik_options;
   RLLKinSolutions ik_solutions;
+  RLLKinSeedState seed_state;
 
-  RLLKinMsg result = callRLLIK(ik_pose, ik_seed_state, &ik_solutions, ik_options);
+  seed_state.emplace_back(ik_seed_state);
+  seed_state.emplace_back(ik_seed_state);
+
+  RLLKinMsg result = callRLLIK(ik_pose, seed_state, &ik_solutions, ik_options);
   if (result.error())
   {
     error_code.val = error_code.NO_IK_SOLUTION;
@@ -133,8 +127,12 @@ bool RLLMoveItKinematicsPlugin::searchPositionIK(  // NOLINT google-default-argu
 {
   RLLInvKinOptions ik_options;
   RLLKinSolutions ik_solutions;
+  RLLKinSeedState seed_state;
 
-  RLLKinMsg result = callRLLIK(ik_pose, ik_seed_state, &ik_solutions, ik_options);
+  seed_state.emplace_back(ik_seed_state);
+  seed_state.emplace_back(ik_seed_state);
+
+  RLLKinMsg result = callRLLIK(ik_pose, seed_state, &ik_solutions, ik_options);
   if (result.error())
   {
     error_code.val = error_code.NO_IK_SOLUTION;
@@ -192,7 +190,7 @@ bool RLLMoveItKinematicsPlugin::getPositionIKarmangle(const geometry_msgs::Pose&
                                                       const double& arm_angle) const
 {
   RLLKinPoseConfig cart_pose;
-  RLLKinJoints seed_state;
+  RLLKinSeedState seed_state;
   RLLKinSolutions ik_solutions;
   RLLInvKinOptions ik_options;
 
@@ -200,7 +198,7 @@ bool RLLMoveItKinematicsPlugin::getPositionIKarmangle(const geometry_msgs::Pose&
   cart_pose.pose.setPosition(ik_pose.position.x, ik_pose.position.y, ik_pose.position.z);
   cart_pose.pose.setQuaternion(ik_pose.orientation.w, ik_pose.orientation.x, ik_pose.orientation.y,
                                ik_pose.orientation.z);
-  seed_state.setJoints(ik_seed_state);
+  seed_state.emplace_back(ik_seed_state);
 
   ik_options.method = RLLInvKinOptions::ARM_ANGLE_FIXED;
   RLLKinMsg result = solver_.ik(seed_state, &cart_pose, &ik_solutions, ik_options);
@@ -242,25 +240,25 @@ bool RLLMoveItKinematicsPlugin::getPositionFK(const std::vector<double>& joint_a
 
 bool RLLMoveItKinematicsPlugin::setLimbLengthsJointLimits()
 {
-  ROS_DEBUG_STREAM("Registering joints and links");
   const moveit::core::LinkModel* link = robot_model_->getLinkModel(tip_frames_[0]);
   const moveit::core::LinkModel* base_link = robot_model_->getLinkModel(base_frame_);
   std::vector<double> lower_joint_limits;
   std::vector<double> upper_joint_limits;
+  std::vector<double> velocity_limits;
+  std::vector<double> acceleration_limits;
 
   while (link != nullptr && link != base_link)
   {
-    ROS_DEBUG_STREAM("Link " << link->getName());
     link_names_.push_back(link->getName());
     const moveit::core::JointModel* joint = link->getParentJointModel();
     if (joint->getType() != joint->UNKNOWN && joint->getType() != joint->FIXED && joint->getVariableCount() == 1)
     {
-      ROS_DEBUG_STREAM("Adding joint " << joint->getName());
-
       joint_names_.push_back(joint->getName());
       const moveit::core::VariableBounds& bounds = joint->getVariableBounds()[0];
       lower_joint_limits.push_back(bounds.min_position_);
       upper_joint_limits.push_back(bounds.max_position_);
+      velocity_limits.push_back(bounds.max_velocity_);
+      acceleration_limits.push_back(bounds.max_acceleration_);
     }
     link = link->getParentLinkModel();
   }
@@ -277,13 +275,8 @@ bool RLLMoveItKinematicsPlugin::setLimbLengthsJointLimits()
   std::reverse(joint_names_.begin(), joint_names_.end());
   std::reverse(lower_joint_limits.begin(), lower_joint_limits.end());
   std::reverse(upper_joint_limits.begin(), upper_joint_limits.end());
-
-  ROS_DEBUG("joint limits:");
-  for (size_t joint_id = 0; joint_id < RLL_NUM_JOINTS; ++joint_id)
-  {
-    ROS_DEBUG_STREAM(joint_names_[joint_id] << " " << lower_joint_limits[joint_id] << " "
-                                            << upper_joint_limits[joint_id]);
-  }
+  std::reverse(velocity_limits.begin(), velocity_limits.end());
+  std::reverse(acceleration_limits.begin(), acceleration_limits.end());
 
 // get parent_to_joint_origin_transform.position.z for all joints from urdf to calculate limb lengths:
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
@@ -315,26 +308,38 @@ bool RLLMoveItKinematicsPlugin::setLimbLengthsJointLimits()
   limb_lengths[1] = joint_distances[2] + joint_distances[3];
   limb_lengths[2] = joint_distances[4] + joint_distances[5];
   limb_lengths[3] = joint_distances[6] + joint_distances[7];
-  RLLKinJoints rllkin_lower_joint_limits = lower_joint_limits;
-  RLLKinJoints rllkin_upper_joint_limits = upper_joint_limits;
+  RLLKinJointLimits rllkin_joint_limits;
+  rllkin_joint_limits.lower = lower_joint_limits;
+  rllkin_joint_limits.upper = upper_joint_limits;
+  RLLKinJoints rllkin_velocity_limits = velocity_limits;
+  RLLKinJoints rllkin_acceleration_limits = acceleration_limits;
 
-  RLLKinMsg result = solver_.initialize(limb_lengths, rllkin_lower_joint_limits, rllkin_upper_joint_limits);
+  RLLKinMsg result =
+      solver_.initialize(limb_lengths, rllkin_joint_limits, rllkin_velocity_limits, rllkin_acceleration_limits);
   return !result.error();
 }
 
-RLLKinMsg RLLMoveItKinematicsPlugin::callRLLIK(const geometry_msgs::Pose& ik_pose,
-                                               const std::vector<double>& ik_seed_state, RLLKinSolutions* solutions,
+RLLKinMsg RLLMoveItKinematicsPlugin::callRLLIK(const geometry_msgs::Pose& ros_pose,
+                                               const RLLKinSeedState& ik_seed_state, RLLKinSolutions* solutions,
                                                RLLInvKinOptions ik_options) const
 {
-  RLLKinPoseConfig cart_pose;
-  RLLKinJoints seed_state;
+  RLLKinPoseConfig ik_pose;
+  transformPose(ros_pose, &ik_pose);
 
-  cart_pose.pose.setPosition(ik_pose.position.x, ik_pose.position.y, ik_pose.position.z);
-  cart_pose.pose.setQuaternion(ik_pose.orientation.w, ik_pose.orientation.x, ik_pose.orientation.y,
-                               ik_pose.orientation.z);
-  seed_state.setJoints(ik_seed_state);
+  return solver_.ik(ik_seed_state, &ik_pose, solutions, ik_options);
+}
 
-  return solver_.ik(seed_state, &cart_pose, solutions, ik_options);
+RLLKinMsg RLLMoveItKinematicsPlugin::callRLLIK(const RLLKinSeedState& ik_seed_state, RLLKinPoseConfig* ik_pose,
+                                               RLLKinSolutions* solutions, RLLInvKinOptions ik_options) const
+{
+  return solver_.ik(ik_seed_state, ik_pose, solutions, ik_options);
+}
+
+void RLLMoveItKinematicsPlugin::transformPose(const geometry_msgs::Pose& ros_pose, RLLKinPoseConfig* ik_pose)
+{
+  ik_pose->pose.setPosition(ros_pose.position.x, ros_pose.position.y, ros_pose.position.z);
+  ik_pose->pose.setQuaternion(ros_pose.orientation.w, ros_pose.orientation.x, ros_pose.orientation.y,
+                              ros_pose.orientation.z);
 }
 
 }  // namespace rll_moveit_kinematics

@@ -43,8 +43,9 @@ protected:
   static const double DEFAULT_ACCELERATION_SCALING_FACTOR;
 
   static const double DEFAULT_LINEAR_EEF_STEP;
+  static const double DEFAULT_ROTATION_EEF_STEP;
   static const double DEFAULT_LINEAR_JUMP_THRESHOLD;
-  static const double LINEAR_MIN_STEPS_FOR_JUMP_THRESH;
+  static const size_t LINEAR_MIN_STEPS_FOR_JUMP_THRESH;
 
   // TODO(wolfgang): make these private
   std::string node_name_;
@@ -65,14 +66,15 @@ protected:
                                          const std::vector<double>& waypoints_arm_angles,
                                          const std::vector<double>& ik_seed_state,
                                          std::vector<robot_state::RobotStatePtr>* path);
-  RLLErrorCode computeLinearPath(const std::vector<geometry_msgs::Pose>& waypoints,
-                                 moveit_msgs::RobotTrajectory* trajectory);
+  RLLErrorCode computeLinearPath(const geometry_msgs::Pose& goal, moveit_msgs::RobotTrajectory* trajectory);
   void transformPoseForIK(geometry_msgs::Pose* pose);
-  void interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
-                              std::vector<geometry_msgs::Pose>* waypoints);
+  void transformPoseFromFK(geometry_msgs::Pose* pose);
+  RLLErrorCode interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
+                                      std::vector<geometry_msgs::Pose>* waypoints, size_t steps_arm_angle = 0);
   void interpolateArmangleLinear(double start, double end, int dir, int n, std::vector<double>* arm_angles);
   std::vector<double> getJointValuesFromNamedTarget(const std::string& name);
   bool armangleInRange(double arm_angle);
+  size_t numStepsArmAngle(double start, double end);
 
   bool manipCurrentStateAvailable();
   robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);
@@ -118,6 +120,8 @@ private:
   bool stateInCollision(robot_state::RobotState* state);
   float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
 
+  void getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose, const std::vector<double>& ik_seed_state,
+                 std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage);
   void getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose,
                  const std::vector<double>& waypoints_arm_angles, const std::vector<double>& ik_seed_state,
                  std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage);

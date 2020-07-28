@@ -48,7 +48,7 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
         resp = self.client.move_ptp(goal_pose)
         self.assert_last_srv_call_success(resp)
 
-    def test_2_move_lin_sole_rotation(self):
+    def test_2_move_lin_few_waypoints(self):
         # move into home position
         resp = self.client.move_joints(0, pi / 100, 0, -pi / 2, 0, -pi / 2, 0)
         self.assert_last_srv_call_success(resp)
@@ -58,8 +58,14 @@ class TestInvalidMovements(TestCaseWithRLLMoveClient):
         goal_pose.orientation = orientation_from_rpy(-pi / 2, 0, 0)
         resp = self.client.move_ptp(goal_pose)
 
-        # only change the orientation, no linear motion -> should fail
-        goal_pose.orientation = orientation_from_rpy(0, 0, 0)
+        # only change the orientation a little, no linear motion -> should fail
+        goal_pose.orientation = orientation_from_rpy(-pi / 1.9, 0, 0)
+        success = self.client.move_lin(goal_pose)
+        self.assert_last_srv_call_failed(
+            success, RLLErrorCode.TOO_FEW_WAYPOINTS)
+
+        # only change the translation a little, no linear motion -> should fail
+        goal_pose.position = Point(.305, .41, .62)
         success = self.client.move_lin(goal_pose)
         self.assert_last_srv_call_failed(
             success, RLLErrorCode.TOO_FEW_WAYPOINTS)

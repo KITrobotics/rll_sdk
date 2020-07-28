@@ -26,9 +26,13 @@
 const double RLLMoveIfacePlanning::DEFAULT_VELOCITY_SCALING_FACTOR = 0.4;
 const double RLLMoveIfacePlanning::DEFAULT_ACCELERATION_SCALING_FACTOR = 0.4;
 
-const double RLLMoveIfacePlanning::DEFAULT_LINEAR_EEF_STEP = 0.0005;
-const double RLLMoveIfacePlanning::DEFAULT_LINEAR_JUMP_THRESHOLD = 4.5;
-const double RLLMoveIfacePlanning::LINEAR_MIN_STEPS_FOR_JUMP_THRESH = 10;
+const double RLLMoveIfacePlanning::DEFAULT_LINEAR_EEF_STEP = 0.001;
+const double RLLMoveIfacePlanning::DEFAULT_ROTATION_EEF_STEP = 1 * M_PI / 180;
+// TODO(wolfgang): get rid of the jump threshold. Instead, modify the IK error code with a flag to report if new arm
+// angle is in same interval as old arm angle -> no jump.
+// The jump threshold is too restrictive and throws errors on otherwise admissible trajectories.
+const double RLLMoveIfacePlanning::DEFAULT_LINEAR_JUMP_THRESHOLD = 10;
+const size_t RLLMoveIfacePlanning::LINEAR_MIN_STEPS_FOR_JUMP_THRESH = 10;
 
 const std::string RLLMoveIfacePlanning::MANIP_PLANNING_GROUP = "manipulator";
 const std::string RLLMoveIfacePlanning::GRIPPER_PLANNING_GROUP = "gripper";
@@ -220,21 +224,16 @@ RLLErrorCode RLLMoveIfacePlanning::moveToGoalLinear(const geometry_msgs::Pose& g
                                                     bool cartesian_time_parametrization)
 {
   moveit_msgs::RobotTrajectory trajectory;
-  std::vector<geometry_msgs::Pose> waypoints;
-  const double MIN_LIN_MOVEMENT_DISTANCE = 0.005;
+  std::vector<double> goal_joint_values(RLL_NUM_JOINTS);
 
-  float distance = distanceToCurrentPosition(goal);
-  if (distance < MIN_LIN_MOVEMENT_DISTANCE)
+  RLLErrorCode error_code = poseGoalInCollision(goal, &goal_joint_values);
+  if (error_code.failed())
   {
-    ROS_WARN("Linear motions that cover a distance of less than 5 mm are currently not supported."
-             " Please use the 'move_ptp' service instead.");
-
-    return RLLErrorCode::TOO_FEW_WAYPOINTS;
+    return error_code;
   }
 
   manip_move_group_.setStartStateToCurrentState();
-  waypoints.push_back(goal);
-  RLLErrorCode error_code = computeLinearPath(waypoints, &trajectory);
+  error_code = computeLinearPath(goal, &trajectory);
   if (error_code.failed())
   {
     return error_code;
@@ -243,30 +242,59 @@ RLLErrorCode RLLMoveIfacePlanning::moveToGoalLinear(const geometry_msgs::Pose& g
   return runLinearTrajectory(trajectory, cartesian_time_parametrization);
 }
 
-RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const std::vector<geometry_msgs::Pose>& waypoints,
+RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const geometry_msgs::Pose& goal,
                                                      moveit_msgs::RobotTrajectory* trajectory)
 {
-  moveit::planning_interface::MoveItErrorCode moveit_error_code;
+  std::vector<geometry_msgs::Pose> waypoints_pose;
+  RLLErrorCode error_code = interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, goal, &waypoints_pose);
+  if (error_code.failed())
+  {
+    return error_code;
+  }
 
-  double achieved = manip_move_group_.computeCartesianPath(
-      waypoints, DEFAULT_LINEAR_EEF_STEP, DEFAULT_LINEAR_JUMP_THRESHOLD, *trajectory, true, &moveit_error_code);
+  for (auto& waypoint : waypoints_pose)
+  {
+    transformPoseForIK(&waypoint);
+  }
 
-  if (achieved > 0 && achieved < 1)
+  double achieved = 0.0;
+  std::vector<robot_state::RobotStatePtr> path;
+  getPathIK(waypoints_pose, manip_move_group_.getCurrentJointValues(), &path, &achieved);
+
+  moveit::core::JumpThreshold thresh(DEFAULT_LINEAR_JUMP_THRESHOLD);
+  achieved *= robot_state::RobotState::testJointSpaceJump(manip_joint_model_group_, path, thresh);
+
+  if (achieved > 0.0 && achieved < 1.0)
   {
     ROS_ERROR("only achieved to compute %f of the requested path", achieved);
     return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
   }
-  if (achieved <= 0)
+  if (achieved <= 0.0)
   {
-    ROS_ERROR("path planning completely failed, error code %s", stringifyMoveItErrorCodes(moveit_error_code));
+    ROS_ERROR("path planning completely failed");
     return RLLErrorCode::MOVEIT_PLANNING_FAILED;
   }
+
+  robot_trajectory::RobotTrajectory rt(manip_model_, manip_move_group_.getName());
+  for (const auto& path_pose : path)
+  {
+    rt.addSuffixWayPoint(path_pose, 0.0);
+  }
+
+  rt.getRobotTrajectoryMsg(*trajectory);
 
   if (trajectory->joint_trajectory.points.size() < LINEAR_MIN_STEPS_FOR_JUMP_THRESH)
   {
     ROS_ERROR("trajectory has not enough points to check for continuity, only got %lu",
               trajectory->joint_trajectory.points.size());
     return RLLErrorCode::TOO_FEW_WAYPOINTS;
+  }
+
+  // check for collisions
+  if (!planning_scene_->isPathValid(rt))
+  {  // TODO(updim): maybe output collision state
+    ROS_ERROR("There is a collision along the path");
+    return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
   }
 
   return RLLErrorCode::SUCCESS;
@@ -303,6 +331,9 @@ RLLErrorCode RLLMoveIfacePlanning::runLinearTrajectory(const moveit_msgs::RobotT
       return RLLErrorCode::TRAJECTORY_MODIFICATION_FAILED;
     }
   }
+
+  ROS_INFO_STREAM("trajectory duration is "
+                  << my_plan.trajectory_.joint_trajectory.points.back().time_from_start.toSec() << " seconds");
 
   return execute(&manip_move_group_, my_plan);
 }
@@ -394,6 +425,7 @@ bool RLLMoveIfacePlanning::jointsGoalInCollision(const std::vector<double>& goal
 RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose& goal,
                                                        std::vector<double>* goal_joint_values)
 {
+  RLLKinSeedState ik_seed_state;
   RLLInvKinOptions ik_options;
   RLLKinSolutions ik_solutions;
   std::vector<double> current_joint_values(RLL_NUM_JOINTS);
@@ -404,10 +436,12 @@ RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose
   ik_options.global_configuration_mode = RLLInvKinOptions::RETURN_ALL_GLOBAL_CONFIGS;
   geometry_msgs::Pose goal_ik = goal;
   transformPoseForIK(&goal_ik);
-  RLLKinMsg result = kinematics_plugin_->callRLLIK(goal_ik, current_joint_values, &ik_solutions, ik_options);
+  ik_seed_state.emplace_back(current_joint_values);
+  ik_seed_state.emplace_back(current_joint_values);
+  RLLKinMsg result = kinematics_plugin_->callRLLIK(goal_ik, ik_seed_state, &ik_solutions, ik_options);
   if (result.error())
   {
-    ROS_WARN("no IK solution found for given goal pose");
+    ROS_WARN_STREAM("no IK solution found for given goal pose: " << result.message());
     return RLLErrorCode::NO_IK_SOLUTION_FOUND;
   }
 
@@ -586,14 +620,56 @@ RLLErrorCode RLLMoveIfacePlanning::computeLinearPathArmangle(const std::vector<g
 }
 
 void RLLMoveIfacePlanning::getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose,
+                                     const std::vector<double>& ik_seed_state,
+                                     std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage)
+{
+  RLLInvKinOptions ik_options;
+  RLLKinSolutions ik_solutions;
+  RLLKinSeedState seed_state;
+  robot_state::RobotState tmp_state = getCurrentRobotState();
+  std::vector<double> sol(RLL_NUM_JOINTS);
+  std::vector<double> seed_tmp_1 = ik_seed_state;
+  std::vector<double> seed_tmp_2 = ik_seed_state;
+
+  ik_options.joint_velocity_scaling_factor = DEFAULT_VELOCITY_SCALING_FACTOR;
+  ik_options.joint_acceleration_scaling_factor = DEFAULT_ACCELERATION_SCALING_FACTOR;
+  ik_options.global_configuration_mode = RLLInvKinOptions::KEEP_CURRENT_GLOBAL_CONFIG;
+
+  tmp_state.setJointGroupPositions(manip_joint_model_group_, ik_seed_state);
+  path->push_back(std::make_shared<moveit::core::RobotState>(tmp_state));
+
+  for (size_t i = 1; i < waypoints_pose.size(); i++)
+  {
+    seed_state.clear();
+    seed_state.emplace_back(seed_tmp_1);
+    seed_state.emplace_back(seed_tmp_2);
+
+    RLLKinMsg result = kinematics_plugin_->callRLLIK(waypoints_pose[i], seed_state, &ik_solutions, ik_options);
+    if (result.error())
+    {
+      // TODO(wolfgang): also print pose where IK failed
+      *last_valid_percentage = static_cast<double>(i) / static_cast<double>(waypoints_pose.size());
+      return;
+    }
+
+    ik_solutions.front().getJoints(&sol);
+    seed_tmp_2 = seed_tmp_1;
+    seed_tmp_1 = sol;
+    tmp_state.setJointGroupPositions(manip_joint_model_group_, sol);
+    path->push_back(std::make_shared<moveit::core::RobotState>(tmp_state));
+  }
+
+  *last_valid_percentage = 1.0;
+}
+
+void RLLMoveIfacePlanning::getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose,
                                      const std::vector<double>& waypoints_arm_angles,
                                      const std::vector<double>& ik_seed_state,
                                      std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage)
 {
-  robot_state::RobotState tmp_state(manip_model_);
+  robot_state::RobotState tmp_state = getCurrentRobotState();
   std::vector<double> sol(RLL_NUM_JOINTS);
   std::vector<double> seed_tmp = ik_seed_state;
-  bool success;
 
   if (waypoints_pose.size() != waypoints_arm_angles.size())
   {
@@ -602,13 +678,14 @@ void RLLMoveIfacePlanning::getPathIK(const std::vector<geometry_msgs::Pose>& way
     return;
   }
 
-  tmp_state.setToDefaultValues();
+  tmp_state.setJointGroupPositions(manip_joint_model_group_, ik_seed_state);
+  path->push_back(std::make_shared<moveit::core::RobotState>(tmp_state));
 
-  for (size_t i = 0; i < waypoints_pose.size(); i++)
+  for (size_t i = 1; i < waypoints_pose.size(); i++)
   {
     moveit_msgs::MoveItErrorCodes error_code;
-    success = kinematics_plugin_->getPositionIKarmangle(waypoints_pose[i], seed_tmp, &sol, &error_code,
-                                                        waypoints_arm_angles[i]);
+    bool success = kinematics_plugin_->getPositionIKarmangle(waypoints_pose[i], seed_tmp, &sol, &error_code,
+                                                             waypoints_arm_angles[i]);
     if (!success)
     {
       *last_valid_percentage = static_cast<double>(i) / static_cast<double>(waypoints_pose.size());
@@ -623,10 +700,13 @@ void RLLMoveIfacePlanning::getPathIK(const std::vector<geometry_msgs::Pose>& way
   *last_valid_percentage = 1.0;
 }
 
-void RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& start, const geometry_msgs::Pose& end,
-                                                  std::vector<geometry_msgs::Pose>* waypoints)
+RLLErrorCode RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& start,
+                                                          const geometry_msgs::Pose& end,
+                                                          std::vector<geometry_msgs::Pose>* waypoints,
+                                                          const size_t steps_arm_angle)
 {
-  // most parts of code for cartesian interpolation from Moveit's computeCartesianPath()
+  // most parts adapted from Moveit's computeCartesianPath()
+  // https://github.com/ros-planning/moveit/blob/master/moveit_core/robot_state/src/cartesian_interpolator.cpp#L99
 
   Eigen::Isometry3d start_pose;
   tf::poseMsgToEigen(start, start_pose);
@@ -634,10 +714,10 @@ void RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& sta
   Eigen::Isometry3d target_pose;
   tf::poseMsgToEigen(end, target_pose);
 
-  Eigen::Quaterniond start_quaternion(start_pose.rotation());
-  Eigen::Quaterniond target_quaternion(target_pose.rotation());
+  Eigen::Quaterniond start_quaternion(start_pose.linear());
+  Eigen::Quaterniond target_quaternion(target_pose.linear());
 
-  // double rotation_distance = start_quaternion.angularDistance(target_quaternion);
+  double rotation_distance = start_quaternion.angularDistance(target_quaternion);
   double translation_distance = (target_pose.translation() - start_pose.translation()).norm();
 
   // decide how many steps we will need for this trajectory
@@ -647,11 +727,20 @@ void RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& sta
     translation_steps = floor(translation_distance / DEFAULT_LINEAR_EEF_STEP);
   }
 
-  // At least 30 steps even at constant pose for nullspace interpolation
-  std::size_t steps = translation_steps + 1;
-  if (steps < 30)  // in moveit 10 = MIN_STEPS_FOR_JUMP_THRESH
+  std::size_t rotation_steps = 0;
+  if (DEFAULT_ROTATION_EEF_STEP > 0.0)
   {
-    steps = 30;
+    rotation_steps = floor(rotation_distance / DEFAULT_ROTATION_EEF_STEP);
+  }
+
+  std::size_t steps = std::max(translation_steps, std::max(steps_arm_angle, rotation_steps)) + 1;
+  ROS_INFO_STREAM("interpolated path with " << steps << " waypoints");
+  if (steps < LINEAR_MIN_STEPS_FOR_JUMP_THRESH)
+  {
+    ROS_WARN("Linear motions that cover a distance of less than 10 mm or sole end-effector rotations with less than 10 "
+             "degrees are currently not supported."
+             " Please use the 'move_ptp' service instead.");
+    return RLLErrorCode::TOO_FEW_WAYPOINTS;
   }
 
   waypoints->clear();
@@ -669,6 +758,18 @@ void RLLMoveIfacePlanning::interpolatePosesLinear(const geometry_msgs::Pose& sta
     tf::poseEigenToMsg(pose, tmp);
     waypoints->push_back(tmp);
   }
+
+  return RLLErrorCode::SUCCESS;
+}
+
+size_t RLLMoveIfacePlanning::numStepsArmAngle(const double start, const double end)
+{
+  if (end < start)
+  {
+    return floor((2 * M_PI + end - start) / DEFAULT_ROTATION_EEF_STEP);
+  }
+
+  return floor((end - start) / DEFAULT_ROTATION_EEF_STEP);
 }
 
 void RLLMoveIfacePlanning::interpolateArmangleLinear(const double start, const double end, const int dir, const int n,
@@ -700,12 +801,20 @@ void RLLMoveIfacePlanning::interpolateArmangleLinear(const double start, const d
 
 void RLLMoveIfacePlanning::transformPoseForIK(geometry_msgs::Pose* pose)
 {
-  tf::Transform world_to_ee;
-  tf::Transform base_to_tip;
+  tf::Transform world_to_ee, base_to_tip;
 
   tf::poseMsgToTF(*pose, world_to_ee);
   base_to_tip = base_to_world_ * world_to_ee * ee_to_tip_;
   tf::poseTFToMsg(base_to_tip, *pose);
+}
+
+void RLLMoveIfacePlanning::transformPoseFromFK(geometry_msgs::Pose* pose)
+{
+  tf::Transform base_to_tip, world_to_ee;
+
+  tf::poseMsgToTF(*pose, base_to_tip);
+  world_to_ee = base_to_world_.inverse() * base_to_tip * ee_to_tip_.inverse();
+  tf::poseTFToMsg(world_to_ee, *pose);
 }
 
 bool RLLMoveIfacePlanning::armangleInRange(double arm_angle)
