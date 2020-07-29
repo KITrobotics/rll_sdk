@@ -52,8 +52,8 @@ struct RLLInvKinOptions
   double position_exp_alpha = 4.3;
 
   // parameters for the multi-objective optimization
-  double delta_t_desired = 0.04;  // desired time step; if set to zero or negative, the minimal admissible value
-                                  // according to velocity/acceleration limits will be used
+  double delta_t_desired = 0.1;  // desired time step; if set to zero or negative, the minimal admissible value
+                                 // according to velocity/acceleration limits will be used
   double joint_velocity_scaling_factor = 1.0;
   double joint_acceleration_scaling_factor = 1.0;
   bool minimize_acceleration = true;
