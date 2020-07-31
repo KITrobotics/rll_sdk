@@ -377,13 +377,15 @@ std::vector<double> RLLMoveIfacePlanning::getJointValuesFromNamedTarget(const st
 
 bool RLLMoveIfacePlanning::jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal)
 {
-  float distance = 0.0;
+  const double MIN_DISTANCE = 0.02;  // a little more than 1 degree
+
+  double distance = 0.0;
   for (unsigned int i = 0; i < start.size(); ++i)
   {
     distance += fabs(start[i] - goal[i]);
   }
 
-  return (distance < 0.01);
+  return (distance < MIN_DISTANCE);
 }
 
 bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& goal)
