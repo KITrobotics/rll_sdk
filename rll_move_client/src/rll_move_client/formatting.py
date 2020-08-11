@@ -1,8 +1,7 @@
 import sys
 import traceback
 
-from geometry_msgs.msg import Pose
-from geometry_msgs.msg import Quaternion, Point
+from geometry_msgs.msg import Pose, Quaternion, Point, Pose2D
 from rll_move_client.util import quaternion_to_rpy
 
 C_BOLD = '\033[1m'
@@ -67,6 +66,11 @@ def format_point(point):
     return "Point(%.2f, %.2f, %.2f)" % (point.x, point.y, point.z)
 
 
+def format_pose2d(pose):
+    # type: (Pose2D) -> str
+    return "Point2D(%.2f, %.2f), theta: %.2f" % (pose.x, pose.y, pose.theta)
+
+
 def format_list(_list, max_n=20):
     text = "["
     for val in _list[:max_n]:
@@ -87,6 +91,8 @@ def override_formatting_for_ros_types():
     Pose.__repr__ = format_pose
     Point.__str__ = format_point
     Point.__repr__ = format_point
+    Pose2D.__str__ = format_pose2d
+    Pose2D.__repr__ = format_pose2d
     Quaternion.__str__ = format_quaternion
     Quaternion.__repr__ = format_quaternion
 
