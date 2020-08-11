@@ -43,6 +43,10 @@ public:
     GOAL_TOO_CLOSE_TO_START,
     GOAL_IN_COLLISION,
     NO_IK_SOLUTION_FOUND,
+    // to support project specific error codes, project designer can return these values
+    PROJECT_SPECIFIC_INVALID_1 = 32,
+    PROJECT_SPECIFIC_INVALID_2,
+    PROJECT_SPECIFIC_INVALID_3,
 
     // recoverable failure
     RECOVERABLE_FAILURE_BEGIN = 64,
@@ -55,6 +59,9 @@ public:
     INSUFFICIENT_PERMISSION,
     JOB_EXECUTION_TIMED_OUT,
     SERVICE_CALL_NOT_ALLOWED,
+    PROJECT_SPECIFIC_RECOVERABLE_1 = 96,
+    PROJECT_SPECIFIC_RECOVERABLE_2,
+    PROJECT_SPECIFIC_RECOVERABLE_3,
 
     // critical failure
     CRITICAL_FAILURE_BEGIN = 128,
@@ -66,6 +73,9 @@ public:
     GRIPPER_MOVEMENT_FAILED,
     RESET_TO_HOME_FAILED,
     INTERNAL_ERROR,
+    PROJECT_SPECIFIC_CRITICAL_1 = 160,
+    PROJECT_SPECIFIC_CRITICAL_2,
+    PROJECT_SPECIFIC_CRITICAL_3,
 
     // initial value, used to determine if a value has been set
     NOT_SET = 255
