@@ -24,19 +24,37 @@
 
     stop_trajectory_duration: 0.5        # Override default
 
-  # Gripper controller ------------------------------------------
-  PositionJointInterface_gripper_controller:
+  # EGL 90 Gripper controller ------------------------------------------
+  PositionJointInterface_egl90_gripper_controller:
     type: effort_controllers/JointTrajectoryController
     joints:
-      - $(arg robot_name)_egl_position_left
-      - $(arg robot_name)_egl_position_right
+      - $(arg robot_name)_egl90_position_left
+      - $(arg robot_name)_egl90_position_right
     gains:
-      $(arg robot_name)_egl_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
-      $(arg robot_name)_egl_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      $(arg robot_name)_egl90_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      $(arg robot_name)_egl90_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
     constraints:
       goal_time: 2.0
       stopped_velocity_tolerance: 0.03
-      $(arg robot_name)_egl_position_left:
+      $(arg robot_name)_egl90_position_left:
         goal: 0.045
-      $(arg robot_name)_egl_position_right:
+      $(arg robot_name)_egl90_position_right:
+        goal: 0.045
+
+  # CRG 200 Gripper controller ------------------------------------------
+  PositionJointInterface_crg200_gripper_controller:
+    type: effort_controllers/JointTrajectoryController
+    joints:
+      - $(arg robot_name)_crg200_position_left
+      - $(arg robot_name)_crg200_position_right
+    gains:
+      # TODO(mark): are these values correct?
+      $(arg robot_name)_crg200_position_left: {p: 500,  d: 10, i: 2, i_clamp: 10}
+      $(arg robot_name)_crg200_position_right: {p: 500,  d: 10, i: 2, i_clamp: 10}
+    constraints:
+      goal_time: 2.0
+      stopped_velocity_tolerance: 0.03
+      $(arg robot_name)_crg200_position_left:
+        goal: 0.045
+      $(arg robot_name)_crg200_position_right:
         goal: 0.045

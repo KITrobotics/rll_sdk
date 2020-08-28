@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<robot name="none" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- This is a dummy EEF if no gripper is attached -->
+  <xacro:macro name="none" params="parent robot_name">
+
+    <joint name="${robot_name}_none_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_link_tcp" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_link_tcp" />
+  </xacro:macro>
+
+</robot>

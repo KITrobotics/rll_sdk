@@ -3,6 +3,9 @@
 
     <arg name="hardware_interface" default="PositionJointInterface" />
     <arg name="robot_name" default="iiwa" />
+    <arg name="eef_type" default="egl90" />
+    <arg name="load_gripper_controller" default="$(eval eef_type in ['crg200', 'egl90'])" />
+    
     <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
     <arg name="headless" default="true"/>
     <arg name="gazebo_port" default="11345"/>
@@ -15,6 +18,7 @@
     <include file="$(find rll_gazebo)/launch/rll_world.launch">
         <arg name="hardware_interface" value="$(arg hardware_interface)" />
         <arg name="robot_name" value="$(arg robot_name)" />
+        <arg name="eef_type" value="$(arg eef_type)" />
         <arg name="description_file" value="$(arg description_file)" />
         <arg name="headless" value="$(arg headless)" />
     </include>
@@ -22,8 +26,11 @@
     <!-- Spawn controllers - it uses a JointTrajectoryController -->
     <include file="$(find rll_control)/launch/rll_control.launch">
         <arg name="hardware_interface" value="$(arg hardware_interface)" />
-        <arg name="controllers" value="joint_state_controller $(arg hardware_interface)_trajectory_controller PositionJointInterface_gripper_controller" />
         <arg name="robot_name" value="$(arg robot_name)" />
+
+        <!-- load the gripper controller only if required -->
+        <arg if="$(arg load_gripper_controller )" name="controllers" value="joint_state_controller $(arg hardware_interface)_trajectory_controller PositionJointInterface_$(arg eef_type)_gripper_controller" />
+        <arg unless="$(arg load_gripper_controller)" name="controllers" value="joint_state_controller $(arg hardware_interface)_trajectory_controller" />
     </include>
 
 </launch>

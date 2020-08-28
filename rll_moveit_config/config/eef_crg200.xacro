@@ -1,0 +1,161 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_crg200">
+
+    <xacro:macro name="rll_crg200" params="robot_name">
+
+        <group name="gripper">
+            <link name="${robot_name}_crg200_base" />
+            <link name="${robot_name}_crg200_waggon_left" />
+            <link name="${robot_name}_crg200_waggon_right" />
+            <link name="${robot_name}_crg200_finger_adapter_left" />
+            <link name="${robot_name}_crg200_finger_adapter_right" />
+            <link name="${robot_name}_crg200_finger_left" />
+            <link name="${robot_name}_crg200_finger_right" />
+        </group>
+
+        <!-- According to the schematic the waggons can move from: -24.25mm <-> 18.25mm => 42.5mm -->
+        <!-- However, the default finger adapters are in collision in the fully closed position -> add offset by 15.5mm -->
+        <!-- NOTE: these values aren't used directly by the current CRG200 gripper driver! They are only used to determine
+         whether to open or close the gripper while  the actual limits are configured via the CRG200 GripPresets -->
+        <group_state name="gripper_close" group="gripper">
+            <joint name="${robot_name}_crg200_position_left" value="0.027" />
+            <joint name="${robot_name}_crg200_position_right" value="0.027" />
+        </group_state>
+        <group_state name="gripper_open" group="gripper">
+            <joint name="${robot_name}_crg200_position_left" value="0.0" />
+            <joint name="${robot_name}_crg200_position_right" value="0.0" />
+        </group_state>
+
+
+        <!-- Disable collisions specific to the CRG200 gripper -->
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_adapter" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_base" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_finger_left" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_adapter" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_base" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_finger_left" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_base" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_finger_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_link_ee" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_finger_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_waggon_left" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_waggon_right" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_left" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_right" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_left" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_waggon_right" link2="profile_cams" reason="Never" />
+        <!-- the CRG 200 model has an additional finger_adpater link -->
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_finger_adapter_left" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_crg200_finger_adapter_right" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_finger_adapter_left" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_crg200_finger_adapter_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_finger_adapter_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_adapter" link2="${robot_name}_crg200_finger_adapter_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_finger_adapter_left" reason="Default" />
+        <disable_collisions link1="${robot_name}_crg200_base" link2="${robot_name}_crg200_finger_adapter_right" reason="Default" />
+
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_crg200_finger_left" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_crg200_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_crg200_waggon_left" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_crg200_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_left" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_crg200_finger_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_crg200_finger_right" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_crg200_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_crg200_waggon_right" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_crg200_finger_adapter_right" link2="profile_cams" reason="Never" />
+
+    </xacro:macro>
+</robot>

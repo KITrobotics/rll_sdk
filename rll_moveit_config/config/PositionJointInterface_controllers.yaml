@@ -12,10 +12,10 @@ controller_list:
       - $(arg robot_name)_joint_6
       - $(arg robot_name)_joint_7
 
-  - name: PositionJointInterface_gripper_controller
+  - name: PositionJointInterface_$(arg eef_type)_gripper_controller
     action_ns: follow_joint_trajectory
     type: FollowJointTrajectory
     default: true
     joints:
-      - $(arg robot_name)_egl_position_left
-      - $(arg robot_name)_egl_position_right
+      - $(arg robot_name)_$(arg eef_type)_position_left
+      - $(arg robot_name)_$(arg eef_type)_position_right

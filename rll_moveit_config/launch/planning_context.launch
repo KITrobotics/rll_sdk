@@ -1,34 +1,37 @@
 <?xml version="1.0"?>
 <launch>
   <!-- By default we do not overwrite the URDF. Change the following to true to change the default behavior -->
-  <arg name="load_robot_description" default="false"/>
-  <arg name="hardware_interface" default="PositionJointInterface"/>
-  <arg name="robot_name" default="iiwa"/>
+  <arg name="load_robot_description" default="false" />
+  <arg name="hardware_interface" default="PositionJointInterface" />
+  <arg name="robot_name" default="iiwa" />
+  <arg name="eef_type" default="egl90" />
+
   <!-- The name of the parameter under which the URDF is loaded -->
-  <arg name="robot_description" default="robot_description"/>
-  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
-  <arg name="semantic_description_file" default ="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
+  <arg name="robot_description" default="robot_description" />
+  <arg name="description_file" default="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <arg name="semantic_description_file" default="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
 
   <!-- Loads the URDF with the given hardware interface and robot name into the ROS Parameter Server -->
   <group if="$(arg load_robot_description)">
     <include file="$(find rll_description)/launch/rll_description_upload.launch">
-      <arg name="hardware_interface" value="$(arg hardware_interface)"/>
+      <arg name="hardware_interface" value="$(arg hardware_interface)" />
       <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="eef_type" value="$(arg eef_type)" />
       <arg name="description_file" value="$(arg description_file)" />
     </include>
   </group>
 
   <!-- The semantic description that corresponds to the URDF -->
-  <param name="$(arg robot_description)_semantic" command="$(find xacro)/xacro --inorder '$(arg semantic_description_file)' robot_name:=$(arg robot_name)" />
+  <param name="$(arg robot_description)_semantic" command="$(find xacro)/xacro --inorder '$(arg semantic_description_file)' robot_name:=$(arg robot_name) eef_type:=$(arg eef_type)" />
 
-    <!-- Load updated joint limits (override information from URDF) -->
+  <!-- Load updated joint limits (override information from URDF) -->
   <group ns="$(arg robot_description)_planning">
-    <rosparam command="load" subst_value="True" file="$(find rll_moveit_config)/config/joint_limits.yaml"/>
+    <rosparam command="load" subst_value="True" file="$(find rll_moveit_config)/config/joint_limits.yaml" />
   </group>
 
   <!-- Load default settings for kinematics; these settings are overridden by settings in a node's namespace -->
   <group ns="$(arg robot_description)_kinematics">
-    <rosparam command="load" file="$(find rll_moveit_config)/config/kinematics.yaml"/>
+    <rosparam command="load" file="$(find rll_moveit_config)/config/kinematics.yaml" />
   </group>
-  
+
 </launch>

@@ -2,11 +2,11 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cell">
 
-  <xacro:include filename="$(find rll_description)/urdf/rll_cell.xacro"/>
+  <xacro:arg name="hardware_interface" default="PositionJointInterface" />
+  <xacro:arg name="robot_name" default="iiwa" />
+  <xacro:arg name="eef_type" default="egl90" />
 
-  <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
-  <xacro:arg name="robot_name" default="iiwa"/>
-
-    <xacro:rll_cell hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)"/>
+  <xacro:include filename="$(find rll_description)/urdf/rll_cell.xacro" />
+  <xacro:rll_cell hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" eef_type="$(arg eef_type)" />
 
 </robot>

@@ -1,0 +1,31 @@
+<?xml version="1.0" ?>
+<robot name="cap" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <!-- This is a protective cap, which can be used, if no gripper is attached -->
+  <xacro:macro name="cap" params="parent robot_name">
+    <xacro:property name="package_mesh_path" value="package://rll_description/meshes/cap" />
+
+    <joint name="${robot_name}_cap_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_link_tcp" />
+      <!-- The origin is on the top of the model, but it is attached on the other side of the top shell, which has a thickness of 11.6mm -->
+      <origin xyz="0 0 0.0116" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_link_tcp">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/cap.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.002" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/collision/cap.stl" />
+        </geometry>
+      </collision>
+    </link>
+  </xacro:macro>
+
+</robot>

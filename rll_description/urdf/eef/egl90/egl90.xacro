@@ -1,0 +1,172 @@
+<?xml version="1.0"?>
+<robot name="egl90" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rll_description)/urdf/eef/egl90/egl90.gazebo.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/eef/egl90/egl90.transmission.xacro" />
+
+  <xacro:macro name="egl90" params="parent robot_name">
+
+    <!-- Local properties of the macro -->
+    <xacro:property name="mesh_path" value="package://rll_description/meshes/egl90" />
+    <xacro:property name="finger_mass" value="0.1" />
+    <xacro:property name="joint_lower_limit" value="0.0" />
+    <xacro:property name="joint_upper_limit" value="0.055" />
+    <xacro:property name="joint_damping" value="0.5" />
+
+
+    <joint name="${robot_name}_egl90_adapter_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_egl90_adapter" />
+      <origin xyz="0 0 0" rpy="0 0 ${-90 * pi / 180}" />
+    </joint>
+    <link name="${robot_name}_egl90_adapter">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_adapter.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0.015" rpy="0 0 0" />
+        <geometry>
+          <box size="0.09 0.07 0.03" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_egl90_mount" type="fixed">
+      <parent link="${robot_name}_egl90_adapter" />
+      <child link="${robot_name}_egl90_base" />
+      <origin xyz="0 0 0.024" rpy="0 0 0" />
+    </joint>
+    <link name="${robot_name}_egl90_base">
+      <inertial>
+        <origin xyz="0 0 0.0465291" rpy="0 0 0" />
+        <mass value="2.57" />
+        <inertia ixx="0.003" ixy="0" ixz="0" iyy="0.004" iyz="0" izz="0.004" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_base.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="-0.025 0 0.055" rpy="0 0 0" />
+        <geometry>
+          <box size="0.18 0.09 0.108" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_egl90_position_left" type="prismatic">
+      <parent link="${robot_name}_egl90_base" />
+      <child link="${robot_name}_egl90_waggon_left" />
+      <origin xyz="0.02985 0.0255 0.1063" rpy="0 0 ${180 * pi / 180}" />
+      <axis xyz="1 0 0" />
+      <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1" />
+      <dynamics damping="${joint_damping}" />
+    </joint>
+    <link name="${robot_name}_egl90_waggon_left">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_waggon.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+          <box size="0.06 0.035 0.02" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_egl90_finger_left_joint" type="fixed">
+      <parent link="${robot_name}_egl90_waggon_left" />
+      <child link="${robot_name}_egl90_finger_left" />
+      <origin xyz="-0.016 0 0" rpy="0 0 0" />
+    </joint>
+    <link name="${robot_name}_egl90_finger_left">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_finger.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/collision/gripper_finger.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_egl90_position_right" type="prismatic">
+      <parent link="${robot_name}_egl90_base" />
+      <child link="${robot_name}_egl90_waggon_right" />
+      <origin xyz="-0.02985 -0.0255 0.1063" rpy="0 0 0" />
+      <axis xyz="1 0 0" />
+      <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1" />
+      <dynamics damping="${joint_damping}" />
+    </joint>
+    <link name="${robot_name}_egl90_waggon_right">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_waggon.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 -0.01" rpy="0 0 0" />
+        <geometry>
+          <box size="0.06 0.035 0.02" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_egl90_finger_right_joint" type="fixed">
+      <parent link="${robot_name}_egl90_waggon_right" />
+      <child link="${robot_name}_egl90_finger_right" />
+      <origin xyz="-0.016 0 0" rpy="0 0 0" />
+    </joint>
+    <link name="${robot_name}_egl90_finger_right">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/visual/gripper_finger.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${mesh_path}/collision/gripper_finger.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- This is the EEF/TCP link, the position is at the very bottom of the gripper finger -->
+    <joint name="${robot_name}_egl90_ee_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_link_tcp" />
+      <origin xyz="0 0 0.248" rpy="0 0 0" />
+    </joint>
+    <link name="${robot_name}_link_tcp" />
+
+    <!-- Gazebo settings -->
+    <xacro:egl90_gazebo robot_name="${robot_name}" />
+    <xacro:egl90_transmission robot_name="${robot_name}" />
+
+  </xacro:macro>
+  
+</robot>

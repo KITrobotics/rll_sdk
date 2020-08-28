@@ -1,16 +1,19 @@
-<?xml version="1.0"?>
+<?xml version="1.0" ?>
 <launch>
-  
-  <arg name="hardware_interface" default="PositionJointInterface"/>
-  <arg name="robot_name" default="iiwa"/>
-  <arg name="description_file" default ="$(find rll_description)/urdf/rll_main.urdf.xacro" />
-  <arg name="semantic_description_file" default ="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
-  <arg name="output" default="screen"/>
+
+  <arg name="hardware_interface" default="PositionJointInterface" />
+  <arg name="robot_name" default="iiwa" />
+  <arg name="eef_type" default="egl90" />
+
+  <arg name="description_file" default="$(find rll_description)/urdf/rll_main.urdf.xacro" />
+  <arg name="semantic_description_file" default="$(find rll_moveit_config)/config/rll_cell.srdf.xacro" />
+  <arg name="output" default="screen" />
 
   <include file="$(find rll_moveit_config)/launch/planning_context.launch">
-    <arg name="load_robot_description" value="true"/>
-    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
-    <arg name="robot_name" value="$(arg robot_name)"/>
+    <arg name="load_robot_description" value="true" />
+    <arg name="hardware_interface" value="$(arg hardware_interface)" />
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="eef_type" value="$(arg eef_type)" />
     <arg name="description_file" value="$(arg description_file)" />
     <arg name="semantic_description_file" value="$(arg semantic_description_file)" />
   </include>
@@ -18,20 +21,19 @@
   <!-- GDB Debug Option -->
   <arg name="debug" default="false" />
   <arg unless="$(arg debug)" name="launch_prefix" value="" />
-  <arg     if="$(arg debug)" name="launch_prefix"
-	   value="gdb -x $(find rll_moveit_config)/launch/gdb_settings.gdb --ex run --args" />
+  <arg if="$(arg debug)" name="launch_prefix" value="gdb -x $(find rll_moveit_config)/launch/gdb_settings.gdb --ex run --args" />
 
   <!-- Verbose Mode Option -->
   <arg name="info" default="$(arg debug)" />
   <arg unless="$(arg info)" name="command_args" value="" />
-  <arg     if="$(arg info)" name="command_args" value="--debug" />
+  <arg if="$(arg info)" name="command_args" value="--debug" />
 
   <!-- move_group settings -->
-  <arg name="allow_trajectory_execution" default="true"/>
-  <arg name="fake_execution" default="false"/>
-  <arg name="max_safe_path_cost" default="1"/>
+  <arg name="allow_trajectory_execution" default="true" />
+  <arg name="fake_execution" default="false" />
+  <arg name="max_safe_path_cost" default="1" />
   <arg name="jiggle_fraction" default="0.05" />
-  <arg name="publish_monitored_planning_scene" default="true"/>
+  <arg name="publish_monitored_planning_scene" default="true" />
 
   <!-- Planning Functionality -->
   <include ns="move_group" file="$(find rll_moveit_config)/launch/planning_pipeline.launch.xml">
@@ -41,10 +43,11 @@
   <!-- Trajectory Execution Functionality -->
   <include ns="move_group" file="$(find rll_moveit_config)/launch/trajectory_execution.launch.xml" if="$(arg allow_trajectory_execution)">
     <arg name="moveit_manage_controllers" value="true" />
-    <arg name="moveit_controller_manager" value="rll_cell" unless="$(arg fake_execution)"/>
-    <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)"/>
-    <arg name="hardware_interface" value="$(arg hardware_interface)"/>
-    <arg name="robot_name" value="$(arg robot_name)"/>
+    <arg name="moveit_controller_manager" value="rll_cell" unless="$(arg fake_execution)" />
+    <arg name="moveit_controller_manager" value="fake" if="$(arg fake_execution)" />
+    <arg name="hardware_interface" value="$(arg hardware_interface)" />
+    <arg name="robot_name" value="$(arg robot_name)" />
+    <arg name="eef_type" value="$(arg eef_type)" />
   </include>
 
   <!-- Sensors Functionality -->
@@ -57,8 +60,8 @@
     <!-- Set the display variable, in case OpenGL code is used internally -->
     <env name="DISPLAY" value="$(optenv DISPLAY :0)" />
 
-    <param name="allow_trajectory_execution" value="$(arg allow_trajectory_execution)"/>
-    <param name="max_safe_path_cost" value="$(arg max_safe_path_cost)"/>
+    <param name="allow_trajectory_execution" value="$(arg allow_trajectory_execution)" />
+    <param name="max_safe_path_cost" value="$(arg max_safe_path_cost)" />
     <param name="jiggle_fraction" value="$(arg jiggle_fraction)" />
 
     <!-- MoveGroup capabilities to load -->

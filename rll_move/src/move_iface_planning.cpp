@@ -54,13 +54,23 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
   ROS_INFO("starting in ns %s", ns_.c_str());
 
   node_name_ = ros::this_node::getName();
-  ros::param::get(node_name_ + "/no_gripper", no_gripper_attached_);
-  if (no_gripper_attached_)
-  {
-    ROS_INFO("configured to not use a gripper");
-  }
 
   ros::param::get("move_group/trajectory_execution/allowed_start_tolerance", allowed_start_tolerance_);
+
+  ros::param::get("~eef_type", eef_type_);
+  if (eef_type_.empty())
+  {
+    ROS_ERROR("No EEF type specified, please pass a eef_type parameter, using default egl90");
+    eef_type_ = "egl90";
+  }
+  ROS_INFO("Using EEF type %s: ", eef_type_.c_str());
+
+  // for now we only support two gripper types
+  no_gripper_attached_ = !(eef_type_ == "egl90" || eef_type_ == "crg200");
+  if (no_gripper_attached_)
+  {
+    ROS_INFO("Configured to not use a gripper");
+  }
 
   manip_move_group_.setPlannerId("RRTConnectkConfigDefault");
   manip_move_group_.setPlanningTime(2.0);
@@ -74,7 +84,8 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
   manip_model_ = manip_move_group_.getRobotModel();
   manip_joint_model_group_ = manip_model_->getJointModelGroup(manip_move_group_.getName());
 
-  std::string ee_link = ns_ + "_gripper_link_ee";
+  // each configurable EEF will have this link
+  std::string ee_link = ns_ + "_link_tcp";
   manip_move_group_.setEndEffectorLink(ee_link);
 
   planning_scene_monitor_ = std::make_shared<planning_scene_monitor::PlanningSceneMonitor>("robot_description");
@@ -84,11 +95,29 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
   acm_ = planning_scene_->getAllowedCollisionMatrix();
 
   // startup checks, shutdown the node if something is wrong
-  if (!isCollisionLinkAvailable() || !getKinematicsSolver() || !initConstTransforms())
+  if (isInitialStateInCollision() || !isCollisionLinkAvailable() || !getKinematicsSolver() || !initConstTransforms())
   {
     ROS_FATAL("Startup checks failed, shutting the node down!");
     ros::shutdown();
   }
+}
+
+const std::string& RLLMoveIfacePlanning::getEEFType()
+{
+  return eef_type_;
+}
+
+bool RLLMoveIfacePlanning::isInitialStateInCollision()
+{
+  // If we start in a colliding state, it is often not apparant why the robot isn't moving
+  robot_state::RobotState current_state = getCurrentRobotState();
+  if (stateInCollision(&current_state))
+  {
+    ROS_FATAL("Starting state is in collision! Please verify your setup!");
+    return true;
+  }
+
+  return false;
 }
 
 bool RLLMoveIfacePlanning::isCollisionLinkAvailable()
@@ -480,6 +509,7 @@ bool RLLMoveIfacePlanning::stateInCollision(robot_state::RobotState* state)
   state->update(true);
   collision_detection::CollisionRequest request;
   request.distance = true;
+  request.verbose = true;
 
   collision_detection::CollisionResult result;
   result.clear();
@@ -541,8 +571,10 @@ bool RLLMoveIfacePlanning::attachGraspObject(const std::string& object_id)
   attached_object.link_name = manip_move_group_.getEndEffectorLink();
   attached_object.object = remove_object;
   attached_object.object.operation = attached_object.object.ADD;
+
   attached_object.touch_links =
-      std::vector<std::string>{ ns_ + "_gripper_finger_left", ns_ + "_gripper_finger_right", "table" };
+      std::vector<std::string>{ ns_ + "_" + eef_type_ + "_finger_left", ns_ + "_" + eef_type_ + "_finger_right",
+                                "table" };  // TODO(mark): remove table (better to use an offset)
   planning_scene_interface_.applyAttachedCollisionObject(attached_object);
 
   return true;

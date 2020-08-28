@@ -1,0 +1,117 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_egl90">
+
+    <xacro:macro name="rll_egl90" params="robot_name">
+
+        <group name="gripper">
+            <link name="${robot_name}_egl90_base" />
+            <link name="${robot_name}_egl90_waggon_left" />
+            <link name="${robot_name}_egl90_waggon_right" />
+            <link name="${robot_name}_egl90_finger_left" />
+            <link name="${robot_name}_egl90_finger_right" />
+        </group>
+
+        <group_state name="gripper_close" group="gripper">
+            <joint name="${robot_name}_egl90_position_left" value="0.055" />
+            <joint name="${robot_name}_egl90_position_right" value="0.055" />
+        </group_state>
+        <group_state name="gripper_open" group="gripper">
+            <joint name="${robot_name}_egl90_position_left" value="0" />
+            <joint name="${robot_name}_egl90_position_right" value="0" />
+        </group_state>
+
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_adapter" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_base" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_finger_left" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_finger_right" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_waggon_left" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_adapter" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_base" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_finger_left" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_finger_right" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_waggon_left" reason="Never" />
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_egl90_base" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_egl90_finger_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_egl90_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_egl90_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_link_ee" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_adapter" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_egl90_finger_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_egl90_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_egl90_waggon_left" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_egl90_waggon_right" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_base" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_egl90_finger_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_egl90_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_left" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_egl90_waggon_left" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_finger_right" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_egl90_waggon_right" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_left" link2="profile_cams" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_3" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_link_ee" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_roboception_adapter" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_roboception_camera_uncal" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="${robot_name}_roboception_gusset" reason="Never" />
+        <disable_collisions link1="${robot_name}_egl90_waggon_right" link2="profile_cams" reason="Never" />
+
+    </xacro:macro>
+</robot>
