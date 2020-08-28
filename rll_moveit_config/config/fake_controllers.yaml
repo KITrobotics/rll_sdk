@@ -12,5 +12,12 @@ controller_list:
       - $(arg robot_name)_joint_7
   - name: fake_gripper_controller
     joints:
-      - $(arg robot_name)_egl_position_left
-      - $(arg robot_name)_egl_position_right
+      - $(arg robot_name)_$(arg eef_type)_position_left
+      - $(arg robot_name)_$(arg eef_type)_position_right
+
+
+#initial:
+#  - group: gripper
+#    pose: gripper_open
+#  - group: manipulator
+#    pose: home_bow

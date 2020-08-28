@@ -1,28 +1,32 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
   <xacro:macro name="egl90_transmission" params="robot_name">
 
     <!-- gripper right transmissions -->
-    <transmission name="$(arg robot_name)_tran_egl_position_left">
+    <transmission name="${robot_name}_tran_egl90_position_left">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="$(arg robot_name)_egl_position_left">
+      <joint name="${robot_name}_egl90_position_left">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
-      <actuator name="$(arg robot_name)_motor_egl_position_left">
+      <actuator name="${robot_name}_motor_egl90_position_left">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
         <mechanicalReduction>1</mechanicalReduction>
       </actuator>
     </transmission>
+
     <!-- gripper left transmissions -->
-    <transmission name="$(arg robot_name)_tran_egl_position_right">
+    <transmission name="${robot_name}_tran_egl90_position_right">
       <type>transmission_interface/SimpleTransmission</type>
-      <joint name="$(arg robot_name)_egl_position_right">
+      <joint name="${robot_name}_egl90_position_right">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
       </joint>
-      <actuator name="$(arg robot_name)_motor_egl_position_right">
+      <actuator name="${robot_name}_motor_egl90_position_right">
         <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
-      <mechanicalReduction>1</mechanicalReduction>
-    </actuator>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
     </transmission>
-    </xacro:macro>
-  </robot>
+
+  </xacro:macro>
+
+</robot>

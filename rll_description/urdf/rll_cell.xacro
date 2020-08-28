@@ -2,146 +2,162 @@
 
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cell">
 
-  <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/egl90/egl90.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/rll_virtual.xacro"/>
-  <xacro:include filename="$(find rll_description)/urdf/rll.gazebo.xacro"/>
+  <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa7.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/visard160/rc_visard_160.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/rll_virtual.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/rll.gazebo.xacro" />
 
-  <!--  Arguments for the iiwa7 macro  -->
-  <xacro:arg name="hardware_interface" default="PositionJointInterface"/>
-  <xacro:arg name="robot_name" default="iiwa"/>
 
-  <xacro:macro name="rll_cell" params="hardware_interface robot_name">
+  <xacro:macro name="rll_cell" params="hardware_interface robot_name eef_type:=egl90">
 
-    <link name="world"/>
+    <link name="world" />
     <joint name="table_joint" type="fixed">
       <parent link="world" />
       <child link="table" />
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </joint>
     <link name="table">
       <inertial>
-        <origin xyz="0 0 -0.1" rpy="0 0 0"/>
-        <mass value="500"/>
-        <inertia ixx="108" ixy="0" ixz="0" iyy="62" iyz="0" izz="167"/>
+        <origin xyz="0 0 -0.1" rpy="0 0 0" />
+        <mass value="500" />
+        <inertia ixx="108" ixy="0" ixz="0" iyy="62" iyz="0" izz="167" />
       </inertial>
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}" />
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/table.dae"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/table.dae" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 -0.1" rpy="0 0 0"/>
+        <origin xyz="0 0 -0.1" rpy="0 0 0" />
         <geometry>
-          <box size="1.2 1.6 0.2"/>
+          <box size="1.2 1.6 0.2" />
         </geometry>
       </collision>
     </link>
-
 
     <joint name="base_adapter_joint" type="fixed">
       <parent link="table" />
-      <child link="$(arg robot_name)_base_adapter" />
-      <origin xyz="-0.2 0 0" rpy="0 0 0"/>
+      <child link="${robot_name}_base_adapter" />
+      <origin xyz="-0.2 0 0" rpy="0 0 0" />
     </joint>
-    <link name="$(arg robot_name)_base_adapter">
+    <link name="${robot_name}_base_adapter">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/base_adapter.dae"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/base_adapter.dae" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0.01" rpy="0 0 0"/>
+        <origin xyz="0 0 0.01" rpy="0 0 0" />
         <geometry>
-          <cylinder length="0.02" radius="0.16"/>
+          <cylinder length="0.02" radius="0.16" />
         </geometry>
       </collision>
     </link>
 
-    <xacro:iiwa7 hardware_interface="$(arg hardware_interface)" robot_name="$(arg robot_name)" parent="$(arg robot_name)_base_adapter">
-      <origin xyz="0 0 0.02" rpy="0 0 0"/>
+    <!-- KUKA iiwa manipulator -->
+    <xacro:iiwa7 hardware_interface="${hardware_interface}" robot_name="${robot_name}" parent="${robot_name}_base_adapter">
+      <origin xyz="0 0 0.02" rpy="0 0 0" />
     </xacro:iiwa7>
 
-    <!-- Here we insert a Schunk gripper in the scene -->
-    <xacro:egl90 parent="$(arg robot_name)_link_ee" prefix="$(arg robot_name)_" />
+    <!-- The rll_sdk comes with some predefined endeffectors.
+         If you want to use a different endeffector you simply need to provide the corresponding macros -->
+    <xacro:if value="${eef_type == 'egl90'}">
+      <xacro:include filename="$(find rll_description)/urdf/eef/egl90/egl90.xacro" />
+      <xacro:egl90 parent="${robot_name}_link_ee" robot_name="${robot_name}" />
+    </xacro:if>
 
+    <xacro:if value="${eef_type == 'crg200'}">
+      <xacro:include filename="$(find rll_description)/urdf/eef/crg200/crg200.xacro" />
+      <xacro:crg200 parent="${robot_name}_link_ee" robot_name="${robot_name}" />
+    </xacro:if>
+
+    <xacro:if value="${eef_type == 'cap'}">
+      <xacro:include filename="$(find rll_description)/urdf/eef/cap/cap.xacro" />
+      <xacro:cap parent="${robot_name}_link_ee" robot_name="${robot_name}" />
+    </xacro:if>
+
+    <xacro:if value="${eef_type == 'none'}">
+      <xacro:include filename="$(find rll_description)/urdf/eef/none/none.xacro" />
+      <xacro:none parent="${robot_name}_link_ee" robot_name="${robot_name}" />
+    </xacro:if>
+
+    <!-- Profile on which the cameras are mounted -->
     <joint name="profile_cams_joint" type="fixed">
       <parent link="table" />
       <child link="profile_cams" />
-      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
     </joint>
     <link name="profile_cams">
       <inertial>
-        <origin xyz="0.58 0.82 0.17" rpy="0 0 0"/>
-        <mass value="5"/>
-        <inertia ixx="1.67" ixy="0" ixz="0" iyy="1.67" iyz="0" izz="0.002"/>
+        <origin xyz="0.58 0.82 0.17" rpy="0 0 0" />
+        <mass value="5" />
+        <inertia ixx="1.67" ixy="0" ixz="0" iyy="1.67" iyz="0" izz="0.002" />
       </inertial>
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}" />
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/profile_cams.dae"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/profile_cams.dae" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0.58 0.82 0.17" rpy="0 0 0"/>
+        <origin xyz="0.58 0.82 0.17" rpy="0 0 0" />
         <geometry>
-          <box size="0.05 0.05 2.0"/>
+          <box size="0.05 0.05 2.0" />
         </geometry>
       </collision>
     </link>
 
     <!-- Roboception camera -->
-    <xacro:rc_160 parent="profile_cams" prefix="$(arg robot_name)_">
-      <origin xyz="0.577 0.8 0.829" rpy="0 ${180 * pi / 180} 0"/>
+    <xacro:rc_160 parent="profile_cams" prefix="${robot_name}_">
+      <origin xyz="0.577 0.8 0.829" rpy="0 ${180 * pi / 180} 0" />
     </xacro:rc_160>
 
     <!-- Axis camera -->
     <joint name="axis_cam_base_joint" type="fixed">
       <parent link="profile_cams" />
       <child link="axis_cam_base" />
-      <origin xyz="0.577 0.8 1.137" rpy="${90 * pi / 180} 0 0"/>
+      <origin xyz="0.577 0.8 1.137" rpy="${90 * pi / 180} 0 0" />
     </joint>
     <link name="axis_cam_base">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_bottom.dae"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_bottom.dae" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0 0.035" rpy="0 0 0"/>
+        <origin xyz="0 0 0.035" rpy="0 0 0" />
         <geometry>
-          <box size="0.07 0.07 0.07"/>
+          <box size="0.07 0.07 0.07" />
         </geometry>
       </collision>
     </link>
     <joint name="axis_cam_top_joint" type="fixed">
       <parent link="axis_cam_base" />
       <child link="axis_cam_top" />
-      <origin xyz="0 0 0.068" rpy="${30 * pi / 180} ${30 * pi / 180} ${-65 * pi / 180}"/>
+      <origin xyz="0 0 0.068" rpy="${30 * pi / 180} ${30 * pi / 180} ${-65 * pi / 180}" />
     </joint>
     <link name="axis_cam_top">
       <visual>
-        <origin xyz="0 0 0" rpy="0 0 0"/>
+        <origin xyz="0 0 0" rpy="0 0 0" />
         <geometry>
-          <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_top.dae"/>
+          <mesh filename="package://rll_description/meshes/rll/visual/axis_cam_top.dae" />
         </geometry>
       </visual>
       <collision>
-        <origin xyz="0 0.01 0.03" rpy="0 0 0"/>
+        <origin xyz="0 0.01 0.03" rpy="0 0 0" />
         <geometry>
-          <box size="0.06 0.11 0.06"/>
+          <box size="0.06 0.11 0.06" />
         </geometry>
       </collision>
     </link>
 
-    <!--Extensions -->
+    <!-- Extensions -->
     <xacro:rll_virtual />
-    <xacro:rll_gazebo robot_name="$(arg robot_name)" />
+    <xacro:rll_gazebo robot_name="${robot_name}" />
 
-</xacro:macro>
+  </xacro:macro>
 
 </robot>

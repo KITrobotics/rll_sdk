@@ -57,6 +57,7 @@ protected:
   moveit::core::RobotModelConstPtr manip_model_;
   bool no_gripper_attached_ = false;
 
+  const std::string& getEEFType();
   RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface* move_group, bool for_gripper = false);
   RLLErrorCode moveToGoalLinear(const geometry_msgs::Pose& goal, bool cartesian_time_parametrization = false);
   RLLErrorCode runLinearTrajectory(const moveit_msgs::RobotTrajectory& trajectory,
@@ -104,6 +105,7 @@ private:
   static const std::string GRIPPER_CLOSE_TARGET_NAME;
 
   std::string ns_;
+  std::string eef_type_;
   moveit::planning_interface::MoveGroupInterface gripper_move_group_;
   tf::Transform base_to_world_;
   tf::Transform ee_to_tip_;
@@ -129,6 +131,7 @@ private:
   bool getKinematicsSolver();
   bool initConstTransforms();  // init members base_to_world_ ee_to_tip_
   bool isCollisionLinkAvailable();
+  bool isInitialStateInCollision();
 };
 
 #endif  // RLL_MOVE_MOVE_IFACE_PLANNING_H

@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:macro name="crg200_transmission" params="robot_name">
+
+    <!-- gripper right transmissions -->
+    <transmission name="${robot_name}_tran_crg200_position_left">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${robot_name}_crg200_position_left">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${robot_name}_motor_crg200_position_left">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+
+    <!-- gripper left transmissions -->
+    <transmission name="${robot_name}_tran_crg200_position_right">
+      <type>transmission_interface/SimpleTransmission</type>
+      <joint name="${robot_name}_crg200_position_right">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+      </joint>
+      <actuator name="${robot_name}_motor_crg200_position_right">
+        <hardwareInterface>hardware_interface/EffortJointInterface</hardwareInterface>
+        <mechanicalReduction>1</mechanicalReduction>
+      </actuator>
+    </transmission>
+
+  </xacro:macro>
+
+</robot>

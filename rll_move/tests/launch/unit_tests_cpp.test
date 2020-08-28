@@ -1,9 +1,8 @@
 <launch>
-    <arg name="robot" default="iiwa"/>
-    <arg name="output" default="log"/>
-    <arg name="headless" default="true"/>
+    <arg name="robot" default="iiwa" />
+    <arg name="output" default="log" />
+    <arg name="headless" default="true" />
 
-    <test ns="$(arg robot)" test-name="unit_tests_cpp" pkg="rll_move"
-          type="unit_tests_cpp" time-limit="60"/>
+    <test ns="$(arg robot)" test-name="unit_tests_cpp" pkg="rll_move" type="unit_tests_cpp" time-limit="60" />
 
 </launch>

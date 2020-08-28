@@ -1,0 +1,260 @@
+<?xml version="1.0"?>
+<robot name="crg200" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:include filename="$(find rll_description)/urdf/eef/crg200/crg200.gazebo.xacro" />
+  <xacro:include filename="$(find rll_description)/urdf/eef/crg200/crg200.transmission.xacro" />
+
+  <!-- TOOD(mark): allow to configure the gripper finger -->
+  <xacro:macro name="crg200" params="parent robot_name">
+
+    <!-- Local properties of the macro -->
+    <xacro:property name="package_mesh_path" value="package://rll_description/meshes/crg200" />
+    <xacro:property name="joint_lower_limit" value="0.0" />
+    <xacro:property name="joint_upper_limit" value="0.0425" />
+    <!-- TODO(mark): find correct mass, effort, damping... (for the finger adapter as well) -->
+    <xacro:property name="finger_mass" value="0.1" />
+    <xacro:property name="joint_damping" value="0.5" />
+
+    <!-- optional, additional padding for the gripper's base collision primitives  -->
+    <xacro:property name="padding" value="0.005" />
+
+    <!-- The dimensions listed here refer to dimensions of the gripper's CAD model -->
+    <xacro:property name="base_dim" value="${[0.105,0.060,0.0691]}" /> <!-- the waggon reaches .9mm out of the base: total=0.070 -->
+
+    <!-- The adapter plate has an asymetrical nodge on the right side and is a bit wider than the base.
+    The gripper's cable is connected to this notch and reaches upwards.Therefore, the adater collision model
+    is offset to the right and extends upwards to cover the cable -->
+    <xacro:property name="adapter_x_offset" value="0.01" />
+    <xacro:property name="adapter_z_extension" value="0.04" />
+
+    <!-- Dimension of the adapter plate from the CAD model -->
+    <xacro:property name="adapter_dim" value="${[base_dim[0] + adapter_x_offset, base_dim[1] + 0.005, 0.017]}" />
+    <xacro:property name="adapter_dim_collision" value="${[adapter_dim[0] + padding, adapter_dim[1] + padding, adapter_dim[2] + padding]}" />
+
+    <!-- The waggon's (and finger adapter's) origin are on the left edge of the waggon finger mount.
+     The CRG 200 schematic specifies the distance from the left edge of the waggon to the gripper's base center as
+     (-)24.25mm for the closed and 18.25 for the open position. The waggon is therefore positioned at -24.25,
+     so the reported joint state are in the range [0mm, 42.5mm]. The waggon track is offset by 18.5mm from the base's origin.
+     The values are for the inverted position (joint state) mode, i.e. the reported value is 0 when the gripper is full opened
+     and 24.25 when the gripper is fully closed. To achieve this the waggon and finger_adpater joints are rotate by +-pi.
+    -->
+    <xacro:property name="waggon_dim" value="${[0.0048, 0.0084, 0.0124]}" />
+    <xacro:property name="waggon_pos" value="${[0.01825, 0.0185, 0.0576]}" />
+    <xacro:property name="finger_pos" value="${[0.030, -waggon_pos[1], 0.025]}" />
+
+    <joint name="${robot_name}_crg200_adapter_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_crg200_adapter" />
+      <!-- The gripper's CAD model is oriented along the x-axis, but it is mounted along the y-axis -> rotate the first joint by 90deg. -->
+      <origin xyz="0 0 0" rpy="0 0 ${90 * pi / 180}" />
+    </joint>
+
+    <link name="${robot_name}_crg200_adapter">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/gripper_adapter.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="${-adapter_x_offset/2} 0 ${(adapter_dim_collision[2] - adapter_z_extension) / 2.0}" rpy="0 0 0" />
+        <geometry>
+          <box size="${adapter_dim_collision[0]} ${adapter_dim_collision[1]} ${adapter_dim_collision[2] + adapter_z_extension}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_mount" type="fixed">
+      <parent link="${robot_name}_crg200_adapter" />
+      <child link="${robot_name}_crg200_base" />
+      <origin xyz="0 0 ${adapter_dim[2]}" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_crg200_base">
+      <inertial>
+        <origin xyz="0 0 0.0465291" rpy="0 0 0" />
+        <mass value="2.57" />
+        <inertia ixx="0.003" ixy="0" ixz="0" iyy="0.004" iyz="0" izz="0.004" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/gripper_base.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${(base_dim[2] + padding) / 2}" rpy="0 0 0" />
+        <geometry>
+          <box size="${base_dim[0] + padding} ${base_dim[1] + padding} ${base_dim[2] + padding}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_position_left" type="prismatic">
+      <parent link="${robot_name}_crg200_base" />
+      <child link="${robot_name}_crg200_waggon_left" />
+      <origin xyz="${waggon_pos[0]} ${waggon_pos[1]} ${waggon_pos[2]}" rpy="0 0 ${-pi}" />
+      <axis xyz="1 0 0" />
+      <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1" />
+      <dynamics damping="${joint_damping}" />
+    </joint>
+
+    <link name="${robot_name}_crg200_waggon_left">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 ${-pi}" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/gripper_waggon.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${waggon_dim[2]/2}" rpy="0 0 ${-pi}" />
+        <geometry>
+          <box size="${waggon_dim[0]} ${waggon_dim[1]} ${waggon_dim[2]}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_finger_adapter_left_joint" type="fixed">
+      <parent link="${robot_name}_crg200_waggon_left" />
+      <child link="${robot_name}_crg200_finger_adapter_left" />
+      <origin xyz="0 0 ${waggon_dim[2]}" rpy="0 0 ${-pi}" />
+    </joint>
+
+    <link name="${robot_name}_crg200_finger_adapter_left">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/finger_adapter.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/collision/finger_adapter.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_finger_left_joint" type="fixed">
+      <parent link="${robot_name}_crg200_finger_adapter_left" />
+      <child link="${robot_name}_crg200_finger_left" />
+      <origin xyz="${finger_pos[0]} ${finger_pos[1]} ${finger_pos[2]}" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_crg200_finger_left">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/finger_straight.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/collision/finger_straight.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_position_right" type="prismatic">
+      <parent link="${robot_name}_crg200_base" />
+      <child link="${robot_name}_crg200_waggon_right" />
+      <origin xyz="${-waggon_pos[0]} ${-waggon_pos[1]} ${waggon_pos[2]}" rpy="0 0 ${0 *pi}" />
+      <axis xyz="1 0 0" />
+      <limit effort="500.0" lower="${joint_lower_limit}" upper="${joint_upper_limit}" velocity="0.1" />
+      <dynamics damping="${joint_damping}" />
+    </joint>
+
+    <link name="${robot_name}_crg200_waggon_right">
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 ${pi}" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/gripper_waggon.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 ${waggon_dim[2]/2}" rpy="0 0 ${pi}" />
+        <geometry>
+          <box size="${waggon_dim[0]} ${waggon_dim[1]} ${waggon_dim[2]}" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_finger_adapter_right_joint" type="fixed">
+      <parent link="${robot_name}_crg200_waggon_right" />
+      <child link="${robot_name}_crg200_finger_adapter_right" />
+      <origin xyz="0 0 ${waggon_dim[2]}" rpy="0 0 ${pi}" />
+    </joint>
+
+    <link name="${robot_name}_crg200_finger_adapter_right">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/finger_adapter.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/collision/finger_adapter.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <joint name="${robot_name}_crg200_finger_right_joint" type="fixed">
+      <parent link="${robot_name}_crg200_finger_adapter_right" />
+      <child link="${robot_name}_crg200_finger_right" />
+      <origin xyz="${finger_pos[0]} ${finger_pos[1]} ${finger_pos[2]}" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_crg200_finger_right">
+      <inertial>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <mass value="${finger_mass}" />
+        <inertia ixx="0.002" ixy="0" ixz="0" iyy="0.0002" iyz="0" izz="0.0002" />
+      </inertial>
+      <visual>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/visual/finger_straight.dae" />
+        </geometry>
+      </visual>
+      <collision>
+        <origin xyz="0 0 0" rpy="0 0 0" />
+        <geometry>
+          <mesh filename="${package_mesh_path}/collision/finger_straight.stl" />
+        </geometry>
+      </collision>
+    </link>
+
+    <!-- This is the EEF/TCP link, the position is at the very bottom of the gripper finger -->
+    <joint name="${robot_name}_crg200_ee_joint" type="fixed">
+      <parent link="${parent}" />
+      <child link="${robot_name}_link_tcp" />
+      <origin xyz="0 0 0.17" rpy="0 0 0" />
+    </joint>
+
+    <link name="${robot_name}_link_tcp"></link>
+
+    <!-- Gazebo settings -->
+    <xacro:crg200_gazebo robot_name="${robot_name}" />
+    <xacro:crg200_transmission robot_name="${robot_name}" />
+
+  </xacro:macro>
+
+</robot>

@@ -3,7 +3,8 @@
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cell">
   <xacro:include filename="$(find rll_moveit_config)/config/rll_cell.xacro" />
 
-  <xacro:arg name="robot_name" default="iiwa"/>
+  <xacro:arg name="robot_name" default="iiwa" />
+  <xacro:arg name="eef_type" default="egl90" />
 
-  <xacro:rll_cell robot_name="$(arg robot_name)"/>
+  <xacro:rll_cell robot_name="$(arg robot_name)" eef_type="$(arg eef_type)" />
 </robot>

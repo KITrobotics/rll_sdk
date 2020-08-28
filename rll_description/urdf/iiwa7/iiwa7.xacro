@@ -4,288 +4,260 @@
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa.gazebo.xacro" />
   <xacro:include filename="$(find rll_description)/urdf/iiwa7/iiwa.transmission.xacro" />
 
-  <xacro:property name="safety_controller_k_pos" value="15" />
-  <xacro:property name="safety_controller_k_vel" value="10" />
-  <xacro:property name="joint_damping" value="0.5" />
-
   <xacro:macro name="iiwa7" params="parent hardware_interface robot_name *origin">
+
+    <!-- Macro local properties -->
+    <xacro:property name="safety_controller_k_pos" value="15" />
+    <xacro:property name="safety_controller_k_vel" value="10" />
+    <xacro:property name="joint_damping" value="0.5" />
 
     <!--joint between {parent} and link_0-->
     <joint name="${parent}_${robot_name}_joint" type="fixed">
-      <xacro:insert_block name="origin"/>
-      <parent link="${parent}"/>
-      <child link="${robot_name}_link_0"/>
+      <xacro:insert_block name="origin" />
+      <parent link="${parent}" />
+      <child link="${robot_name}_link_0" />
     </joint>
 
     <link name="${robot_name}_link_0">
       <inertial>
-        <origin xyz="-0.01 0 0.07" rpy="0 0 0"/>
-        <mass value="5"/>
-        <inertia ixx="0.05"  ixy="0"  ixz="0" iyy="0.06" iyz="0" izz="0.03" />
+        <origin xyz="-0.01 0 0.07" rpy="0 0 0" />
+        <mass value="5" />
+        <inertia ixx="0.05" ixy="0" ixz="0" iyy="0.06" iyz="0" izz="0.03" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/base.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/base.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 0 0.0785"/>
+        <origin xyz="0 0 0.0785" />
         <geometry>
-	  <cylinder length="0.157" radius="0.135"/>
+          <cylinder length="0.157" radius="0.135" />
         </geometry>
       </collision>
     </link>
 
     <!-- joint between link_0 and link_1 -->
     <joint name="${robot_name}_joint_1" type="revolute">
-      <parent link="${robot_name}_link_0"/>
-      <child link="${robot_name}_link_1"/>
-      <origin xyz="0 0 0.157" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="176" velocity="${98 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-167 * pi / 180}"
-                         soft_upper_limit="${167 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_0" />
+      <child link="${robot_name}_link_1" />
+      <origin xyz="0 0 0.157" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}" effort="176" velocity="${98 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-167 * pi / 180}" soft_upper_limit="${167 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_1">
       <inertial>
-        <origin xyz="0 -0.03 0.12" rpy="0 0 0"/>
-        <mass value="3.4525"/>
-        <inertia ixx="0.02183"  ixy="0"  ixz="0" iyy="0.02081" iyz="0.003883" izz="0.007697" />
+        <origin xyz="0 -0.03 0.12" rpy="0 0 0" />
+        <mass value="3.4525" />
+        <inertia ixx="0.02183" ixy="0" ixz="0" iyy="0.02081" iyz="0.003883" izz="0.007697" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link1.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link1.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 -0.01 0.06"/>
+        <origin xyz="0 -0.01 0.06" />
         <geometry>
-	  <cylinder length="0.12" radius="0.1"/>
+          <cylinder length="0.12" radius="0.1" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_2" type="revolute">
-      <parent link="${robot_name}_link_1"/>
-      <child link="${robot_name}_link_2"/>
-      <origin xyz="0 0 0.183" rpy="0 0 0"/>
-      <axis xyz="0 1 0"/>
-      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="176" velocity="${98 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-117 * pi / 180}"
-                         soft_upper_limit="${117 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_1" />
+      <child link="${robot_name}_link_2" />
+      <origin xyz="0 0 0.183" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}" effort="176" velocity="${98 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-117 * pi / 180}" soft_upper_limit="${117 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_2">
       <inertial>
-        <origin xyz="0.000 0.034417 0.0673286" rpy="0 0 0"/>
-        <mass value="3.4821"/>
-        <inertia ixx="0.02177"  ixy="0"  ixz="0.00" iyy="0.02075" iyz="0.003621" izz="0.00779" />
+        <origin xyz="0.000 0.034417 0.0673286" rpy="0 0 0" />
+        <mass value="3.4821" />
+        <inertia ixx="0.02177" ixy="0" ixz="0.00" iyy="0.02075" iyz="0.003621" izz="0.00779" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link2.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link2.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 0 0"/>
+        <origin xyz="0 0 0" />
         <geometry>
-	  <sphere radius="0.125"/>
+          <sphere radius="0.125" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_3" type="revolute">
-      <parent link="${robot_name}_link_2"/>
-      <child link="${robot_name}_link_3"/>
-      <origin xyz="0 0 0.185" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="110" velocity="${100 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-167 * pi / 180}"
-                         soft_upper_limit="${167 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_2" />
+      <child link="${robot_name}_link_3" />
+      <origin xyz="0 0 0.185" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}" effort="110" velocity="${100 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-167 * pi / 180}" soft_upper_limit="${167 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_3">
       <inertial>
-        <origin xyz="0 0.0295 0.1258" rpy="0 0 0"/>
-        <mass value="4.05623"/>
-        <inertia ixx="0.03204"  ixy="0"  ixz="0" iyy="0.03044" iyz="-0.006231" izz="0.009726" />
+        <origin xyz="0 0.0295 0.1258" rpy="0 0 0" />
+        <mass value="4.05623" />
+        <inertia ixx="0.03204" ixy="0" ixz="0" iyy="0.03044" iyz="-0.006231" izz="0.009726" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link3.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link3.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 0.01 0.02"/>
+        <origin xyz="0 0.01 0.02" />
         <geometry>
-	  <cylinder length="0.28" radius="0.1"/>
+          <cylinder length="0.28" radius="0.1" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_4" type="revolute">
-      <parent link="${robot_name}_link_3"/>
-      <child link="${robot_name}_link_4"/>
-      <origin xyz="0 0 0.215" rpy="0 0 0"/>
-      <axis xyz="0 -1 0"/>
-      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="110" velocity="${130 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-117 * pi / 180}"
-                         soft_upper_limit="${117 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_3" />
+      <child link="${robot_name}_link_4" />
+      <origin xyz="0 0 0.215" rpy="0 0 0" />
+      <axis xyz="0 -1 0" />
+      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}" effort="110" velocity="${130 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-117 * pi / 180}" soft_upper_limit="${117 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_4">
       <inertial>
-        <origin xyz="0 -0.034 0.067" rpy="0 0 0"/>
-        <mass value="3.4822"/>
-        <inertia ixx="0.021775"  ixy="0"  ixz="0" iyy="0.02075" iyz="-0.003621" izz="0.007783" />
+        <origin xyz="0 -0.034 0.067" rpy="0 0 0" />
+        <mass value="3.4822" />
+        <inertia ixx="0.021775" ixy="0" ixz="0" iyy="0.02075" iyz="-0.003621" izz="0.007783" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link4.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link4.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 0 0"/>
+        <origin xyz="0 0 0" />
         <geometry>
-	  <sphere radius="0.125"/>
+          <sphere radius="0.125" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_5" type="revolute">
-      <parent link="${robot_name}_link_4"/>
-      <child link="${robot_name}_link_5"/>
-      <origin xyz="0 0 0.4" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}"
-             effort="110" velocity="${140 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-167 * pi / 180}"
-                         soft_upper_limit="${167 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_4" />
+      <child link="${robot_name}_link_5" />
+      <origin xyz="0 0 0.4" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+      <limit lower="${-169 * pi / 180}" upper="${169 * pi / 180}" effort="110" velocity="${140 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-167 * pi / 180}" soft_upper_limit="${167 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_5">
       <inertial>
-        <origin xyz="0.0001 -0.02263 -0.1365" rpy="0 0 0"/>
-        <mass value="2.1633"/>
-        <inertia ixx="0.01287"  ixy="0"  ixz="0" iyy="0.01112" iyz="0.003943" izz="0.0057128" />
+        <origin xyz="0.0001 -0.02263 -0.1365" rpy="0 0 0" />
+        <mass value="2.1633" />
+        <inertia ixx="0.01287" ixy="0" ixz="0" iyy="0.01112" iyz="0.003943" izz="0.0057128" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link5.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link5.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 -0.01 -0.18"/>
+        <origin xyz="0 -0.01 -0.18" />
         <geometry>
-	  <cylinder length="0.3" radius="0.1"/>
+          <cylinder length="0.3" radius="0.1" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_6" type="revolute">
-      <parent link="${robot_name}_link_5"/>
-      <child link="${robot_name}_link_6"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <axis xyz="0 1 0"/>
-      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}"
-             effort="40" velocity="${180 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-117 * pi / 180}"
-                         soft_upper_limit="${117 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_5" />
+      <child link="${robot_name}_link_6" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <axis xyz="0 1 0" />
+      <limit lower="${-119 * pi / 180}" upper="${119 * pi / 180}" effort="40" velocity="${180 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-117 * pi / 180}" soft_upper_limit="${117 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_6">
       <inertial>
-        <origin xyz="0 0.00047 0.002124" rpy="0 0 0"/>
-        <mass value="2.3466"/>
-        <inertia ixx="0.006522"  ixy="0"  ixz="0" iyy="0.006270" iyz="0.00032280" izz="0.0045345" />
+        <origin xyz="0 0.00047 0.002124" rpy="0 0 0" />
+        <mass value="2.3466" />
+        <inertia ixx="0.006522" ixy="0" ixz="0" iyy="0.006270" iyz="0.00032280" izz="0.0045345" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link6.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link6.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 -0.03 0"/>
+        <origin xyz="0 -0.03 0" />
         <geometry>
-	  <sphere radius="0.08"/>
+          <sphere radius="0.08" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_7" type="revolute">
-      <parent link="${robot_name}_link_6"/>
-      <child link="${robot_name}_link_7"/>
-      <origin xyz="0 0 0" rpy="0 0 0"/>
-      <axis xyz="0 0 1"/>
-      <limit lower="${-174 * pi / 180}" upper="${174 * pi / 180}"
-             effort="40" velocity="${180 * pi / 180}" />
-      <safety_controller soft_lower_limit="${-172 * pi / 180}"
-                         soft_upper_limit="${172 * pi / 180}"
-                         k_position="${safety_controller_k_pos}"
-                         k_velocity="${safety_controller_k_vel}"/>
-      <dynamics damping="${joint_damping}"/>
+      <parent link="${robot_name}_link_6" />
+      <child link="${robot_name}_link_7" />
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <axis xyz="0 0 1" />
+      <limit lower="${-174 * pi / 180}" upper="${174 * pi / 180}" effort="40" velocity="${180 * pi / 180}" />
+      <safety_controller soft_lower_limit="${-172 * pi / 180}" soft_upper_limit="${172 * pi / 180}" k_position="${safety_controller_k_pos}" k_velocity="${safety_controller_k_vel}" />
+      <dynamics damping="${joint_damping}" />
     </joint>
 
     <link name="${robot_name}_link_7">
       <inertial>
-        <origin xyz="0 0 0.1" rpy="0 0 0"/>
-        <mass value="0.34217"/>
-        <inertia ixx="0.0022711"  ixy="0.0000221"  ixz="0" iyy="0.0022807" iyz="0" izz="0.002872" />
+        <origin xyz="0 0 0.1" rpy="0 0 0" />
+        <mass value="0.34217" />
+        <inertia ixx="0.0022711" ixy="0.0000221" ixz="0" iyy="0.0022807" iyz="0" izz="0.002872" />
       </inertial>
       <visual>
         <geometry>
-          <mesh filename="package://rll_description/meshes/iiwa7/visual/link7.dae"/>
+          <mesh filename="package://rll_description/meshes/iiwa7/visual/link7.dae" />
         </geometry>
       </visual>
       <collision>
-	<origin xyz="0 0 -0.01"/>
+        <origin xyz="0 0 -0.01" />
         <geometry>
-	  <sphere radius="0.085"/>
+          <sphere radius="0.085" />
         </geometry>
       </collision>
     </link>
 
     <joint name="${robot_name}_joint_ee" type="fixed">
-      <parent link="${robot_name}_link_7"/>
-      <child link="${robot_name}_link_ee"/>
-      <origin xyz="0 0 0.126" rpy="0 0 0"/>
+      <parent link="${robot_name}_link_7" />
+      <child link="${robot_name}_link_ee" />
+      <origin xyz="0 0 0.126" rpy="0 0 0" />
     </joint>
 
     <link name="${robot_name}_link_ee">
       <collision>
-	<origin xyz="0 0 -0.046"/>
+        <origin xyz="0 0 -0.046" />
         <geometry>
-	  <sphere radius="0.065"/>
+          <sphere radius="0.065" />
         </geometry>
       </collision>
     </link>
 
     <xacro:iiwa_gazebo robot_name="${robot_name}" />
-    <xacro:iiwa_transmission robot_name="${robot_name}"
-			     hardware_interface="${hardware_interface}"/>
+    <xacro:iiwa_transmission robot_name="${robot_name}" hardware_interface="${hardware_interface}" />
 
   </xacro:macro>
 

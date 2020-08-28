@@ -2,6 +2,8 @@
 <launch>
   <arg name="hardware_interface" default="PositionJointInterface"/>
   <arg name="robot_name" default="iiwa"/>
+  <arg name="eef_type" default="egl90" />
+
   <arg name="headless" default="false"/>
   <arg name="gazebo_gui" default="false"/>
   <arg name="use_sim" default="true"/>
@@ -12,11 +14,13 @@
   <arg name="output" default="screen"/>
 
   <remap from="/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory"
-         to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />
-  <remap from="/PositionJointInterface_gripper_controller/follow_joint_trajectory"
-         to="/$(arg robot_name)/PositionJointInterface_gripper_controller/follow_joint_trajectory" />
+         to="/$(arg robot_name)/$(arg hardware_interface)_trajectory_controller/follow_joint_trajectory" />  
   <remap from="robot_description" to="/$(arg robot_name)/robot_description" />
   <remap from="/get_planning_scene" to="/$(arg robot_name)/get_planning_scene" />
+
+  <!-- TODO(mark): not needed if there is no gripper attached -->
+  <remap from="/PositionJointInterface_$(arg eef_type)_gripper_controller/follow_joint_trajectory"
+         to="/$(arg robot_name)/PositionJointInterface_$(arg eef_type)_gripper_controller/follow_joint_trajectory" />
 
   <!-- remaps for Gazebo -->
   <remap from="/gazebo/set_physics_properties" to="/$(arg robot_name)/gazebo/set_physics_properties" />
@@ -32,6 +36,7 @@
     <include if="$(arg use_sim)" file="$(find rll_gazebo)/launch/rll_gazebo.launch">
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)" />
+      <arg name="eef_type" value="$(arg eef_type)"/>
       <arg name="description_file" value="$(arg description_file)" />
       <arg name="headless" value="$(eval not arg('gazebo_gui'))" unless="$(arg headless)" />
       <arg name="gazebo_port" value="$(arg gazebo_port)"/>
@@ -44,6 +49,7 @@
       <arg name="publish_monitored_planning_scene" value="true" />
       <arg name="hardware_interface" value="$(arg hardware_interface)"/>
       <arg name="robot_name" value="$(arg robot_name)"/>
+      <arg name="eef_type" value="$(arg eef_type)"/>
       <arg name="description_file" value="$(arg description_file)" />
       <arg name="semantic_description_file" value="$(arg semantic_description_file)" />
       <arg name="fake_execution" value="true" unless="$(arg use_sim)" />

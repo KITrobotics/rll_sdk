@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="rll_cap">
+
+    <xacro:macro name="rll_cap" params="robot_name">
+
+        <!-- Protective cap specific collisions -->
+        <disable_collisions link1="axis_cam_top" link2="${robot_name}_link_tcp" reason="Never" />
+        <disable_collisions link1="axis_cam_base" link2="${robot_name}_link_tcp" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_1" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_2" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_3" reason="Never" />
+        <!-- The cap collision model collides with link5 in the home bow pose. However, the actual model will not collide! -->
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_4" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_5" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_6" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_7" reason="Never" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="${robot_name}_link_ee" reason="Adjacent" />
+        <disable_collisions link1="${robot_name}_link_tcp" link2="profile_cams" reason="Never" />
+
+    </xacro:macro>
+</robot>
