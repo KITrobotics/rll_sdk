@@ -157,6 +157,26 @@ const char* RLLErrorCode::message() const noexcept
     case INTERNAL_ERROR:
       return "INTERNAL_ERROR";
 
+    // these are special codes, the actual meaning depends on the project
+    case PROJECT_SPECIFIC_INVALID_1:
+      return "PROJECT_SPECIFIC_INVALID_1";
+    case PROJECT_SPECIFIC_INVALID_2:
+      return "PROJECT_SPECIFIC_INVALID_2";
+    case PROJECT_SPECIFIC_INVALID_3:
+      return "PROJECT_SPECIFIC_INVALID_3";
+    case PROJECT_SPECIFIC_RECOVERABLE_1:
+      return "PROJECT_SPECIFIC_RECOVERABLE_1";
+    case PROJECT_SPECIFIC_RECOVERABLE_2:
+      return "PROJECT_SPECIFIC_RECOVERABLE_2";
+    case PROJECT_SPECIFIC_RECOVERABLE_3:
+      return "PROJECT_SPECIFIC_RECOVERABLE_3";
+    case PROJECT_SPECIFIC_CRITICAL_1:
+      return "PROJECT_SPECIFIC_CRITICAL_1";
+    case PROJECT_SPECIFIC_CRITICAL_2:
+      return "PROJECT_SPECIFIC_CRITICAL_2";
+    case PROJECT_SPECIFIC_CRITICAL_3:
+      return "PROJECT_SPECIFIC_CRITICAL_3";
+
     default:
       return "UNKNOWN_ERROR";
   }

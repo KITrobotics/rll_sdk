@@ -2,7 +2,7 @@
 #
 # This file is part of the Robot Learning Lab Move Client
 #
-# Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
+# Copyright (C) 2019 Mark Weinreuter <mark.weinreuter@kit.edu>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -31,6 +31,9 @@ class RLLErrorCode(object):
     GOAL_TOO_CLOSE_TO_START = 6
     GOAL_IN_COLLISION = 7
     NO_IK_SOLUTION_FOUND = 8
+    PROJECT_SPECIFIC_INVALID_1 = 32
+    PROJECT_SPECIFIC_INVALID_2 = 33
+    PROJECT_SPECIFIC_INVALID_3 = 34
 
     # non critical failure
     RECOVERABLE_FAILURE = 64
@@ -42,6 +45,9 @@ class RLLErrorCode(object):
     INSUFFICIENT_PERMISSION = 70
     JOB_EXECUTION_TIMED_OUT = 71
     SERVICE_CALL_NOT_ALLOWED = 72
+    PROJECT_SPECIFIC_RECOVERABLE_1 = 96
+    PROJECT_SPECIFIC_RECOVERABLE_2 = 97
+    PROJECT_SPECIFIC_RECOVERABLE_3 = 98
 
     SERVICE_CALL_CLIENT_ERROR = 127  # Note: only used client side
 
@@ -54,6 +60,9 @@ class RLLErrorCode(object):
     GRIPPER_MOVEMENT_FAILED = 133
     RESET_TO_HOME_FAILED = 134
     INTERNAL_ERROR = 135
+    PROJECT_SPECIFIC_CRITICAL_1 = 160
+    PROJECT_SPECIFIC_CRITICAL_2 = 161
+    PROJECT_SPECIFIC_CRITICAL_3 = 162
 
     # not set (initial value)
     NOT_SET = 255
@@ -125,6 +134,12 @@ class RLLErrorCode(object):
                                    "accept service calls, possibly due to a "
                                    "critical failure.")
     }
+
+    @classmethod
+    def set_error_code_details(cls, code, name, hint=None):
+        cls.NAMES[code] = name
+        if hint is not None:
+            cls.HINTS[code] = hint
 
     def __init__(self, code=NOT_SET):
         self.code = code
