@@ -274,8 +274,20 @@ RLLErrorCode RLLMoveIfacePlanning::moveToGoalLinear(const geometry_msgs::Pose& g
 RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const geometry_msgs::Pose& goal,
                                                      moveit_msgs::RobotTrajectory* trajectory)
 {
+  return computeLinearPath(manip_move_group_.getCurrentJointValues(), goal, trajectory);
+}
+
+RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const std::vector<double>& start, const geometry_msgs::Pose& goal,
+                                                     moveit_msgs::RobotTrajectory* trajectory)
+{
   std::vector<geometry_msgs::Pose> waypoints_pose;
-  RLLErrorCode error_code = interpolatePosesLinear(manip_move_group_.getCurrentPose().pose, goal, &waypoints_pose);
+
+  geometry_msgs::Pose start_pose;
+  double arm_angle;
+  int config;
+  kinematics_plugin_->getPositionFK(start, &start_pose, &arm_angle, &config);
+  transformPoseFromFK(&start_pose);
+  RLLErrorCode error_code = interpolatePosesLinear(start_pose, goal, &waypoints_pose);
   if (error_code.failed())
   {
     return error_code;
@@ -288,7 +300,7 @@ RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const geometry_msgs::Pose& 
 
   double achieved = 0.0;
   std::vector<robot_state::RobotStatePtr> path;
-  getPathIK(waypoints_pose, manip_move_group_.getCurrentJointValues(), &path, &achieved);
+  getPathIK(waypoints_pose, start, &path, &achieved);
 
   moveit::core::JumpThreshold thresh(DEFAULT_LINEAR_JUMP_THRESHOLD);
   achieved *= robot_state::RobotState::testJointSpaceJump(manip_joint_model_group_, path, thresh);

@@ -67,6 +67,8 @@ protected:
                                          const std::vector<double>& waypoints_arm_angles,
                                          const std::vector<double>& ik_seed_state,
                                          std::vector<robot_state::RobotStatePtr>* path);
+  RLLErrorCode computeLinearPath(const std::vector<double>& start, const geometry_msgs::Pose& goal,
+                                 moveit_msgs::RobotTrajectory* trajectory);
   RLLErrorCode computeLinearPath(const geometry_msgs::Pose& goal, moveit_msgs::RobotTrajectory* trajectory);
   void transformPoseForIK(geometry_msgs::Pose* pose);
   void transformPoseFromFK(geometry_msgs::Pose* pose);
