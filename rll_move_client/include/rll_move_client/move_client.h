@@ -30,7 +30,9 @@
 #include <rll_msgs/GetPose.h>
 #include <rll_msgs/MoveJoints.h>
 #include <rll_msgs/MoveLin.h>
+#include <rll_msgs/MoveLinArmangle.h>
 #include <rll_msgs/MovePTP.h>
+#include <rll_msgs/MovePTPArmangle.h>
 #include <rll_msgs/MoveRandom.h>
 #include <rll_msgs/PickPlace.h>
 
@@ -150,7 +152,9 @@ public:
   }
   bool moveRandom(geometry_msgs::Pose* result_pose);
   bool movePTP(const geometry_msgs::Pose& pose);
+  bool movePTPArmangle(const geometry_msgs::Pose& pose, double arm_angle);
   bool moveLin(const geometry_msgs::Pose& pose);
+  bool moveLinArmangle(const geometry_msgs::Pose& pose, double arm_angle, bool direction);
 
   bool moveJoints(const std::vector<double>& joint_values);
   bool moveJoints(double a1, double a2, double a3, double a4, double a5, double a6, double a7);
@@ -159,6 +163,8 @@ protected:
   ros::ServiceClient move_joints_;
   ros::ServiceClient move_ptp_;
   ros::ServiceClient move_lin_;
+  ros::ServiceClient move_ptp_armangle_;
+  ros::ServiceClient move_lin_armangle_;
   ros::ServiceClient move_random_;
 };
 

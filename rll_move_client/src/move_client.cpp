@@ -127,6 +127,8 @@ RLLBasicMoveClient::RLLBasicMoveClient()
   : move_joints_(nh_.serviceClient<rll_msgs::MoveJoints>(RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME))
   , move_ptp_(nh_.serviceClient<rll_msgs::MovePTP>(RLLMoveIfaceServices::MOVE_PTP_SRV_NAME))
   , move_lin_(nh_.serviceClient<rll_msgs::MoveLin>(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME))
+  , move_ptp_armangle_(nh_.serviceClient<rll_msgs::MovePTPArmangle>(RLLMoveIfaceServices::MOVE_PTP_ARMANGLE_SRV_NAME))
+  , move_lin_armangle_(nh_.serviceClient<rll_msgs::MoveLinArmangle>(RLLMoveIfaceServices::MOVE_LIN_ARMANGLE_SRV_NAME))
   , move_random_(nh_.serviceClient<rll_msgs::MoveRandom>(RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME))
 {
 }
@@ -152,12 +154,33 @@ bool RLLBasicMoveClient::movePTP(const geometry_msgs::Pose& pose)
   return callServiceWithErrorCode<rll_msgs::MovePTP>(RLLMoveIfaceServices::MOVE_PTP_SRV_NAME, move_ptp_, move_ptp_msg);
 }
 
+bool RLLBasicMoveClient::movePTPArmangle(const geometry_msgs::Pose& pose, double arm_angle)
+{
+  rll_msgs::MovePTPArmangle move_ptp_msg;
+  move_ptp_msg.request.pose = pose;
+  move_ptp_msg.request.arm_angle = arm_angle;
+
+  return callServiceWithErrorCode<rll_msgs::MovePTPArmangle>(RLLMoveIfaceServices::MOVE_PTP_ARMANGLE_SRV_NAME,
+                                                             move_ptp_armangle_, move_ptp_msg);
+}
+
 bool RLLBasicMoveClient::moveLin(const geometry_msgs::Pose& pose)
 {
   rll_msgs::MoveLin move_lin_msg;
   move_lin_msg.request.pose = pose;
 
   return callServiceWithErrorCode<rll_msgs::MoveLin>(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME, move_lin_, move_lin_msg);
+}
+
+bool RLLBasicMoveClient::moveLinArmangle(const geometry_msgs::Pose& pose, double arm_angle, bool direction)
+{
+  rll_msgs::MoveLinArmangle move_lin_msg;
+  move_lin_msg.request.pose = pose;
+  move_lin_msg.request.arm_angle = arm_angle;
+  move_lin_msg.request.direction = static_cast<unsigned char>(direction);
+
+  return callServiceWithErrorCode<rll_msgs::MoveLinArmangle>(RLLMoveIfaceServices::MOVE_LIN_ARMANGLE_SRV_NAME,
+                                                             move_lin_armangle_, move_lin_msg);
 }
 
 bool RLLBasicMoveClient::moveJoints(const std::vector<double>& joint_values)
