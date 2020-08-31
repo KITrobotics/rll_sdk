@@ -1,8 +1,9 @@
 #! /usr/bin/env python
+# -*- coding: utf-8 -*-
 #
 # This file is part of the  Robot Learning Lab Robot Playground project
 #
-# Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
+# Copyright (C) 2019 Mark Weinreuter <mark.weinreuter@kit.edu>
 #
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
@@ -109,6 +110,11 @@ def hello_world(move_client):
 
     time.sleep(2)
 
+    # You can also switch back to moving the joints directly. Let's repeat the
+    # joint movement from before.
+    move_client.move_joints(0.0, pi / 4, 0.0, -pi / 4,
+                            0.0, -pi / 2, 0.0)
+
     # Next up: move the end effector on a triangular path
     # while maintaining the same orientation
     rospy.loginfo("Next: move the end effector on a triangular path")
@@ -117,12 +123,10 @@ def hello_world(move_client):
     goal_pose.orientation = orientation_from_rpy(0, pi / 2, 0)
 
     # move to the starting position still in a ptp fashion
-    goal_pose.position = Point(0.5, -0.6, 0.3)
+    goal_pose.position = Point(0.3, -0.6, 0.3)
 
     rospy.loginfo("move_ptp to the starting point of the triangle")
     move_client.move_ptp(goal_pose)  # (error check omitted)
-
-    time.sleep(1)
 
     # move up, its a right angled triangle
     goal_pose.position.z = .7
@@ -131,10 +135,8 @@ def hello_world(move_client):
     rospy.loginfo("move_lin to the tip of the triangle")
     move_client.move_lin(goal_pose)  # (error check omitted)
 
-    time.sleep(1)
-
     # next point is the upper right point of the triangle
-    goal_pose.position.y = -0.15
+    goal_pose.position.y = -0.25
     rospy.loginfo("move_lin to the upper right point of the triangle")
     move_client.move_lin(goal_pose)  # (error check omitted)
 
@@ -143,8 +145,6 @@ def hello_world(move_client):
     goal_pose.position.z = .3
     rospy.loginfo("move_lin to the start to close the triangle shape")
     move_client.move_lin(goal_pose)  # (error check omitted)
-
-    time.sleep(1)
 
     # Note: move_lin is not always successful, even if move_ptp succeeds.
     # This is because moving on a linear trajectory is more constraining
@@ -164,6 +164,15 @@ def hello_world(move_client):
         rospy.logerr("move_ptp service call failed (unexpectedly)!")
 
     time.sleep(2)
+
+    # Besides moving the end effector, you can also change the arm angle to
+    # move the elbow of the robot.
+    goal_arm_angle = pi / 2
+    move_client.move_lin_armangle(goal_pose, goal_arm_angle, True)
+    # This is also possible with PTP movements.
+    goal_arm_angle = -pi / 2
+    goal_pose.position.z = .5
+    move_client.move_ptp_armangle(goal_pose, goal_arm_angle)
 
     # the response sometimes holds more information than only a boolean status
     # move_random() returns the random pose the end effector moved to

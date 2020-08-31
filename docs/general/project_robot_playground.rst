@@ -76,8 +76,8 @@ Hello ROS
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 16,17
-         :lines: 1, 20-35, 175-186
+         :emphasize-lines: 17,18
+         :lines: 1-2, 21-36, 184-195
 
    .. group-tab:: C++
 
@@ -85,7 +85,7 @@ Hello ROS
          :language: cpp
          :linenos:
          :emphasize-lines: 9,10
-         :lines: 20-29, 187-198
+         :lines: 20-29, 191-202
 
 
 We use the :ref:`move-client-getting-started` template and add some simple
@@ -104,8 +104,8 @@ The previous example didn't actually move the robot. Lets change that!
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 17
-         :lines: 1, 20-33, 37-42, 175-186
+         :emphasize-lines: 18
+         :lines: 1-2, 21-34, 38-43, 184-195
 
    .. group-tab:: C++
 
@@ -113,7 +113,7 @@ The previous example didn't actually move the robot. Lets change that!
          :linenos:
          :language: cpp
          :emphasize-lines: 10
-         :lines: 20-27, 31-36, 187-198
+         :lines: 20-27, 31-36, 191-202
 
 
 We use the :ref:`move_random <move-client-move-random>` function to move the
@@ -134,8 +134,8 @@ neglected.
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 19, 25, 32-33, 41-42, 44-45
-         :lines: 1, 20-33, 44-75, 175-186
+         :emphasize-lines: 20, 26, 33-34, 42-43, 45-46
+         :lines: 1-2, 21-34, 45-76, 184-195
 
    .. group-tab:: C++
 
@@ -143,7 +143,7 @@ neglected.
          :linenos:
          :language: cpp
          :emphasize-lines: 12, 20, 24-27, 34, 36-39
-         :lines: 20-27, 38-70, 188-199
+         :lines: 20-27, 38-70, 191-202
 
 
 We use the :ref:`move_joints<move-client-move-joints>` function to specify
@@ -168,8 +168,8 @@ More movement
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 18-20, 23, 38, 40, 45, 47
-         :lines: 1, 20-33, 77-110, 175-186
+         :emphasize-lines: 19-21, 24, 39, 41, 46, 48
+         :lines: 1-2, 21-34, 78-111, 184-195
 
    .. group-tab:: C++
 
@@ -177,7 +177,7 @@ More movement
          :linenos:
          :language: cpp
          :emphasize-lines: 13-17, 20, 36, 40, 45, 47
-         :lines: 20-27, 48, 71-110, 188-199
+         :lines: 20-27, 48, 71-110, 191-202
 
 Point based movement ist easier to understand. You only need to specify
 the position and orientation of the end effector and the robot will move there.
@@ -198,16 +198,16 @@ Linear movement
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 22, 25, 28, 33, 37, 42, 44, 47-48, 50
-         :lines: 1, 20-33, 79, 112-147, 175-186
+         :emphasize-lines: 23, 26, 29, 32, 36, 39, 41, 44-45, 47
+         :lines: 1-2, 21-34, 80, 118-153, 184-195
 
    .. group-tab:: C++
 
       .. literalinclude:: _static/code_examples/hello_world.cpp
          :linenos:
          :language: cpp
-         :emphasize-lines: 15, 18-20, 23, 28, 32, 37, 40,45-46, 49
-         :lines: 20-27, 74, 112-153, 188-199
+         :emphasize-lines: 15, 18-20, 23, 26, 30, 33, 36, 39, 40, 43
+         :lines: 20-27, 74, 116-149, 191-202
 
 
 Previously we moved in a point to point fashion to a desired pose.
@@ -223,8 +223,8 @@ three consecutive linear movements, forming a triangular path, are executed.
 
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
-         :emphasize-lines: 25, 32, 27, 34
-         :lines: 1, 20-33, 79, 117, 120, 148-166, 175-186
+         :emphasize-lines: 26, 33, 28, 35
+         :lines: 1-2, 21-34, 80, 100, 126, 148-166, 184-195
 
    .. group-tab:: C++
 
@@ -232,7 +232,7 @@ three consecutive linear movements, forming a triangular path, are executed.
          :linenos:
          :language: cpp
          :emphasize-lines: 22, 31, 24, 33
-         :lines: 20-27, 48, 74, 117, 120-122, 154-177, 188-199
+         :lines: 20-27, 48, 74, 97, 124-126, 150-171, 191-202
 
 Since :code:`move_lin()` requires the end effector to travel on a
 linear trajectory, it is more constrained than :code:`move_ptp()`
@@ -255,7 +255,7 @@ The complete code, which encompasses the examples above, is shown below:
       .. literalinclude:: _static/code_examples/hello_world.py
          :linenos:
          :caption: Complete hello_world.py example
-         :lines: 1, 20-
+         :lines: 1-2, 21-
 
    .. group-tab:: C++
 
