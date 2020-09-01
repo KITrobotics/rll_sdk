@@ -25,6 +25,17 @@ import rospy
 from rll_msgs.msg import JobEnvAction, JobEnvGoal, JobStatus
 
 
+# Formatting is defined in rll_move_client
+# TODO: Should be refactored in the future, so it only appears once in rll_sdk
+
+C_BOLD = '\033[1m'
+C_RED = '\033[91m'
+C_GREEN = '\033[92m'
+C_FAIL = C_RED + C_BOLD
+C_OK = C_GREEN + C_BOLD
+C_END = '\033[0m'
+
+
 def job_result_codes_to_string(status):
     job_codes = {
         JobStatus.SUCCESS: "success",
@@ -70,6 +81,13 @@ def run_project(server_timeout=5, auth_secret="", client_ip_addr="127.0.0.1"):
 
     rospy.loginfo("Executed project with status '%s'",
                   job_result_codes_to_string(resp.job.status))
+
+    if resp.job.status_detail:
+        if resp.job.status_detail.find("successfully") != -1:
+            rospy.loginfo("%s%s%s", C_OK, resp.job.status_detail, C_END)
+        else:
+            rospy.loginfo("%s%s%s", C_FAIL, resp.job.status_detail, C_END)
+
     if resp.job_data:
         rospy.loginfo("Received extra job data:")
         for element in resp.job_data:

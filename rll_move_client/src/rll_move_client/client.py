@@ -210,7 +210,6 @@ class RLLMoveClientListener(object):
                           C_WARN, C_END)
 
         self.notify_job_finished(success)
-        rospy.loginfo("Code execution completed")
 
         return success
 
