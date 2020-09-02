@@ -283,6 +283,39 @@ chosen random pose:
       # store the pose in the pointed to Pose object
       move_client->moveRandom(&pose);
 
+.. _move-client-arm-angle:
+
+Controlling the arm angle
+-------------------------
+
+The robots in the lab have seven degrees of freedom, while only six degrees of freedom are required to define the end effector pose. The additional degree of freedom can be controlled using an arm angle. The arm angle defines the positon of the elbow on a circle with the line connecting shoulder and wrist as rotation axis. The angle should be between -pi and pi.
+
+For point to point movements and linear paths, a goal arm angle can be specified.
+
+.. tabs::
+
+   .. code-tab:: py
+
+      goal_pose = Pose()
+      # set position and orientation of the pose...
+
+      goal_arm_angle = pi / 2
+
+      move_client.move_lin_armangle(goal_pose, goal_arm_angle)
+      # or
+      move_client.move_ptp_armangle(goal_pose, goal_arm_angle)
+
+   .. code-tab:: c++
+
+      geometry_msgs::Pose goal_pose;
+      // set position and orientation of the pose...
+
+      double goal_arm_angle = M_PI / 2;
+
+      move_client->moveLinArmangle(goal_pose, goal_arm_angle);
+      // or
+      move_client->movePTPArmangle(goal_pose, goal_arm_angle);
+
 .. _move-client-error-handling:
 
 Error handling
