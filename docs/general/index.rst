@@ -28,3 +28,4 @@ KUKA Robot Learning Lab at KIT Documentation
    development_workflow
    rll_move_client
    project_robot_playground
+   planning_project
