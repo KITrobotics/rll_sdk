@@ -12,26 +12,27 @@ services:
 # This config ensures that the temp folder is located inside the project directory (e.g. for prerelease tests or SSH agent forwarding)
 variables:
   TMPDIR: "${CI_PROJECT_DIR}.tmp"
-  # A upstream workspace is created with the dependencies from the specified rosinstall file. It has to be in the vcstool format: https://github.com/dirk-thomas/vcstool
-  # TODO: rename file to .repos to reflect the change in the file format?
-  UPSTREAM_WORKSPACE: ".ci.rosinstall"
+  # A upstream workspace is created with the dependencies from the specified repos file. It has to be in the vcstool format: https://github.com/dirk-thomas/vcstool
+  UPSTREAM_WORKSPACE: ".ci.repos"
   ROS_DISTRO: "melodic"
-  ROS_REPO: "ros"
+  ROS_REPO: "testing"
+  VERBOSE_OUTPUT: "true"
+  VERBOSE_TESTS: "true"
 
   # Dependencies for your project:
   # Most projects will require the rll_sdk to be installed. The rll_sdk doesn't require itself, which is why repositories are left empty
-  # If you copy this config to a project and depend on the rll_sdk, simply adjust the ROSINSTALL_DEFAULT variable below as indicated by the comment
-  PROJECT_ROSINSTALL_FILENAME: ".ci.rosinstall" # Used to generate the file if it does not exist
-  ROSINSTALL_SDK_TEMPLATE: "{repositories: {rll_sdk: {type: git, url: 'https://gitlab.ipr.kit.edu/rll/rll_sdk.git', version: master}}}"
-  ROSINSTALL_DEFAULT: "{repositories: {}}" # ${ROSINSTALL_SDK_TEMPLATE}
+  # If you copy this config to a project and depend on the rll_sdk, simply adjust the REPOS_DEFAULT variable below as indicated by the comment
+  PROJECT_REPOS_FILENAME: ".ci.repos" # Used to generate the file if it does not exist
+  REPOS_SDK_TEMPLATE: "{repositories: {rll_sdk: {type: git, url: 'https://gitlab.ipr.kit.edu/rll/rll_sdk.git', version: master}}}"
+  REPOS_DEFAULT: "{repositories: {}}" # ${REPOS_SDK_TEMPLATE}
 
 
 before_script:
   - apk add --update bash coreutils tar # install industrial_ci dependencies
   - git clone --quiet --depth 1 https://github.com/ros-industrial/industrial_ci .industrial_ci
-  # create the .rosinstall file if it does not exist
-  - test ! -f ${PROJECT_ROSINSTALL_FILENAME} && echo ${ROSINSTALL_DEFAULT} >> ${PROJECT_ROSINSTALL_FILENAME}
-  - sed -i 's/https\:\/\/gitlab\.ipr\.kit\.edu/https\:\/\/gitlab-ci-token\:'${CI_JOB_TOKEN}'\@gitlab\.ipr\.kit\.edu/g' ${CI_PROJECT_DIR}/${PROJECT_ROSINSTALL_FILENAME}
+  # create the .repos file if it does not exist
+  - test ! -f ${PROJECT_REPOS_FILENAME} && echo ${REPOS_DEFAULT} >> ${PROJECT_REPOS_FILENAME}
+  - sed -i 's/https\:\/\/gitlab\.ipr\.kit\.edu/https\:\/\/gitlab-ci-token\:'${CI_JOB_TOKEN}'\@gitlab\.ipr\.kit\.edu/g' ${CI_PROJECT_DIR}/${PROJECT_REPOS_FILENAME}
   # download config files if they do not exist
   - test ! -f .clang-format && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.clang-format
   - test ! -f .clang-tidy && wget https://gitlab.ipr.kit.edu/rll/rll_sdk/raw/master/.clang-tidy
@@ -56,6 +57,10 @@ kinetic-build-rostests:
   variables:
     ROS_DISTRO: "kinetic" # override ROS_DISTRO variable
     AFTER_SETUP_UPSTREAM_WORKSPACE: "apt -yq install python-pip && pip -q install typing"
+    # if a build fails without errors it is sometimes useful to switch to a more verbose builder
+    # However, catkin_make does bring its own set of problems so a successful build with catkin is preferred
+    # BUILDER: "catkin_make"
+
   # run default -> build
   script: .industrial_ci/gitlab.sh
   tags:

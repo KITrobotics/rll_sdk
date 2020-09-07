@@ -105,3 +105,13 @@ def get_exception_raising_function():
         return fname
     except Exception:  # noqa: E731, pylint: disable=broad-except
         return "Unknown function"
+
+
+def format_not_implemented(excpt):
+    name = get_exception_raising_function()
+    if name is not None:
+        name = ansi_format(name, C_RED)
+    msg = 'Function: %s is not implemented' % name
+    if excpt.message:
+        msg += ". Message: " + excpt.message
+    return msg

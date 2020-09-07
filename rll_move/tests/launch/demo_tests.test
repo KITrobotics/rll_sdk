@@ -2,20 +2,18 @@
     <arg name="robot" default="iiwa"/>
     <arg name="output" default="screen"/>
     <arg name="headless" default="true"/>
-    <arg name="eef_type" default="egl90"/>
     <arg name="use_sim" default="false"/>
-    <arg name="client_server_port" default="5556"/>
+    <arg name="client_server_port" default="5555"/>
 
     <include file="$(find rll_move)/launch/setup_moveit_and_move_iface.launch">
         <arg name="use_sim" value="$(arg use_sim)"/>
         <arg name="headless" value="$(arg headless)"/>
         <arg name="output" value="$(arg output)"/>
-        <arg name="eef_type" value="$(arg eef_type)"/>
         <arg name="client_server_port" value="$(arg client_server_port)"/>
     </include>
 
-    <test ns="$(arg robot)" test-name="movement_tests_main" pkg="rll_move" type="movement_tests_main.py"
-          time-limit="600">
+    <test ns="$(arg robot)" test-name="demo_tests" pkg="rll_move"
+          type="demo_tests_main.py" time-limit="600">
         <param name="client_server_port" value="$(arg client_server_port)"/>
     </test>
 </launch>

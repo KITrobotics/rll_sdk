@@ -153,7 +153,7 @@ def run_test_classes(package, test_data):
     for test in test_data:  # type: TestData
 
         try:
-            # catch any possible to allow an orderly shutdown
+            # catch possible errors to make sure that shutdown is called
             test.run(package)
         except StandardError as ex:
             rospy.logwarn("rosunit.unitrun resulted in an error: %s", ex)

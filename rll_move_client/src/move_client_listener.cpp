@@ -55,7 +55,11 @@ RLLMoveClientListener::RLLMoveClientListener()
   struct sockaddr_in address;
   address.sin_family = AF_INET;
   address.sin_addr.s_addr = INADDR_ANY;
-  address.sin_port = htons(RLLMoveIfaceBase::CLIENT_SERVER_PORT);
+
+  int client_server_port = RLLMoveIfaceBase::DEFAULT_CLIENT_SERVER_PORT;
+  ros::param::get("~client_server_port", client_server_port);
+  address.sin_port = htons(client_server_port);
+
   if (bind(socket_, reinterpret_cast<struct sockaddr*>(&address), sizeof(address)) < 0)
   {
     ROS_ERROR("failed to bind socket to port");

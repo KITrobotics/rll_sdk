@@ -63,7 +63,7 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
     ROS_ERROR("No EEF type specified, please pass a eef_type parameter, using default egl90");
     eef_type_ = "egl90";
   }
-  ROS_INFO("Using EEF type %s: ", eef_type_.c_str());
+  ROS_INFO("Using EEF type: %s", eef_type_.c_str());
 
   // for now we only support two gripper types
   no_gripper_attached_ = !(eef_type_ == "egl90" || eef_type_ == "crg200");

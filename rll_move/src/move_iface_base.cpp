@@ -45,8 +45,10 @@ RLLMoveIfaceBase::RLLMoveIfaceBase(const ros::NodeHandle& nh) : nh_(nh)
     ROS_INFO("job execution timeout changed to %ds", job_execution_timeout_seconds_);
   }
 
+  int client_server_port = DEFAULT_CLIENT_SERVER_PORT;
+  ros::param::get("~client_server_port", client_server_port);
   client_serv_addr_.sin_family = AF_INET;
-  client_serv_addr_.sin_port = htons(CLIENT_SERVER_PORT);
+  client_serv_addr_.sin_port = htons(client_server_port);
 }
 
 void RLLMoveIfaceBase::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as)

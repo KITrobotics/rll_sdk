@@ -19,13 +19,12 @@
 #
 
 import time
-
 import rospy
-
 from rll_move_client.client import RLLDefaultMoveClient
+from rll_move_client.tests_util import generate_test_callback, shutdown, \
+    TestData
 from rll_tools.run import run_project_in_background
 
-from test_util import generate_test_callback, shutdown, TestData
 from invalid_movements import TestInvalidMovements
 from basic_movements import TestBasicMovements
 from repeat_movements import TestRepeatedMovements
@@ -52,7 +51,7 @@ def main():
 
     execute_before(client)
     run_project_in_background(2)
-    client.spin()
+    client.spin(oneshot=True)
 
 
 if __name__ == "__main__":

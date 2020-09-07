@@ -4,6 +4,7 @@
   <arg name="headless" default="false" />
   <arg name="output" default="log" />
   <arg name="eef_type" default="egl90" />
+  <arg name="client_server_port" default="5005"/>
 
   <include file="$(find rll_moveit_config)/launch/moveit_planning_execution.launch">
     <arg name="use_sim" value="$(arg use_sim)" />
@@ -14,6 +15,7 @@
 
   <include file="$(find rll_move)/launch/move_iface.launch">
     <arg name="eef_type" value="$(arg eef_type)" />
+    <arg name="client_server_port" value="$(arg client_server_port)"/>
   </include>
 
 </launch>
