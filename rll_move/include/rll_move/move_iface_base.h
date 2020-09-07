@@ -95,7 +95,7 @@ public:
   static const std::string RUN_JOB_SRV_NAME;
   static const std::string JOB_FINISHED_SRV_NAME;
 
-  static const int CLIENT_SERVER_PORT = 5005;
+  static const int DEFAULT_CLIENT_SERVER_PORT = 5005;
   static const int CLIENT_SERVER_BUFFER_SIZE = 10;
   static const char* CLIENT_SERVER_START_CMD_;
   static const char* CLIENT_SERVER_OK_RESP_;

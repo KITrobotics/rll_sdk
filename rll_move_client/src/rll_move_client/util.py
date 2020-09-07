@@ -17,17 +17,18 @@
 # You should have received a copy of the GNU General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
-from math import sqrt
-from typing import List, Iterable, Sequence, Dict, Union  # noqa: E501, pylint: disable=unused-import, line-too-long
+from math import sqrt, pi
+from typing import (List, Iterable, Sequence, Dict, Union)  # noqa: E501, pylint: disable=unused-import, line-too-long
+
 
 import numpy as np
 import rospy
 from geometry_msgs.msg import Quaternion, Pose, Point
-from tf.transformations import unit_vector, quaternion_from_euler, \
-    quaternion_matrix, euler_from_quaternion, quaternion_from_matrix, \
-    quaternion_multiply
+from tf.transformations import (unit_vector, quaternion_from_euler,
+                                quaternion_matrix, euler_from_quaternion,
+                                quaternion_from_matrix,
+                                quaternion_multiply)
 from rll_move_client.error import RLLErrorCode, ServiceCallFailure
-
 
 # custom type to make the type hints more readable
 PointLike = Union[Sequence[float], Point, Pose, np.ndarray]  # noqa: E501, pylint: disable=invalid-name, line-too-long
@@ -166,6 +167,18 @@ def translate_pose_relative(pose, t_x=0, t_y=0, t_z=0):
     return _pose
 
 
+def pose_point_at(position, z_axis, rough_x_axis):
+    # type: (PointLike, PointLike, PointLike) -> Pose
+
+    tmp_x_dir = unit_vector(pointlike_to_array(rough_x_axis))
+    z_dir = unit_vector(pointlike_to_array(z_axis))
+    y_dir = unit_vector(np.cross(z_dir, tmp_x_dir))
+    x_dir = unit_vector(np.cross(y_dir, z_dir))
+
+    matrix = construct_transform_matrix(position, x_dir, y_dir, z_dir)
+    return matrix_to_pose(matrix)
+
+
 def offset_point(point, o_x=0, o_y=0, o_z=0):
     # type: (Point, float, float, float) -> Point
     return Point(point.x + o_x, point.y + o_y, point.z + o_z)
@@ -200,8 +213,9 @@ def euler_to_quaternion(alpha, beta, gamma, axes='sxyz'):
     Construct a `Quaternion` from the given euler angles
     """
 
-    return array_to_quaternion(
-        quaternion_from_euler(alpha, beta, gamma, axes))
+    quaternion = quaternion_from_euler(alpha, beta, gamma, axes)
+    magnitude = np.linalg.norm(quaternion)
+    return array_to_quaternion(quaternion / magnitude)
 
 
 def rotate_quaternion(quat, roll, pitch, yaw):
@@ -304,7 +318,8 @@ def compare_lists(values1_pos, values2_pos, atol_pos=1.e-2):
 _REGISTERED_SERVICES = {}  # type: Dict[str, rospy.Service]
 
 
-def register_client_service(client, name, msg_type, callback_func):  # noqa: C901, E501
+def register_client_service(client, name, msg_type,  # noqa: C901, E501
+                            callback_func):
     """
     Register a ROS service with the given name and message type. If the service
     is called the callback_func is invoked and its return value treated as the
@@ -327,6 +342,10 @@ def register_client_service(client, name, msg_type, callback_func):  # noqa: C90
                 res = callback_func(client, *args)
             else:
                 res = callback_func(client, )
+        except NotImplementedError as expt:
+            rospy.logwarn("Custom service %s raised not implemented error: %s",
+                          name, expt.message)
+            res = None
         except Exception as expt:
             # trace = "".join(traceback.format_stack()[:-1])
             raise ServiceCallFailure(
@@ -381,3 +400,9 @@ def register_client_service(client, name, msg_type, callback_func):  # noqa: C90
     service = rospy.Service(name, msg_type, callback_wrapper)
     _REGISTERED_SERVICES[name] = service
     return service
+
+
+UP = Quaternion(0, 0, 0, 1)
+DOWN = orientation_from_rpy(0, pi, 0)
+LEFT = orientation_from_rpy(0, pi / 2, pi / 2)
+RIGHT = orientation_from_rpy(0, pi / 2, -pi / 2)

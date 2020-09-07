@@ -26,8 +26,7 @@ import rospy
 
 from rll_move_client.error import RLLErrorCode
 from rll_move_client.util import orientation_from_rpy
-
-from test_util import TestCaseWithRLLMoveClient
+from rll_move_client.tests_util import TestCaseWithRLLMoveClient
 
 
 class TestBasicMovements(TestCaseWithRLLMoveClient):

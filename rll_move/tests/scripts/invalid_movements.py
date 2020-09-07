@@ -25,10 +25,11 @@ import rospy
 import rll_msgs
 
 from rll_move_client.error import RLLErrorCode, CriticalServiceCallFailure
+from rll_move_client.tests_util import TestCaseWithRLLMoveClient, \
+    concurrent_call
 from rll_move_client.util import orientation_from_rpy
-from rll_tools.run import idle
 
-from test_util import TestCaseWithRLLMoveClient, concurrent_call
+from rll_tools.run import idle
 
 
 class TestInvalidMovements(TestCaseWithRLLMoveClient):

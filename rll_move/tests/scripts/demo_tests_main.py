@@ -19,24 +19,20 @@
 #
 
 import rospy
-from std_srvs.srv import Trigger, TriggerRequest
-
-from rll_move_client.error import RLLErrorCode
-
-from rll_move_client.tests_util import TestCaseWithRLLMoveClient
+import rosunit
+from rll_move_client.tests_demo_launcher import create_test_class
 
 
-class TestBeforeProjectRun(TestCaseWithRLLMoveClient):
+def main():
+    rospy.init_node("demo_tests")
 
-    def __init__(self, *args, **kwargs):
-        super(TestBeforeProjectRun, self).__init__(*args, **kwargs)
-        self.robot_ready_service = rospy.ServiceProxy("robot_ready", Trigger)
+    # Run the move_client_example demo TODO(mark): put in rll_move_client
+    to_import = [("rll_move_client", "scripts/"), ("rll_move_client", "src")]
+    klass = create_test_class(to_import, "move_client_example", "execute",
+                              "rll_move_client.client", "RLLDefaultMoveClient")
 
-    def test_0_call_service(self):
-        resp = self.client.move_random()
-        self.assert_last_srv_call_failed(
-            resp, RLLErrorCode.SERVICE_CALL_NOT_ALLOWED)
+    rosunit.unitrun("rll_move", "demo_tests", klass)
 
-        # robot ready should be allowed even outside project run
-        resp = self.robot_ready_service.call(TriggerRequest())
-        self.assertTrue(resp)
+
+if __name__ == "__main__":
+    main()

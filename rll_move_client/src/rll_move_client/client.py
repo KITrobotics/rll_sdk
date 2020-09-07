@@ -31,8 +31,8 @@ from rll_move_client.error import (ServiceCallFailure,
                                    CriticalServiceCallFailure, RLLErrorCode)
 from rll_move_client.formatting import (ansi_format, C_NAME, C_END, C_OK,
                                         C_FAIL, C_WARN, C_INFO,
-                                        get_exception_raising_function,
-                                        override_formatting_for_ros_types)
+                                        override_formatting_for_ros_types,
+                                        format_not_implemented)
 from rll_move_client.util import orientation_from_rpy
 from rll_msgs.srv import (MoveJoints, MovePTP, MoveLin, MoveRandom, GetPose,
                           GetJointValues, PickPlace, MovePTPArmangle,
@@ -153,7 +153,9 @@ class RLLMoveClientListener(object):
         self._job_finished_service = rospy.ServiceProxy(
             self.JOB_FINISHED_SRV_NAME, SetBool)
 
-        # init TCP socket
+        # init TCP socket, if a port is set on the param server, use it
+        tcp_port = rospy.get_param("~client_server_port", tcp_port)
+        rospy.loginfo("Using client port: %d", tcp_port)
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.sock.settimeout(2.0)
         # listen on all interfaces
@@ -184,9 +186,8 @@ class RLLMoveClientListener(object):
         except ServiceCallFailure as expt:
             rospy.logerr("The client routine was interrupted by an uncaught "
                          "service call exception: \n%s", expt)
-        except NotImplementedError:
-            rospy.logerr("You haven't (fully) implemented function: %s",
-                         ansi_format(get_exception_raising_function(), C_NAME))
+        except NotImplementedError as excpt:
+            rospy.logerr(format_not_implemented(excpt))
         except KeyboardInterrupt:
             rospy.logwarn("The client routine was interrupted by the user.")
         except AssertionError:
@@ -239,10 +240,11 @@ class RLLMoveClientListener(object):
             rospy.logwarn("Client code interrupted during a job run!")
             self.notify_job_finished(False)
 
-    def spin(self):
-        # type: () -> None
+    def spin(self, oneshot=False):  # noqa: C901
+        # type: (bool) -> bool
 
         buffer_size = 10
+        last_result = False
 
         rospy.on_shutdown(self._on_ros_shutdown)
 
@@ -270,11 +272,20 @@ class RLLMoveClientListener(object):
             if data == b"start":
                 rospy.loginfo("received start signal")
                 conn.send(b'ok')  # pylint: disable=no-member
-                self.__execute()
+                last_result = self.__execute()
 
+                if oneshot:
+                    break
             else:
                 rospy.logerr("error receiving start signal")
                 conn.send(b'error')  # pylint: disable=no-member
+
+        try:
+            self.sock.close()
+        except socket.error as err:
+            rospy.loginfo("socket error while closing the socket %s", err)
+
+        return last_result
 
 
 # pylint: disable=too-many-instance-attributes
@@ -388,7 +399,7 @@ class RLLBasicMoveClient(RLLMoveClientBase):
             "%s requested", self._handle_resp_with_values(handle_joint_values))
 
     def get_current_pose(self, detailed=False):
-        # type: () -> Union[Pose, List[Pose, float, bytes], None]
+        # type: (bool) -> Union[Pose, List[Pose, float, bytes], None]
 
         def handle_pose(resp, detailed):
             if detailed:

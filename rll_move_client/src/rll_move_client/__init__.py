@@ -18,4 +18,4 @@
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 
-__all__ = ['client', 'error', 'util']
+__all__ = ['client', 'error', 'util', "tests_demo_launcher", "tests_util"]

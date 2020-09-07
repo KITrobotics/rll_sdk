@@ -45,7 +45,5 @@ add_executable(move_client_example src/move_client_example.cpp)
 target_link_libraries(move_client_example ${PROJECT_NAME} ${catkin_LIBRARIES})
 
 if(CATKIN_ENABLE_TESTING)
-  
   add_rostest(tests/launch/unit_tests_python.test)
-  
 endif()
