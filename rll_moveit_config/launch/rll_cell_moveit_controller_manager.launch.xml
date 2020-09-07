@@ -3,7 +3,9 @@
     <arg name="hardware_interface" default="PositionJointInterface" />
     <arg name="robot_name" default="iiwa" />
     <arg name="eef_type" default="egl90" />
+    <arg name="load_gripper_controller" default="$(eval eef_type in ['crg200', 'egl90'])" />
 
     <param name="moveit_controller_manager" value="$(arg moveit_controller_manager)" />
-    <rosparam subst_value="True" file="$(find rll_moveit_config)/config/$(arg hardware_interface)_controllers.yaml" />
+    <rosparam if="$(arg load_gripper_controller)" subst_value="True" file="$(find rll_moveit_config)/config/$(arg hardware_interface)_gripper_controllers.yaml"/>
+    <rosparam unless="$(arg load_gripper_controller)" subst_value="True" file="$(find rll_moveit_config)/config/$(arg hardware_interface)_controllers.yaml" />
 </launch>
