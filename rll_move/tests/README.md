@@ -50,6 +50,7 @@ the available tests so far are:
 ```bash
 rostest rll_move movement_tests.test
 rostest rll_move unit_tests_cpp.test
+rostest rll_move demo_tests.test
 ```
 
 

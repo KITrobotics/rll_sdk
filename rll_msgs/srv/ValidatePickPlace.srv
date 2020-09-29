@@ -1,6 +1,4 @@
-geometry_msgs/Pose pose_approach
 geometry_msgs/Pose pose_grip
-geometry_msgs/Pose pose_retreat
 bool gripper_close
 string grasp_object
 ---

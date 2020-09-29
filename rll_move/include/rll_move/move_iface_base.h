@@ -25,7 +25,8 @@
 #include <sys/socket.h>
 
 #include <actionlib/server/simple_action_server.h>
-
+#include <geometry_msgs/Pose.h>
+#include <geometry_msgs/Pose2D.h>
 #include <rll_move/authentication.h>
 #include <rll_move/move_iface_services.h>
 #include <rll_msgs/JobEnvAction.h>
@@ -120,7 +121,7 @@ protected:
   virtual RLLErrorCode idle();
 
 private:
-  int client_socket_;
+  int client_socket_ = -1;
   struct sockaddr_in client_serv_addr_;
 
   Authentication authentication_;

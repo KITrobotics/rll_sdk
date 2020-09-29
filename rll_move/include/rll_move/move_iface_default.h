@@ -22,13 +22,16 @@
 #define RLL_MOVE_MOVE_IFACE_DEFAULT_H
 
 #include <rll_move/move_iface_base.h>
+#include <rll_move/move_iface_gripper.h>
 
-class RLLDefaultMoveIfaceBase : public RLLMoveIfaceBase
+class RLLDefaultMoveIfaceBase : public RLLMoveIfaceBase, public RLLMoveIfaceGripperServices
 {
 public:
   explicit RLLDefaultMoveIfaceBase(const ros::NodeHandle& nh) : RLLMoveIfaceBase(nh)
   {
   }
+  void runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result) override;
+
   void startServicesAndRunNode(ros::NodeHandle* nh) override;
 };
 

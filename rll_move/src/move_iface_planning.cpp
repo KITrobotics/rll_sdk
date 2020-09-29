@@ -2,7 +2,7 @@
  * This file is part of the Robot Learning Lab SDK
  *
  * Copyright (C) 2018-2020 Wolfgang Wiedmeyer <wolfgang.wiedmeyer@kit.edu>
- * Copyright (C) 2019 Mark Weinreuter <uieai@student.kit.edu>
+ * Copyright (C) 2019 Mark Weinreuter <mark.weinreuter@kit.edu>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -35,14 +35,10 @@ const double RLLMoveIfacePlanning::DEFAULT_LINEAR_JUMP_THRESHOLD = 10;
 const size_t RLLMoveIfacePlanning::LINEAR_MIN_STEPS_FOR_JUMP_THRESH = 10;
 
 const std::string RLLMoveIfacePlanning::MANIP_PLANNING_GROUP = "manipulator";
-const std::string RLLMoveIfacePlanning::GRIPPER_PLANNING_GROUP = "gripper";
 
 const std::string RLLMoveIfacePlanning::HOME_TARGET_NAME = "home_bow";
-const std::string RLLMoveIfacePlanning::GRIPPER_OPEN_TARGET_NAME = "gripper_open";
-const std::string RLLMoveIfacePlanning::GRIPPER_CLOSE_TARGET_NAME = "gripper_close";
 
-RLLMoveIfacePlanning::RLLMoveIfacePlanning()
-  : manip_move_group_(MANIP_PLANNING_GROUP), gripper_move_group_(GRIPPER_PLANNING_GROUP)
+RLLMoveIfacePlanning::RLLMoveIfacePlanning() : manip_move_group_(MANIP_PLANNING_GROUP)
 {
   ns_ = ros::this_node::getNamespace();
 // remove the slashes at the beginning
@@ -75,8 +71,6 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
   manip_move_group_.setPlannerId("RRTConnectkConfigDefault");
   manip_move_group_.setPlanningTime(2.0);
   manip_move_group_.setPoseReferenceFrame("world");
-  gripper_move_group_.setPlannerId("RRTConnectkConfigDefault");
-  gripper_move_group_.setPlanningTime(2.0);
 
   manip_move_group_.setMaxVelocityScalingFactor(DEFAULT_VELOCITY_SCALING_FACTOR);
   manip_move_group_.setMaxAccelerationScalingFactor(DEFAULT_ACCELERATION_SCALING_FACTOR);
@@ -92,7 +86,8 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
 
   planning_scene_monitor_->requestPlanningSceneState("get_planning_scene");
   planning_scene_ = planning_scene_monitor::LockedPlanningSceneRO(planning_scene_monitor_);
-  acm_ = planning_scene_->getAllowedCollisionMatrix();
+  acm_ = planning_scene_->getAllowedCollisionMatrix();  // this is only a copy of the ACM from the current planning
+                                                        // scene, it is not updated?
 
   // startup checks, shutdown the node if something is wrong
   if (isInitialStateInCollision() || !isCollisionLinkAvailable() || !getKinematicsSolver() || !initConstTransforms())
@@ -100,6 +95,11 @@ RLLMoveIfacePlanning::RLLMoveIfacePlanning()
     ROS_FATAL("Startup checks failed, shutting the node down!");
     ros::shutdown();
   }
+}
+
+const std::string& RLLMoveIfacePlanning::getNamespace()
+{
+  return ns_;
 }
 
 const std::string& RLLMoveIfacePlanning::getEEFType()
@@ -210,8 +210,9 @@ RLLErrorCode RLLMoveIfacePlanning::execute(moveit::planning_interface::MoveGroup
     return error_code;
   }
 
-  if (move_group->getName() == GRIPPER_PLANNING_GROUP)
+  if (move_group->getName() != MANIP_PLANNING_GROUP)  // run only for manipulator
   {
+    ros::Duration(.25).sleep();  // wait a bit just in case the gripper is still moving
     return RLLErrorCode::SUCCESS;
   }
 
@@ -223,8 +224,8 @@ RLLErrorCode RLLMoveIfacePlanning::execute(moveit::planning_interface::MoveGroup
   ros::Time begin = ros::Time::now();
   while (!identical && ros::Time::now() - begin < timeout)
   {
-    // current state in move_group is not uptodate with last state from planning scene, so fetch directly from planning
-    // scene
+    // current state in move_group is not uptodate with last state from planning scene, so fetch directly from
+    // planning scene
     getCurrentRobotState().copyJointGroupPositions(manip_joint_model_group_, current_point);
     for (size_t i = 0; i < last_point.size(); ++i)
     {
@@ -247,6 +248,33 @@ RLLErrorCode RLLMoveIfacePlanning::execute(moveit::planning_interface::MoveGroup
   }
 
   return RLLErrorCode::SUCCESS;
+}
+
+geometry_msgs::Pose RLLMoveIfacePlanning::getCurrentPoseFromPlanningScene()
+{
+  getCurrentRobotState(true).update();  // TODO(mark): does this make a difference?
+  return manip_move_group_.getCurrentPose().pose;
+}
+
+double RLLMoveIfacePlanning::distanceToCurrentPosition(const geometry_msgs::Pose& pose)
+{
+  geometry_msgs::Pose current_pose = getCurrentPoseFromPlanningScene();
+
+  double distance =
+      sqrt(pow(current_pose.position.x - pose.position.x, 2) + pow(current_pose.position.y - pose.position.y, 2) +
+           pow(current_pose.position.z - pose.position.z, 2));
+
+  ROS_INFO("Distance between current and goal: %.3f", distance);
+  ROS_INFO_POS(" current", current_pose.position);
+  ROS_INFO_POS("  target", pose.position);
+  return distance;
+}
+
+bool RLLMoveIfacePlanning::tooCloseForLinearMovement(const geometry_msgs::Pose& goal)
+{
+  const double MIN_LIN_MOVEMENT_DISTANCE = 0.005;
+  float distance = distanceToCurrentPosition(goal);
+  return distance < MIN_LIN_MOVEMENT_DISTANCE;
 }
 
 RLLErrorCode RLLMoveIfacePlanning::moveToGoalLinear(const geometry_msgs::Pose& goal,
@@ -310,6 +338,7 @@ RLLErrorCode RLLMoveIfacePlanning::computeLinearPath(const std::vector<double>& 
     ROS_ERROR("only achieved to compute %f of the requested path", achieved);
     return RLLErrorCode::ONLY_PARTIAL_PATH_PLANNED;
   }
+
   if (achieved <= 0.0)
   {
     ROS_ERROR("path planning completely failed");
@@ -449,7 +478,9 @@ bool RLLMoveIfacePlanning::poseGoalTooClose(const geometry_msgs::Pose& goal)
     return true;
   }
 
-  return false;
+  // in case we chose different joint values check the cartesian distance too
+  // TODO(mark): consider difference in orientation as well
+  return distanceToCurrentPosition(goal) <= 0.001;
 }
 
 bool RLLMoveIfacePlanning::jointsGoalInCollision(const std::vector<double>& goal)
@@ -463,6 +494,12 @@ bool RLLMoveIfacePlanning::jointsGoalInCollision(const std::vector<double>& goal
   }
 
   return false;
+}
+
+RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose& goal)
+{
+  std::vector<double> joints(7);
+  return poseGoalInCollision(goal, &joints);
 }
 
 RLLErrorCode RLLMoveIfacePlanning::poseGoalInCollision(const geometry_msgs::Pose& goal,
@@ -522,10 +559,30 @@ bool RLLMoveIfacePlanning::stateInCollision(robot_state::RobotState* state)
   collision_detection::CollisionRequest request;
   request.distance = true;
   request.verbose = true;
+  request.contacts = true;
+  request.max_contacts = 1;
+  request.max_contacts_per_pair = 1;
 
   collision_detection::CollisionResult result;
   result.clear();
   planning_scene_->checkCollision(request, result, *state, acm_);
+
+  // TODO(mark): outputting the collision info here is redundant if a verbose CollisionRequest is used.
+  // However, it might be usefull if this info is printed/published somewhere in the future
+  for (const auto& collision : result.contacts)
+  {
+    for (const auto& contact : collision.second)
+    {
+      std::string ns_name = contact.body_name_1 + "=" + contact.body_name_2;
+      ROS_INFO("At most one collision detected between: %s", ns_name.c_str());
+    }
+  }
+
+  bool distance_too_close = result.distance >= 0.0 && result.distance < 0.001;
+  if (distance_too_close)
+  {
+    ROS_INFO("Distance (%.4f) too small => treated as collision", result.distance);
+  }
 
   // There is either a collision or the distance between the robot
   // and the nearest collision object is less than 1mm.
@@ -533,108 +590,18 @@ bool RLLMoveIfacePlanning::stateInCollision(robot_state::RobotState* state)
   // because the robot may end up being in collision when it
   // moves into the goal pose and ends up in a slightly different
   // position.
-  return (result.collision || (result.distance >= 0.0 && result.distance < 0.001));
+  return (result.collision || distance_too_close);
 }
 
-void RLLMoveIfacePlanning::disableCollision(const std::string& link_1, const std::string& link_2)
+void RLLMoveIfacePlanning::updateCollisionEntry(const std::string& link_1, const std::string& link_2,
+                                                bool allow_collision)
 {
+  ROS_INFO("Update acm collision entry: %s and %s, can collide: %d", link_1.c_str(), link_2.c_str(), allow_collision);
   planning_scene_monitor::LockedPlanningSceneRW planning_scene_rw(planning_scene_monitor_);
-  planning_scene_rw->getAllowedCollisionMatrixNonConst().setEntry(link_1, link_2, true);
+  planning_scene_rw->getAllowedCollisionMatrixNonConst().setEntry(link_1, link_2, allow_collision);
   // we need a local copy because checkCollision doesn't automatically use the
   // updated collision matrix from the planning scene
   acm_ = planning_scene_rw->getAllowedCollisionMatrixNonConst();
-}
-
-bool RLLMoveIfacePlanning::attachGraspObject(const std::string& object_id)
-{
-  moveit_msgs::CollisionObject remove_object;
-
-  if (object_id.empty())
-  {
-    return true;
-  }
-
-  ROS_INFO("attaching grasp object '%s'", object_id.c_str());
-
-  std::map<std::string, moveit_msgs::CollisionObject> objects =
-      planning_scene_interface_.getObjects(std::vector<std::string>{ object_id });
-
-  if (!objects.empty())
-  {
-    remove_object = objects[object_id];
-  }
-  else
-  {
-    ROS_ERROR("object not found");
-    return false;
-  }
-
-  if (remove_object.id != object_id)
-  {
-    ROS_ERROR("The found grasp object is not the right one");
-    return false;
-  }
-
-  remove_object.operation = remove_object.REMOVE;
-
-  planning_scene_interface_.applyCollisionObject(remove_object);
-
-  moveit_msgs::AttachedCollisionObject attached_object;
-  attached_object.link_name = manip_move_group_.getEndEffectorLink();
-  attached_object.object = remove_object;
-  attached_object.object.operation = attached_object.object.ADD;
-
-  attached_object.touch_links =
-      std::vector<std::string>{ ns_ + "_" + eef_type_ + "_finger_left", ns_ + "_" + eef_type_ + "_finger_right",
-                                "table" };  // TODO(mark): remove table (better to use an offset)
-  planning_scene_interface_.applyAttachedCollisionObject(attached_object);
-
-  return true;
-}
-
-bool RLLMoveIfacePlanning::detachGraspObject(const std::string& object_id)
-{
-  moveit_msgs::AttachedCollisionObject remove_object;
-
-  if (object_id.empty())
-  {
-    return true;
-  }
-
-  ROS_INFO("detaching grasp object '%s'", object_id.c_str());
-
-  std::map<std::string, moveit_msgs::AttachedCollisionObject> objects =
-      planning_scene_interface_.getAttachedObjects(std::vector<std::string>{ object_id });
-
-  if (!objects.empty())
-  {
-    remove_object = objects[object_id];
-  }
-  else
-  {
-    ROS_ERROR("object not found");
-    return false;
-  }
-
-  if (remove_object.object.id != object_id)
-  {
-    ROS_ERROR("The found grasp object is not the right one");
-    return false;
-  }
-
-  remove_object.object.operation = remove_object.object.REMOVE;
-
-  planning_scene_interface_.applyAttachedCollisionObject(remove_object);
-
-  moveit_msgs::CollisionObject detached_object;
-  detached_object = remove_object.object;
-  detached_object.operation = detached_object.ADD;
-  planning_scene_interface_.applyCollisionObject(detached_object);
-  // TODO(uieai): figure out if this is really needed
-  // occasionally, there seems to be a race condition with subsequent planning requests
-  ros::Duration(0.1).sleep();
-
-  return true;
 }
 
 RLLErrorCode RLLMoveIfacePlanning::computeLinearPathArmangle(const std::vector<geometry_msgs::Pose>& waypoints_pose,
@@ -898,7 +865,8 @@ bool RLLMoveIfacePlanning::initConstTransforms()
 #if ROS_VERSION_MINIMUM(1, 14, 3)  // Melodic
                                    // leave world_frame as is
 #else                              // Kinetic and older
-  world_frame.erase(0, 1);  // remove slash
+  // remove slash -> TODO(mark): there might not even be a slash! e.g. starting manually with ROS_NAMESPACE=iiwa
+  world_frame.erase(0, 1);
 #endif
   try
   {
@@ -910,61 +878,13 @@ bool RLLMoveIfacePlanning::initConstTransforms()
   catch (tf2::TransformException& ex)
   {
     ROS_FATAL("%s", ex.what());
-    abortDueToCriticalFailure();
+    // abortDueToCriticalFailure(); -> pure virtual => NOT set in VTABLE YET!!
     return false;
   }
 
   tf::transformMsgToTF(ee_to_tip_stamped.transform, ee_to_tip_);
   tf::transformMsgToTF(base_to_world_stamped.transform, base_to_world_);
   return true;
-}
-
-float RLLMoveIfacePlanning::distanceToCurrentPosition(const geometry_msgs::Pose& pose)
-{
-  geometry_msgs::Pose current_pose = manip_move_group_.getCurrentPose().pose;
-
-  return sqrt(pow(current_pose.position.x - pose.position.x, 2) + pow(current_pose.position.y - pose.position.y, 2) +
-              pow(current_pose.position.z - pose.position.z, 2));
-}
-
-RLLErrorCode RLLMoveIfacePlanning::closeGripper()
-{
-  if (!manipCurrentStateAvailable())
-  {
-    return RLLErrorCode::MANIPULATOR_NOT_AVAILABLE;
-  }
-  ROS_INFO("Closing the gripper");
-
-  gripper_move_group_.setStartStateToCurrentState();
-  gripper_move_group_.setNamedTarget(GRIPPER_CLOSE_TARGET_NAME);
-
-  RLLErrorCode error_code = runPTPTrajectory(&gripper_move_group_, true);
-  if (error_code.failed())
-  {
-    ROS_INFO("Failed to close the gripper");
-  }
-
-  return error_code;
-}
-
-RLLErrorCode RLLMoveIfacePlanning::openGripper()
-{
-  if (!manipCurrentStateAvailable())
-  {
-    return RLLErrorCode::MANIPULATOR_NOT_AVAILABLE;
-  }
-  ROS_INFO("Opening the gripper");
-
-  gripper_move_group_.setStartStateToCurrentState();
-  gripper_move_group_.setNamedTarget(GRIPPER_OPEN_TARGET_NAME);
-
-  RLLErrorCode error_code = runPTPTrajectory(&gripper_move_group_, true);
-  if (error_code.failed())
-  {
-    ROS_INFO("Failed to open the gripper");
-  }
-
-  return error_code;
 }
 
 bool RLLMoveIfacePlanning::modifyLinTrajectory(moveit_msgs::RobotTrajectory* trajectory)

@@ -4,11 +4,15 @@
     <arg name="headless" default="true"/>
     <arg name="use_sim" default="false"/>
     <arg name="client_server_port" default="5555"/>
+    <arg name="gazebo_gui" default="false" />
+    <arg name="eef_type" default="egl90" />
 
-    <include file="$(find rll_move)/launch/setup_moveit_and_move_iface.launch">
+    <include file="$(find rll_move)/tests/launch/setup_moveit_and_gripper_demo_iface.launch">
         <arg name="use_sim" value="$(arg use_sim)"/>
         <arg name="headless" value="$(arg headless)"/>
+        <arg name="gazebo_gui" value="$(arg gazebo_gui)" />
         <arg name="output" value="$(arg output)"/>
+        <arg name="eef_type" value="$(arg eef_type)"/>
         <arg name="client_server_port" value="$(arg client_server_port)"/>
     </include>
 

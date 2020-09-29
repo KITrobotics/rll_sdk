@@ -35,8 +35,9 @@ from rll_move_client.formatting import (ansi_format, C_NAME, C_END, C_OK,
                                         format_not_implemented)
 from rll_move_client.util import orientation_from_rpy
 from rll_msgs.srv import (MoveJoints, MovePTP, MoveLin, MoveRandom, GetPose,
-                          GetJointValues, PickPlace, MovePTPArmangle,
-                          MoveLinArmangle)
+                          GetJointValues, PickPlace, PickPlaceHere,
+                          MoveGripper, MovePTPArmangle, MoveLinArmangle,
+                          ValidatePickPlace)
 
 
 class RLLMoveClientBase(object):
@@ -416,23 +417,57 @@ class RLLBasicMoveClient(RLLMoveClientBase):
 class PickPlaceClient(RLLMoveClientBase):  # TODO(uieai) test pick place
 
     PICK_PLACE_SRV_NAME = "pick_place"
+    VALIDATE_PICK_PLACE_SRV_NAME = "validate_pick_place"
+    PICK_PLACE_HERE_SRV_NAME = "pick_place_here"
+    MOVE_GRIPPER_SRV_NAME = "move_gripper"
 
     def __init__(self):
         RLLMoveClientBase.__init__(self)
 
         self._pick_place_service = rospy.ServiceProxy(
             self.PICK_PLACE_SRV_NAME, PickPlace)
+        self._pick_place_here_service = rospy.ServiceProxy(
+            self.PICK_PLACE_HERE_SRV_NAME, PickPlaceHere)
+        self._move_gripper_service = rospy.ServiceProxy(
+            self.MOVE_GRIPPER_SRV_NAME, MoveGripper)
+        self._validate_pick_place_service = rospy.ServiceProxy(
+            self.VALIDATE_PICK_PLACE_SRV_NAME, ValidatePickPlace)
 
-    def pick_place(self, pose_above, pose_grip,  # pylint: disable=r0913
-                   gripper_close, grasp_object):
-        # type: (Pose, Pose, bool, str) -> bool
+    def pick_place(self, pose_approach, pose_grip,  # pylint: disable=r0913
+                   pose_retreat, gripper_close, grasp_object):
+        # type: (Pose, Pose, Pose, bool, str) -> bool
 
         return self._call_service_with_error_check(
             self._pick_place_service, self.PICK_PLACE_SRV_NAME,
-            "%s requested with: %s->%s close:%s, grasp:%s",
+            "%s requested with: %s->%s->%s close:%s, grasp:%s",
             self._handle_response_error_code,
-            pose_above, pose_grip, gripper_close,
+            pose_approach, pose_grip, pose_retreat, gripper_close,
             grasp_object)
+
+    def pick_place_here(self, pose_grip, gripper_close, grasp_object):
+        # type: (Pose, bool, str) -> bool
+
+        return self._call_service_with_error_check(
+            self._pick_place_here_service, self.PICK_PLACE_HERE_SRV_NAME,
+            "%s requested with: Grip:%s close:%s, object_name:%s",
+            self._handle_response_error_code,
+            pose_grip, gripper_close, grasp_object)
+
+    def move_gripper(self, gripper_close, grasp_object):
+        return self._call_service_with_error_check(
+            self._move_gripper_service, self.MOVE_GRIPPER_SRV_NAME,
+            "%s requested with: gripper close:%s, object_name:%s",
+            self._handle_response_error_code, gripper_close, grasp_object)
+
+    def validate_pick_place(self, pose_grip, gripper_close, grasp_object):
+        # type: (Pose, bool, str) -> bool
+
+        return self._call_service_with_error_check(
+            self._validate_pick_place_service,
+            self.VALIDATE_PICK_PLACE_SRV_NAME,
+            "%s requested with: %s close:%s, grasp:%s",
+            self._handle_response_error_code,
+            pose_grip, gripper_close, grasp_object)
 
 
 class RLLDefaultMoveClient(RLLMoveClientListener, RLLBasicMoveClient,

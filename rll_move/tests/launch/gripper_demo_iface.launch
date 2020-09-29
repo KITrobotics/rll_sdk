@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="robot" default="iiwa"/>
+    <arg name="no_gripper" default="false"/>
+    <arg name="job_execution_timeout" default="600"/>
+    <arg name="collision_link" default="world"/>
+    <arg name="client_server_port" default="5005"/>
+    <arg name="eef_type" default="egl90" />
+
+    <node ns="$(arg robot)" name="rll_move_gripper_demo_iface" pkg="rll_move" type="rll_move_gripper_demo_iface" respawn="false"
+          output="screen">
+        <param name="no_gripper" value="$(arg no_gripper)"/>
+        <param name="job_execution_timeout" value="$(arg job_execution_timeout)"/>
+        <param name="collision_link" value="$(arg collision_link)"/>
+        <param name="client_server_port" value="$(arg client_server_port)"/>
+        <param name="eef_type" value="$(arg eef_type)"/>
+        <remap from="/use_sim_time" to="/$(arg robot)/use_sim_time"/>
+        <remap from="/clock" to="/$(arg robot)/clock"/>
+        <remap from="/joint_states" to="/$(arg robot)/clock"/>
+        
+    </node>
+
+</launch>

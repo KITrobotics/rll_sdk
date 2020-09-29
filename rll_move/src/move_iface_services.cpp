@@ -19,7 +19,6 @@
  */
 
 #include <moveit/trajectory_processing/iterative_time_parameterization.h>
-
 #include <rll_move/move_iface_services.h>
 
 const std::string RLLMoveIfaceServices::ROBOT_READY_SRV_NAME = "robot_ready";
@@ -29,7 +28,6 @@ const std::string RLLMoveIfaceServices::MOVE_LIN_SRV_NAME = "move_lin";
 const std::string RLLMoveIfaceServices::MOVE_LIN_ARMANGLE_SRV_NAME = "move_lin_armangle";
 const std::string RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME = "move_joints";
 const std::string RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME = "move_random";
-const std::string RLLMoveIfaceServices::PICK_PLACE_SRV_NAME = "pick_place";
 const std::string RLLMoveIfaceServices::GET_POSE_SRV_NAME = "get_current_pose";
 const std::string RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME = "get_current_joint_values";
 
@@ -42,15 +40,11 @@ void RLLMoveIfaceServices::setupPermissions()
 {
   only_during_job_run_permission_ = permissions_.registerPermission("only_during_job_run", false);
   move_permission_ = permissions_.registerPermission("allowed_to_move", false);
-  pick_place_permission_ = permissions_.registerPermission("pick_place", false);
 
   // by default every service requires the move permission unless explicitly changed
   auto default_permissions = only_during_job_run_permission_ | move_permission_;
   permissions_.setDefaultRequiredPermissions(default_permissions);
 
-  // the pick_and_place service requires an additional permission
-  permissions_.setRequiredPermissionsFor(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME,
-                                         pick_place_permission_ | default_permissions);
   // robot ready service check is always allowed
   permissions_.setRequiredPermissionsFor(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME,
                                          Permissions::NO_PERMISSION_REQUIRED);
@@ -58,13 +52,13 @@ void RLLMoveIfaceServices::setupPermissions()
 
 bool RLLMoveIfaceServices::robotReadySrv(std_srvs::Trigger::Request& /*req*/, std_srvs::Trigger::Response& resp)
 {
-  RLLErrorCode error_code = beforeMovementServiceCall(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME);
+  RLLErrorCode error_code = beforeServiceCall(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME);
   if (error_code.succeeded())
   {
     error_code = resetToHome();
   }
 
-  error_code = afterMovementServiceCall(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME, error_code);
+  error_code = afterServiceCall(RLLMoveIfaceServices::ROBOT_READY_SRV_NAME, error_code);
   resp.success = error_code.succeededSrv();
   return true;
 }
@@ -77,7 +71,6 @@ void RLLMoveIfaceServices::abortDueToCriticalFailure()
 void RLLMoveIfaceServices::handleFailureSeverity(const RLLErrorCode& error_code)
 {
   // check if a error condition matches, if not assume critical failure
-
   if (error_code.isInvalidInput())
   {
     ROS_WARN("A failure due to invalid input occurred. error: %s", error_code.message());
@@ -94,7 +87,7 @@ void RLLMoveIfaceServices::handleFailureSeverity(const RLLErrorCode& error_code)
   }
 }
 
-RLLErrorCode RLLMoveIfaceServices::beforeNonMovementServiceCall(const std::string& srv_name)
+RLLErrorCode RLLMoveIfaceServices::beforeServiceCall(const std::string& srv_name)
 {
   ROS_DEBUG("service '%s' requested", srv_name.c_str());
 
@@ -111,28 +104,6 @@ RLLErrorCode RLLMoveIfaceServices::beforeNonMovementServiceCall(const std::strin
     return RLLErrorCode::INSUFFICIENT_PERMISSION;
   }
 
-  return RLLErrorCode::SUCCESS;
-}
-
-RLLErrorCode RLLMoveIfaceServices::afterNonMovementServiceCall(const std::string& srv_name,
-                                                               RLLErrorCode previous_error_code)
-{
-  bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
-  RLLErrorCode error_code = iface_state_.endServiceCall(srv_name, only_during_job_run);
-  ROS_DEBUG("service '%s' ended", srv_name.c_str());
-
-  // a previous error code is probably more specific and takes precedence
-  return previous_error_code.failed() ? previous_error_code : error_code;
-}
-
-RLLErrorCode RLLMoveIfaceServices::beforeMovementServiceCall(const std::string& srv_name)
-{
-  RLLErrorCode error_code = beforeNonMovementServiceCall(srv_name);
-  if (error_code.failed())
-  {
-    return error_code;
-  }
-
   if (!manipCurrentStateAvailable())
   {
     return RLLErrorCode::MANIPULATOR_NOT_AVAILABLE;
@@ -141,11 +112,15 @@ RLLErrorCode RLLMoveIfaceServices::beforeMovementServiceCall(const std::string& 
   return RLLErrorCode::SUCCESS;
 }
 
-RLLErrorCode RLLMoveIfaceServices::afterMovementServiceCall(const std::string& srv_name,
-                                                            const RLLErrorCode& previous_error_code)
+RLLErrorCode RLLMoveIfaceServices::afterServiceCall(const std::string& srv_name,
+                                                    const RLLErrorCode& previous_error_code)
 {
-  // pass a possible previous error_code, it will be returned if it is more specific
-  RLLErrorCode error_code = afterNonMovementServiceCall(srv_name, previous_error_code);
+  bool only_during_job_run = permissions_.isPermissionRequiredFor(srv_name, only_during_job_run_permission_);
+  RLLErrorCode error_code = iface_state_.endServiceCall(srv_name, only_during_job_run);
+  ROS_DEBUG("service '%s' ended", srv_name.c_str());
+
+  // a previous error code is probably more specific and takes precedence
+  error_code = previous_error_code.determineWorse(error_code);
 
   if (error_code.failed())
   {
@@ -216,63 +191,6 @@ RLLErrorCode RLLMoveIfaceServices::moveRandom(const rll_msgs::MoveRandom::Reques
   }
 
   return RLLErrorCode::SUCCESS;
-}
-
-bool RLLMoveIfaceServices::pickPlaceSrv(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& resp)
-{
-  return controlledMovementExecution(req, &resp, PICK_PLACE_SRV_NAME, &RLLMoveIfaceServices::pickPlace);
-}
-
-RLLErrorCode RLLMoveIfaceServices::pickPlace(const rll_msgs::PickPlace::Request& req,
-                                             rll_msgs::PickPlace::Response* /*resp*/)
-{
-  RLLErrorCode error_code;
-
-  if (!poseGoalTooClose(req.pose_above))
-  {
-    ROS_INFO("Moving above target");
-    error_code = moveToGoalLinear(req.pose_above);
-    if (error_code.failed())
-    {
-      ROS_WARN("Moving above target failed");
-      return error_code;
-    }
-  }
-
-  ROS_INFO("Moving to grip position");
-  error_code = moveToGoalLinear(req.pose_grip);
-  if (error_code.failed())
-  {
-    ROS_WARN("Moving to grip position failed");
-    return error_code;
-  }
-
-  if (req.gripper_close != RLL_SRV_FALSE)
-  {
-    attachGraspObject(req.grasp_object);
-    error_code = closeGripper();
-  }
-  else
-  {
-    error_code = openGripper();
-    // TODO(uieai): still detach if opening the gripper fails?
-    detachGraspObject(req.grasp_object);
-  }
-
-  if (error_code.failed())
-  {
-    ROS_WARN("Opening or closing the gripper failed");
-    return error_code;
-  }
-
-  ROS_INFO("Moving back above grip position");
-  error_code = moveToGoalLinear(req.pose_above);
-  if (error_code.failed())
-  {
-    ROS_WARN("Moving back above target failed");
-  }
-
-  return error_code;
 }
 
 bool RLLMoveIfaceServices::moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& resp)
@@ -436,8 +354,12 @@ RLLErrorCode RLLMoveIfaceServices::moveJoints(const rll_msgs::MoveJoints::Reques
   joints[5] = req.joint_6;
   joints[6] = req.joint_7;
 
-  manip_move_group_.setStartStateToCurrentState();
+  if (jointsGoalInCollision(joints))
+  {
+    return RLLErrorCode::GOAL_IN_COLLISION;
+  }
 
+  manip_move_group_.setStartStateToCurrentState();
   success = manip_move_group_.setJointValueTarget(joints);
   if (!success)
   {
@@ -451,7 +373,7 @@ RLLErrorCode RLLMoveIfaceServices::moveJoints(const rll_msgs::MoveJoints::Reques
 bool RLLMoveIfaceServices::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Request& /*req*/,
                                                     rll_msgs::GetJointValues::Response& resp)
 {
-  RLLErrorCode error_code = beforeNonMovementServiceCall(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME);
+  RLLErrorCode error_code = beforeServiceCall(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME);
 
   if (error_code.succeeded())
   {
@@ -465,7 +387,7 @@ bool RLLMoveIfaceServices::getCurrentJointValuesSrv(rll_msgs::GetJointValues::Re
     resp.joint_7 = joints[6];
   }
 
-  error_code = afterNonMovementServiceCall(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME, error_code);
+  error_code = afterServiceCall(RLLMoveIfaceServices::GET_JOINT_VALUES_SRV_NAME, error_code);
   resp.error_code = error_code.value();
   resp.success = error_code.succeededSrv();
   return true;
@@ -477,7 +399,7 @@ bool RLLMoveIfaceServices::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/
   double arm_angle;
   int config;
 
-  RLLErrorCode error_code = beforeNonMovementServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME);
+  RLLErrorCode error_code = beforeServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME);
 
   if (error_code.succeeded())
   {
@@ -488,7 +410,7 @@ bool RLLMoveIfaceServices::getCurrentPoseSrv(rll_msgs::GetPose::Request& /*req*/
     resp.config = config;
   }
 
-  error_code = afterNonMovementServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME, error_code);
+  error_code = afterServiceCall(RLLMoveIfaceServices::GET_POSE_SRV_NAME, error_code);
   resp.error_code = error_code.value();
   resp.success = error_code.succeededSrv();
   return true;
@@ -515,15 +437,6 @@ RLLErrorCode RLLMoveIfaceServices::resetToHome()
     manip_move_group_.setNamedTarget(HOME_TARGET_NAME);
 
     RLLErrorCode error_code = runPTPTrajectory(&manip_move_group_);
-    if (error_code.failed())
-    {
-      return error_code;
-    }
-  }
-
-  if (!no_gripper_attached_)
-  {
-    RLLErrorCode error_code = openGripper();
     if (error_code.failed())
     {
       return error_code;

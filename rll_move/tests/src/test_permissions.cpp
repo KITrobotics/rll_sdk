@@ -13,9 +13,11 @@ TEST(PermissionsTest, testUpdatePermissions)
 {
   Permissions p;
   auto p1 = p.registerPermission("p1", true);
-  EXPECT_EQ(p.getCurrentPermissions(), 2U);
+  // two permissions are set by default => next index is 2^2
+  EXPECT_EQ(p.getCurrentPermissions(), 4u);
   auto p2 = p.registerPermission("p2", false);
-  EXPECT_EQ(p.getCurrentPermissions(), 2U);
+  // permissions are unchanged, because p2 is not allowed initially
+  EXPECT_EQ(p.getCurrentPermissions(), 4u);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
 
@@ -33,12 +35,53 @@ TEST(PermissionsTest, testInheritDefaultPermissions)
   Permissions p;
   auto p1 = p.registerPermission("p1");
   p.setDefaultRequiredPermissions(p1);
+  // require no explicit permissions, but inherit defaults
+  p.setRequiredPermissionsFor("test", Permissions::NO_PERMISSION_REQUIRED, true);
+  EXPECT_EQ(p.getRequiredPermissionsFor("test"), p1);
+}
+
+TEST(PermissionsTest, testDefaultPermissionBitNotShown)
+{
+  Permissions p;
+  auto p1 = p.registerPermission("p1");
   auto p2 = p.registerPermission("p2");
+  p.setDefaultRequiredPermissions(p1 | p2);
+
+  // require no explicit permissions, required defaults
+  p.setRequiredPermissionsFor("test", Permissions::NO_PERMISSION_REQUIRED, true);
+  auto required = p.getRequiredPermissionsFor("test");
+  // even though internally the REQUIRE_DEFAULTS_INDICATOR bit is set, it should not be
+  // returned, but rather resolved with the current set permission bits
+  auto default_indicator_set = required & Permissions::APPLY_DEFAULTS_BIT;
+  EXPECT_EQ(default_indicator_set, 0u);
+  EXPECT_EQ(required, p1 | p2);
+}
+
+TEST(PermissionsTest, testExplicitPermissionInheritDefaultPermissions)
+{
+  Permissions p;
+  auto p1 = p.registerPermission("p1");
+  auto p2 = p.registerPermission("p2");
+  p.setDefaultRequiredPermissions(p1);
+
+  // require explicit permission and inherit defaults
+  p.setRequiredPermissionsFor("test", p2, true);
+  EXPECT_EQ(p.getRequiredPermissionsFor("test"), p1 | p2);
+}
+
+TEST(PermissionsTest, testInheritUpdatedDefaultPermissions)
+{
+  Permissions p;
+  auto p1 = p.registerPermission("p1");
+  auto p2 = p.registerPermission("p2");
+  auto p3 = p.registerPermission("p3");
 
   p.setDefaultRequiredPermissions(p1);
   p.setRequiredPermissionsFor("test", p2, true);
-
   EXPECT_EQ(p.getRequiredPermissionsFor("test"), p1 | p2);
+  // update the default permission -> "test" should now also require p3
+  p.setDefaultRequiredPermissions(p1 | p3);
+  EXPECT_EQ(p.getRequiredPermissionsFor("test"), p1 | p2 | p3);
 }
 
 TEST(PermissionsTest, testUpdateByPermissionName)
@@ -97,19 +140,19 @@ TEST(PermissionsTest, testRegisteredPermissionsValue)
   // register a permission, test its index, the current permission and
   // if the initial value is set correctly
   auto p1 = p.registerPermission("p1", true);
-  EXPECT_EQ(p1, 2u);
-  EXPECT_EQ(p.getCurrentPermissions(), 2U);
+  EXPECT_EQ(p1, 4u);
+  EXPECT_EQ(p.getCurrentPermissions(), p1);
   EXPECT_TRUE(p.isPermitted(p1));
 
   auto p2 = p.registerPermission("p2", false);
-  EXPECT_EQ(p2, 4u);
-  EXPECT_EQ(p.getCurrentPermissions(), 2U);
+  EXPECT_EQ(p2, 8u);
+  EXPECT_EQ(p.getCurrentPermissions(), p1);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
 
   auto p3 = p.registerPermission("p3", true);
-  EXPECT_EQ(p3, 8u);
-  EXPECT_EQ(p.getCurrentPermissions(), 10U);
+  EXPECT_EQ(p3, 16u);
+  EXPECT_EQ(p.getCurrentPermissions(), p1 + p3);
   EXPECT_TRUE(p.isPermitted(p1));
   EXPECT_FALSE(p.isPermitted(p2));
   EXPECT_TRUE(p.isPermitted(p3));
