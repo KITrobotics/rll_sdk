@@ -30,14 +30,20 @@ def main():
     to_import = [("rll_move", "tests/scripts/"), ("rll_move_client", "src")]
     klass = create_test_class(to_import, "move_client_demo", "execute",
                               "rll_move_client.client", "RLLDefaultMoveClient")
-    rosunit.unitrun("rll_move", "demo_tests", klass, sysargs="--cov",
-                    coverage_packages=["rll_move_client"])
+    # TODO(wolfgang): variant with test coverage, but returns error
+    # because the package is not installed
+    # rosunit.unitrun("rll_move", "demo_tests", klass, sysargs="--cov",
+    #                 coverage_packages=["rll_move_client"])
+    rosunit.unitrun("rll_move", "demo_tests", klass)
 
     klass = create_test_class(to_import, "pick_place_demo", "execute",
                               "rll_move_client.client", "RLLDefaultMoveClient")
 
-    rosunit.unitrun("rll_move", "pick_place_demo", klass, sysargs="--cov",
-                    coverage_packages=["rll_move_client"])
+    # TODO(wolfgang): variant with test coverage, but returns error
+    # because the package is not installed
+    # rosunit.unitrun("rll_move", "pick_place_demo", klass, sysargs="--cov",
+    #                 coverage_packages=["rll_move_client"])
+    rosunit.unitrun("rll_move", "pick_place_demo", klass)
 
 
 if __name__ == "__main__":
