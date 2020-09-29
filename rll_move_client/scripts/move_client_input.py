@@ -107,7 +107,8 @@ class InputMoveClient(RLLDefaultMoveClient):
                            pose_above.position.y + z_dir[1] * dist,
                            pose_above.position.z + z_dir[2] * dist)
         pick_pose = Pose(pick_point, pose_above.orientation)
-        self.pick_place(pose_above, pick_pose, gripper_open, "lamp_collision")
+        obj = "collision_object"  # TODO(mark): get id from somewhere
+        self.pick_place(pose_above, pick_pose, pose_above, gripper_open, obj)
 
     def toggle_relative_mode(self):
         new_mode = self.MOVE_LIN if self.motion_mode == self.MOVE_PTP \

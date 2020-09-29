@@ -27,6 +27,7 @@
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit/planning_scene_monitor/planning_scene_monitor.h>
 
+#include <rll_move/log_util.h>
 #include <rll_move/move_iface_error.h>
 #include <rll_moveit_kinematics_plugin/moveit_kinematics_plugin.h>
 
@@ -55,7 +56,7 @@ protected:
   planning_scene::PlanningSceneConstPtr planning_scene_;
   moveit::planning_interface::PlanningSceneInterface planning_scene_interface_;
   moveit::core::RobotModelConstPtr manip_model_;
-  bool no_gripper_attached_ = false;
+  const std::string& getNamespace();
 
   const std::string& getEEFType();
   RLLErrorCode runPTPTrajectory(moveit::planning_interface::MoveGroupInterface* move_group, bool for_gripper = false);
@@ -81,16 +82,23 @@ protected:
 
   bool manipCurrentStateAvailable();
   robot_state::RobotState getCurrentRobotState(bool wait_for_state = false);
-  void disableCollision(const std::string& link_1, const std::string& link_2);
   bool jointsGoalTooClose(const std::vector<double>& start, const std::vector<double>& goal);
   bool poseGoalTooClose(const geometry_msgs::Pose& goal);
+  bool tooCloseForLinearMovement(const geometry_msgs::Pose& goal);
+  bool jointsGoalInCollision(const std::vector<double>& goal);
+
+  void updateCollisionEntry(const std::string& link_1, const std::string& link_2, bool allow_collision = true);
+  void disableCollision(const std::string& link_1, const std::string& link_2)
+  {
+    updateCollisionEntry(link_1, link_2, true);
+  }
+  double distanceToCurrentPosition(const geometry_msgs::Pose& pose);
+  geometry_msgs::Pose getCurrentPoseFromPlanningScene();
+
+  RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal);
   RLLErrorCode poseGoalInCollision(const geometry_msgs::Pose& goal, std::vector<double>* goal_joint_values);
-  bool attachGraspObject(const std::string& object_id);
-  bool detachGraspObject(const std::string& object_id);
 
   virtual bool modifyLinTrajectory(moveit_msgs::RobotTrajectory* trajectory);
-  virtual RLLErrorCode closeGripper();
-  virtual RLLErrorCode openGripper();
 
   // this method can be used to handle critical failures, e.g. set error state in the state machine
   virtual void abortDueToCriticalFailure() = 0;
@@ -101,28 +109,21 @@ protected:
 
 private:
   static const std::string MANIP_PLANNING_GROUP;
-  static const std::string GRIPPER_PLANNING_GROUP;
-  // internal moveit named targets
-  static const std::string GRIPPER_OPEN_TARGET_NAME;
-  static const std::string GRIPPER_CLOSE_TARGET_NAME;
 
   std::string ns_;
   std::string eef_type_;
-  moveit::planning_interface::MoveGroupInterface gripper_move_group_;
   tf::Transform base_to_world_;
   tf::Transform ee_to_tip_;
   planning_scene_monitor::PlanningSceneMonitorPtr planning_scene_monitor_;
   collision_detection::AllowedCollisionMatrix acm_;
-
+  bool no_gripper_attached_;
   double allowed_start_tolerance_ = 0.01;
 
   RLLErrorCode execute(moveit::planning_interface::MoveGroupInterface* move_group,
                        const moveit::planning_interface::MoveGroupInterface::Plan& plan);
 
-  bool jointsGoalInCollision(const std::vector<double>& goal);
   RLLErrorCode checkTrajectory(const moveit_msgs::RobotTrajectory& trajectory);
   bool stateInCollision(robot_state::RobotState* state);
-  float distanceToCurrentPosition(const geometry_msgs::Pose& pose);
 
   void getPathIK(const std::vector<geometry_msgs::Pose>& waypoints_pose, const std::vector<double>& ik_seed_state,
                  std::vector<robot_state::RobotStatePtr>* path, double* last_valid_percentage);

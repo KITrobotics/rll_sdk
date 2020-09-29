@@ -35,11 +35,11 @@
 #include <rll_msgs/MovePTP.h>
 #include <rll_msgs/MovePTPArmangle.h>
 #include <rll_msgs/MoveRandom.h>
-#include <rll_msgs/PickPlace.h>
 
 #define RLL_SRV_TRUE 1U
 #define RLL_SRV_FALSE 0U
 
+// TODO(uieai): extract a Services base class, which does not inherit from Planning?
 class RLLMoveIfaceServices : public virtual RLLMoveIfacePlanning
 {
 public:
@@ -53,32 +53,31 @@ public:
   static const std::string MOVE_LIN_ARMANGLE_SRV_NAME;
   static const std::string MOVE_JOINTS_SRV_NAME;
   static const std::string MOVE_RANDOM_SRV_NAME;
-  static const std::string PICK_PLACE_SRV_NAME;
   static const std::string GET_POSE_SRV_NAME;
   static const std::string GET_JOINT_VALUES_SRV_NAME;
 
-  RLLErrorCode resetToHome();
+  virtual RLLErrorCode resetToHome();
 
   // the public interface exposes only service end points
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool robotReadySrv(std_srvs::Trigger::Request& req, std_srvs::Trigger::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
-  bool pickPlaceSrv(rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool moveLinSrv(rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool moveLinArmangleSrv(rll_msgs::MoveLinArmangle::Request& req, rll_msgs::MoveLinArmangle::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool movePTPSrv(rll_msgs::MovePTP::Request& req, rll_msgs::MovePTP::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool movePTPArmangleSrv(rll_msgs::MovePTPArmangle::Request& req, rll_msgs::MovePTPArmangle::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool moveJointsSrv(rll_msgs::MoveJoints::Request& req, rll_msgs::MoveJoints::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+
+  // NOLINTNEXTLINE(google-runtime-references)
   bool moveRandomSrv(rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+  // NOLINTNEXTLINE(google-runtime-references)
   bool getCurrentPoseSrv(rll_msgs::GetPose::Request& req, rll_msgs::GetPose::Response& resp);
-  // NOLINTNEXTLINE google-runtime-references
+
+  // NOLINTNEXTLINE(google-runtime-references)
   bool getCurrentJointValuesSrv(rll_msgs::GetJointValues::Request& req, rll_msgs::GetJointValues::Response& resp);
 
 protected:
@@ -86,13 +85,11 @@ protected:
   Permissions permissions_;
   Permissions::Index move_permission_;
   Permissions::Index only_during_job_run_permission_;
-  Permissions::Index pick_place_permission_;
 
   void setupPermissions();
 
   void abortDueToCriticalFailure() override;
 
-  RLLErrorCode pickPlace(const rll_msgs::PickPlace::Request& req, rll_msgs::PickPlace::Response* resp);
   RLLErrorCode moveLin(const rll_msgs::MoveLin::Request& req, rll_msgs::MoveLin::Response* resp);
   RLLErrorCode moveLinArmangle(const rll_msgs::MoveLinArmangle::Request& req,
                                rll_msgs::MoveLinArmangle::Response* resp);
@@ -101,12 +98,12 @@ protected:
                                rll_msgs::MovePTPArmangle::Response* resp);
   RLLErrorCode moveJoints(const rll_msgs::MoveJoints::Request& req, rll_msgs::MoveJoints::Response* resp);
   RLLErrorCode moveRandom(const rll_msgs::MoveRandom::Request& req, rll_msgs::MoveRandom::Response* resp);
+  RLLErrorCode getCurrentPose(const rll_msgs::GetPose::Request& req, rll_msgs::GetPose::Response* resp);
+  RLLErrorCode getCurrentJointValues(const rll_msgs::GetJointValues::Request& req,
+                                     rll_msgs::GetJointValues::Response* resp);
 
-  virtual RLLErrorCode beforeNonMovementServiceCall(const std::string& srv_name);
-  virtual RLLErrorCode afterNonMovementServiceCall(const std::string& srv_name, RLLErrorCode previous_error_code);
-
-  virtual RLLErrorCode beforeMovementServiceCall(const std::string& srv_name);
-  virtual RLLErrorCode afterMovementServiceCall(const std::string& srv_name, const RLLErrorCode& previous_error_code);
+  virtual RLLErrorCode beforeServiceCall(const std::string& srv_name);
+  virtual RLLErrorCode afterServiceCall(const std::string& srv_name, const RLLErrorCode& previous_error_code);
 
   template <class Request, class Response, class BaseClass>
   bool controlledMovementExecution(const Request& req, Response* resp, const std::string& srv_name,
@@ -119,7 +116,7 @@ template <class Request, class Response, class BaseClass>
 bool RLLMoveIfaceServices::controlledMovementExecution(const Request& req, Response* resp, const std::string& srv_name,
                                                        RLLErrorCode (BaseClass::*move_func)(const Request&, Response*))
 {
-  RLLErrorCode error_code = beforeMovementServiceCall(srv_name);
+  RLLErrorCode error_code = beforeServiceCall(srv_name);
 
   // only execute the move_func if the prior check succeeded
   if (error_code.succeeded())
@@ -138,7 +135,7 @@ bool RLLMoveIfaceServices::controlledMovementExecution(const Request& req, Respo
     }
   }
 
-  error_code = afterMovementServiceCall(srv_name, error_code);
+  error_code = afterServiceCall(srv_name, error_code);
 
   resp->error_code = error_code.value();
   resp->success = error_code.succeeded();

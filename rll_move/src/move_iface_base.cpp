@@ -19,6 +19,7 @@
  */
 
 #include <actionlib/client/simple_action_client.h>
+#include <geometry_msgs/Point.h>
 #include <moveit_msgs/MoveGroupAction.h>
 
 #include <rll_move/move_iface_base.h>
@@ -49,6 +50,9 @@ RLLMoveIfaceBase::RLLMoveIfaceBase(const ros::NodeHandle& nh) : nh_(nh)
   ros::param::get("~client_server_port", client_server_port);
   client_serv_addr_.sin_family = AF_INET;
   client_serv_addr_.sin_port = htons(client_server_port);
+
+  // TODO(mark): specify the required, permission, would be better to have this in
+  permissions_.setRequiredPermissionsFor(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME, only_during_job_run_permission_);
 }
 
 void RLLMoveIfaceBase::runJobAction(const rll_msgs::JobEnvGoalConstPtr& goal, JobServer* as)
@@ -139,8 +143,8 @@ void RLLMoveIfaceBase::runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs
 {
   // set the general movement permission for the duration of the job execution
   permissions_.storeCurrentPermissions();
-  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_ | pick_place_permission_,
-                                        true);
+  // TODO(mark): maybe add beforeRunJob() and afterRunJob() instead of allowing to override this method?
+  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_, true);
   runClient(goal, result);
   permissions_.restorePreviousPermissions();
 }
@@ -236,7 +240,7 @@ bool RLLMoveIfaceBase::runClient(const rll_msgs::JobEnvGoalConstPtr& goal, rll_m
 
 bool RLLMoveIfaceBase::jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs::SetBool::Response& resp)
 {
-  RLLErrorCode error_code = RLLMoveIfaceServices::beforeNonMovementServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME);
+  RLLErrorCode error_code = beforeServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME);
 
   if (error_code.succeeded())
   {
@@ -254,8 +258,13 @@ bool RLLMoveIfaceBase::jobFinishedSrv(std_srvs::SetBool::Request& req, std_srvs:
     ROS_WARN("Concurrent call to jobFinished, setting job success to false.");
     job_result_.setResult(false);
   }
+  else
+  {
+    ROS_INFO("Call to jobFinished failed with: %s", error_code.message());
+    permissions_.debugPermission(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME);
+  }
 
-  error_code = afterNonMovementServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME, error_code);
+  error_code = afterServiceCall(RLLMoveIfaceBase::JOB_FINISHED_SRV_NAME, error_code);
   resp.success = error_code.succeededSrv();
   return true;
 }

@@ -27,11 +27,17 @@ def main():
     rospy.init_node("demo_tests")
 
     # Run the move_client_example demo TODO(mark): put in rll_move_client
-    to_import = [("rll_move_client", "scripts/"), ("rll_move_client", "src")]
-    klass = create_test_class(to_import, "move_client_example", "execute",
+    to_import = [("rll_move", "tests/scripts/"), ("rll_move_client", "src")]
+    klass = create_test_class(to_import, "move_client_demo", "execute",
+                              "rll_move_client.client", "RLLDefaultMoveClient")
+    rosunit.unitrun("rll_move", "demo_tests", klass, sysargs="--cov",
+                    coverage_packages=["rll_move_client"])
+
+    klass = create_test_class(to_import, "pick_place_demo", "execute",
                               "rll_move_client.client", "RLLDefaultMoveClient")
 
-    rosunit.unitrun("rll_move", "demo_tests", klass)
+    rosunit.unitrun("rll_move", "pick_place_demo", klass, sysargs="--cov",
+                    coverage_packages=["rll_move_client"])
 
 
 if __name__ == "__main__":

@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<launch>
+    <arg name="use_sim" default="true"/>
+    <arg name="headless" default="false" />
+    <arg name="output" default="log"/>
+    <arg name="client_server_port" default="5005" />
+    <arg name="gazebo_gui" default="false" />
+    <arg name="eef_type" default="egl90" />
+
+    <!-- Reset the namespace in case it is included in code by a script running in a namespace -->
+    <group ns="/">
+      <include file="$(find rll_moveit_config)/launch/moveit_planning_execution.launch">
+        <arg name="use_sim" value="$(arg use_sim)"/>
+        <arg name="eef_type" value="$(arg eef_type)"/>
+        <arg name="gazebo_gui" value="$(arg gazebo_gui)"/>
+        <arg name="headless" value="$(arg headless)"/>
+        <arg name="output" value="$(arg output)"/>
+        <arg name="rviz_config" value="$(find rll_move)/tests/config/moveit.rviz )"/>
+      </include>
+
+      <include file="$(find rll_move)/tests/launch/gripper_demo_iface.launch">
+            <arg name="client_server_port" value="$(arg client_server_port)" />
+      </include>
+    </group>
+</launch>

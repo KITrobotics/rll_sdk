@@ -36,6 +36,7 @@
 #include <rll_msgs/MoveRandom.h>
 #include <rll_msgs/PickPlace.h>
 
+#include <rll_move/move_iface_gripper.h>
 #include <rll_move/move_iface_services.h>
 
 // scoped globals
@@ -190,12 +191,12 @@ class RLLPickPlaceClient : public virtual RLLMoveClientBase
 {
 public:
   explicit RLLPickPlaceClient()
-    : pick_place_(nh_.serviceClient<rll_msgs::PickPlace>(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME))
+    : pick_place_(nh_.serviceClient<rll_msgs::PickPlace>(RLLMoveIfaceGripperServices::PICK_PLACE_SRV_NAME))
   {
   }
 
-  bool pickPlace(const geometry_msgs::Pose& pose_above, const geometry_msgs::Pose& pose_grip, bool gripper_close,
-                 const std::string& grasp_object);
+  bool pickPlace(const geometry_msgs::Pose& pose_approach, const geometry_msgs::Pose& pose_grip,
+                 const geometry_msgs::Pose& pose_retreat, bool gripper_close, const std::string& grasp_object);
 
 protected:
   ros::ServiceClient pick_place_;

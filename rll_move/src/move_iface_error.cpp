@@ -104,6 +104,7 @@ RLLErrorCode convertMoveItErrorCode(const moveit::planning_interface::MoveItErro
   }
 }
 
+// NOLINTNEXTLINE readability-function-size
 const char* RLLErrorCode::message() const noexcept
 {
   switch (value_)
@@ -148,6 +149,12 @@ const char* RLLErrorCode::message() const noexcept
       return "CRITICAL_FAILURE";
     case SERVICE_CALL_NOT_ALLOWED:
       return "SERVICE_CALL_NOT_ALLOWED";
+    case INVALID_GRIPPER_OPERATION:
+      return "INVALID_GRIPPER_OPERATION";
+    case GRIPPER_CONSTRAINT_FAILED:
+      return "GRIPPER_CONSTRAINT_FAILED";
+    case SERVICE_CALL_CLIENT_ERROR:
+      return "SERVICE_CALL_CLIENT_ERROR";
     case EXECUTION_FAILED:
       return "EXECUTION_FAILED";
     case MANIPULATOR_NOT_AVAILABLE:

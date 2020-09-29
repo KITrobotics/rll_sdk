@@ -59,9 +59,14 @@ public:
     INSUFFICIENT_PERMISSION,
     JOB_EXECUTION_TIMED_OUT,
     SERVICE_CALL_NOT_ALLOWED,
+    INVALID_GRIPPER_OPERATION,
+    GRIPPER_CONSTRAINT_FAILED,
+
     PROJECT_SPECIFIC_RECOVERABLE_1 = 96,
     PROJECT_SPECIFIC_RECOVERABLE_2,
     PROJECT_SPECIFIC_RECOVERABLE_3,
+
+    SERVICE_CALL_CLIENT_ERROR = 127,  // only used client side
 
     // critical failure
     CRITICAL_FAILURE_BEGIN = 128,
@@ -82,7 +87,7 @@ public:
   };
 
   RLLErrorCode() noexcept = default;
-
+  RLLErrorCode(bool) = delete;                     // forbid this
   RLLErrorCode(Code code) noexcept : value_(code)  // NOLINT google-explicit-constructor
   {
   }
@@ -116,6 +121,15 @@ public:
   bool operator!=(const RLLErrorCode& a) const noexcept
   {
     return value_ != a.value_;
+  }
+
+  RLLErrorCode determineWorse(const RLLErrorCode& other) const
+  {
+    if (value_ > other.value_)  // a larger value signifies a more critical error
+    {
+      return *this;
+    }
+    return other;
   }
 
   bool succeeded() const noexcept
@@ -155,6 +169,7 @@ public:
     return value_ >= INVALID_INPUT_BEGIN && value_ < RECOVERABLE_FAILURE_BEGIN;
   }
 
+  // NOLINTNEXTLINE readability-function-size
   const char* message() const noexcept;
 
 private:

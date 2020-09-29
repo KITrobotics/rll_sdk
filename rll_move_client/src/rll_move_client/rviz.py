@@ -6,7 +6,6 @@ from std_msgs.msg import ColorRGBA, Header
 from visualization_msgs.msg import Marker
 from rll_move_client.util import (linear_combine_points, pose_to_matrix)
 
-
 WHITE = ColorRGBA(1, 1, 1, 1)
 RED = ColorRGBA(1, 0, 0, 1)
 GREEN = ColorRGBA(0, 1, 0, 1)
@@ -130,6 +129,11 @@ class RVizHelper(object):
         return self._marker_with_points_and_colors(Marker.ARROW, points,
                                                    **kwargs)
 
+    def add_mesh(self, mesh_resource, pose, **kwargs):
+        return self._single_marker_with_pose(
+            Marker.MESH_RESOURCE, mesh_resource=mesh_resource,
+            position=pose.position, orientation=pose.orientation, **kwargs)
+
     def _marker_with_points_and_colors(
             self, marker_type, positions, colors=None, **kwargs):
         marker = self._get_marker_template(marker_type, **kwargs)
@@ -176,12 +180,8 @@ class RVizHelper(object):
         return self._marker_with_points_and_colors(
             Marker.LINE_LIST, start_end_points, colors, **kwargs)
 
-    def add_mesh(self, mesh_resource, pose, **kwargs):
-        return self._single_marker_with_pose(
-            Marker.MESH_RESOURCE, mesh_resource=mesh_resource,
-            position=pose.position, orientation=pose.orientation, **kwargs)
-
-    def _get_marker_template(self, marker_type=Marker.CUBE, **kwargs):  # noqa: E501, C901
+    def _get_marker_template(self, marker_type=Marker.CUBE,  # noqa: E501, C901
+                             **kwargs):
         settings = dict(self.defaults, **kwargs)
         settings["type"] = marker_type
 

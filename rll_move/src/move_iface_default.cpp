@@ -20,6 +20,16 @@
 
 #include <rll_move/move_iface_default.h>
 
+void RLLDefaultMoveIfaceBase::runJob(const rll_msgs::JobEnvGoalConstPtr& goal, rll_msgs::JobEnvResult* result)
+{
+  // set the general movement permission for the duration of the job execution
+  permissions_.storeCurrentPermissions();
+  permissions_.updateCurrentPermissions(move_permission_ | only_during_job_run_permission_ | pick_place_permission_,
+                                        true);
+  runClient(goal, result);
+  permissions_.restorePreviousPermissions();
+}
+
 void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle* nh)
 {
   ros::AsyncSpinner spinner(0);
@@ -27,6 +37,8 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle* nh)
 
   RLLDefaultMoveIfaceBase* iface_ptr = this;
   RLLMoveIfaceServices* move_iface_srv_ptr = iface_ptr;
+  RLLMoveIfaceGripperServices* move_iface_gripper_ptr = iface_ptr;
+
   RLLMoveIfaceBase* move_iface_base_ptr = iface_ptr;
 
   iface_ptr->resetToHome();
@@ -46,8 +58,6 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle* nh)
                                                          &RLLMoveIfaceBase::jobFinishedSrv, move_iface_base_ptr);
   ros::ServiceServer move_random = nh->advertiseService(RLLMoveIfaceServices::MOVE_RANDOM_SRV_NAME,
                                                         &RLLMoveIfaceServices::moveRandomSrv, move_iface_srv_ptr);
-  ros::ServiceServer pick_place = nh->advertiseService(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME,
-                                                       &RLLMoveIfaceServices::pickPlaceSrv, move_iface_srv_ptr);
   ros::ServiceServer move_lin = nh->advertiseService(RLLMoveIfaceServices::MOVE_LIN_SRV_NAME,
                                                      &RLLMoveIfaceServices::moveLinSrv, move_iface_srv_ptr);
   ros::ServiceServer move_lin_arm_angle = nh->advertiseService(
@@ -58,6 +68,9 @@ void RLLDefaultMoveIfaceBase::startServicesAndRunNode(ros::NodeHandle* nh)
       RLLMoveIfaceServices::MOVE_PTP_ARMANGLE_SRV_NAME, &RLLMoveIfaceServices::movePTPArmangleSrv, move_iface_srv_ptr);
   ros::ServiceServer move_joints = nh->advertiseService(RLLMoveIfaceServices::MOVE_JOINTS_SRV_NAME,
                                                         &RLLMoveIfaceServices::moveJointsSrv, move_iface_srv_ptr);
+
+  move_iface_gripper_ptr->offerGripperServices(nh);
+
   ros::ServiceServer get_pose = nh->advertiseService(RLLMoveIfaceServices::GET_POSE_SRV_NAME,
                                                      &RLLMoveIfaceServices::getCurrentPoseSrv, move_iface_srv_ptr);
   ros::ServiceServer get_joint_values =

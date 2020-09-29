@@ -22,6 +22,7 @@ add_service_files(
   FILES
   GetJointValues.srv
   GetPose.srv
+  MoveGripper.srv
   MoveJoints.srv
   MoveLin.srv
   MoveLinArmangle.srv
@@ -29,6 +30,8 @@ add_service_files(
   MovePTPArmangle.srv
   MoveRandom.srv
   PickPlace.srv
+  PickPlaceHere.srv
+  ValidatePickPlace.srv
 )
 
 add_action_files(DIRECTORY action FILES

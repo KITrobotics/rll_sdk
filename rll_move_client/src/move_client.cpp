@@ -239,16 +239,18 @@ bool RLLGetPoseMoveClient::getCurrentJointValues(std::vector<double>* const join
   return success;
 }
 
-bool RLLPickPlaceClient::pickPlace(const geometry_msgs::Pose& pose_above, const geometry_msgs::Pose& pose_grip,
-                                   bool gripper_close, const std::string& grasp_object)
+bool RLLPickPlaceClient::pickPlace(const geometry_msgs::Pose& pose_approach, const geometry_msgs::Pose& pose_grip,
+                                   const geometry_msgs::Pose& pose_retreat, bool gripper_close,
+                                   const std::string& grasp_object)
 {
   rll_msgs::PickPlace pick_place_msg;
-  pick_place_msg.request.pose_above = pose_above;
+  pick_place_msg.request.pose_approach = pose_approach;
   pick_place_msg.request.pose_grip = pose_grip;
+  pick_place_msg.request.pose_retreat = pose_retreat;
   pick_place_msg.request.gripper_close = gripper_close ? 1u : 0u;
   pick_place_msg.request.grasp_object = grasp_object;
 
-  bool success = callServiceWithErrorCode<rll_msgs::PickPlace>(RLLMoveIfaceServices::PICK_PLACE_SRV_NAME, pick_place_,
-                                                               pick_place_msg);
+  bool success = callServiceWithErrorCode<rll_msgs::PickPlace>(RLLMoveIfaceGripperServices::PICK_PLACE_SRV_NAME,
+                                                               pick_place_, pick_place_msg);
   return success;
 }
