@@ -15,8 +15,8 @@ variables:
   # A upstream workspace is created with the dependencies from the specified repos file. It has to be in the vcstool format: https://github.com/dirk-thomas/vcstool
   UPSTREAM_WORKSPACE: ".ci.repos"
   ROS_DISTRO: "melodic"
-  ROS_REPO: "testing"
-  VERBOSE_OUTPUT: "true"
+  # This causes too much output by default and the Gitlab log output is truncated
+  # VERBOSE_OUTPUT: "true"
   VERBOSE_TESTS: "true"
 
   # Dependencies for your project:
