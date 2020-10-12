@@ -20,6 +20,8 @@
 #ifndef RLL_KINEMATICS_REDUNDANCY_RESOLUTION_H
 #define RLL_KINEMATICS_REDUNDANCY_RESOLUTION_H
 
+#include <iostream>
+
 #include <rll_kinematics/inverse_kinematics.h>
 
 struct RLLInvKinOptions
@@ -61,7 +63,11 @@ struct RLLInvKinOptions
   double d_v = 1.0;
   double d_a = 1.0;
   double d_l = 1.0;
+
+  friend std::ostream& operator<<(std::ostream& output, const RLLInvKinOptions& rll_inv_kin_opt);
 };
+
+std::ostream& operator<<(std::ostream& output, const RLLInvKinOptions& rll_inv_kin_opt);
 
 class RLLRedundancyResolution : public RLLInverseKinematics
 {
