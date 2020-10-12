@@ -94,7 +94,7 @@ bool RLLKinJoints::allFinite() const
 
 std::ostream& operator<<(std::ostream& out, const RLLKinJoints& j)
 {
-  std::copy(j.begin(), j.end(), std::ostream_iterator<double>(std::cout, " "));
+  std::copy(j.begin(), j.end(), std::ostream_iterator<double>(out, " "));
 
   return out;
 }
@@ -138,12 +138,6 @@ void RLLKinFrame::setQuaternion(const double w, const double x, const double y, 
   ori_ = static_cast<Eigen::Matrix3d>(Eigen::Quaterniond(w, x, y, z));
 }
 
-void RLLKinFrame::setRPY(const double roll, const double pitch, const double yaw)
-{
-  ori_ = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
-         Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
-}
-
 void RLLKinFrame::getQuaternion(double* w, double* x, double* y, double* z) const
 {
   Eigen::Quaterniond q = static_cast<Eigen::Quaterniond>(ori_);
@@ -151,6 +145,22 @@ void RLLKinFrame::getQuaternion(double* w, double* x, double* y, double* z) cons
   *x = q.x();
   *y = q.y();
   *z = q.z();
+}
+
+void RLLKinFrame::setRPY(const double roll, const double pitch, const double yaw)
+{
+  ori_ = Eigen::AngleAxisd(roll, Eigen::Vector3d::UnitX()) * Eigen::AngleAxisd(pitch, Eigen::Vector3d::UnitY()) *
+         Eigen::AngleAxisd(yaw, Eigen::Vector3d::UnitZ());
+}
+
+void RLLKinFrame::getRPY(double* roll, double* pitch, double* yaw)
+{
+  Eigen::Quaterniond q = static_cast<Eigen::Quaterniond>(ori_);
+  auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+
+  *roll = euler.x();
+  *pitch = euler.y();
+  *yaw = euler.z();
 }
 
 void RLLKinFrame::setPosition(const double x, const double y, const double z)
@@ -161,6 +171,13 @@ void RLLKinFrame::setPosition(const double x, const double y, const double z)
 void RLLKinFrame::setPosition(const uint8_t index, const double value)
 {
   pos_[index] = value;
+}
+
+void RLLKinFrame::getPosition(double* x, double* y, double* z)
+{
+  *x = pos_.x();
+  *y = pos_.y();
+  *z = pos_.z();
 }
 
 RLLKinFrame RLLKinFrame::operator*(const RLLKinFrame& t) const
@@ -183,6 +200,21 @@ RLLKinFrame& RLLKinFrame::operator=(const RLLKinFrame& rhs)
   this->pos_.noalias() = rhs.pos_;
 
   return *this;
+}
+std::ostream& operator<<(std::ostream& out, const RLLKinFrame& pose)
+{
+  double roll, pitch, yaw;
+  Eigen::Quaterniond q = static_cast<Eigen::Quaterniond>(pose.ori_);
+  auto euler = q.toRotationMatrix().eulerAngles(0, 1, 2);
+
+  roll = euler.x();
+  pitch = euler.y();
+  yaw = euler.z();
+
+  out << "Position[XYZ]:(" << pose.pos_.x() << ", " << pose.pos_.y() << ", " << pose.pos_.z() << ") \n";
+  out << "Orientation[RPY]:(" << roll << ", " << pitch << ", " << yaw << ")";
+
+  return out;
 }
 
 void RLLKinGlobalConfig::set(const RLLKinJoints& joint_angles)

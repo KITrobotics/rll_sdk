@@ -18,7 +18,7 @@ variables:
   # This causes too much output by default and the Gitlab log output is truncated
   # VERBOSE_OUTPUT: "true"
   VERBOSE_TESTS: "true"
-
+  
   # Dependencies for your project:
   # Most projects will require the rll_sdk to be installed. The rll_sdk doesn't require itself, which is why repositories are left empty
   # If you copy this config to a project and depend on the rll_sdk, simply adjust the REPOS_DEFAULT variable below as indicated by the comment

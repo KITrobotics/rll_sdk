@@ -71,6 +71,45 @@ RLLKinMsg RLLRedundancyResolution::ik(const RLLKinSeedState& seed_state, RLLKinP
 
   return RLLKinMsg::INVALID_INPUT;
 }
+std::ostream& operator<<(std::ostream& output, const RLLInvKinOptions& rll_inv_kin_opt)
+{
+  output << "(method:";
+  switch (rll_inv_kin_opt.method)
+  {
+    case RLLInvKinOptions::POSITION_RESOLUTION_EXP:
+      output << "POSITION_RESOLUTION_EXP";
+      break;
+    case RLLInvKinOptions::RESOLUTION_MULTI_OBJECTIVE:
+      output << "RESOLUTION_MULTI_OBJECTIVE";
+      break;
+    case RLLInvKinOptions::ARM_ANGLE_FIXED:
+      output << "ARM_ANGLE_FIXED";
+      break;
+    default:
+      output << "METHOD IS NOT SET!";
+      break;
+  }
+
+  output << " | global_configuration_mode:";
+
+  switch (rll_inv_kin_opt.global_configuration_mode)
+  {
+    case RLLInvKinOptions::SELECT_NEAREST_GLOBAL_CONFIG:
+      output << "SELECT_NEAREST_GLOBAL_CONFIG";
+      break;
+    case RLLInvKinOptions::KEEP_CURRENT_GLOBAL_CONFIG:
+      output << "KEEP_CURRENT_GLOBAL_CONFIG";
+      break;
+    case RLLInvKinOptions::RETURN_ALL_GLOBAL_CONFIGS:
+      output << "RETURN_ALL_GLOBAL_CONFIGS";
+      break;
+    default:
+      output << "GLOBAL_CONFIGURATION_MODE IS NOT SET!";
+      break;
+  }
+
+  return output << ")";
+}
 
 RLLKinMsg RLLRedundancyResolution::ikFixedArmAngle(const RLLKinSeedState& seed_state, RLLKinPoseConfig* ik_pose,
                                                    RLLKinSolutions* solutions, const RLLInvKinOptions& options) const

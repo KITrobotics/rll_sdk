@@ -150,6 +150,8 @@ public:
 
   bool jointLimitsViolated(const RLLKinJoints& lower_joint_limits, const RLLKinJoints& upper_joint_limits) const;
 
+  friend std::ostream& operator<<(std::ostream& out, const RLLKinJoints& j);
+
 private:
   template <class container>
   void copyToJoints(const container& c);
@@ -175,15 +177,18 @@ public:
     return pos_;
   }
 
-  void getQuaternion(double* w, double* x, double* y, double* z) const;
   void setQuaternion(double w, double x, double y, double z);
+  void getQuaternion(double* w, double* x, double* y, double* z) const;
   void setRPY(double roll, double pitch, double yaw);
+  void getRPY(double* roll, double* pitch, double* yaw);
 
   void setPosition(double x, double y, double z);
   void setPosition(uint8_t index, double value);
+  void getPosition(double* x, double* y, double* z);
 
   RLLKinFrame operator*(const RLLKinFrame& t) const;
   RLLKinFrame& operator=(const RLLKinFrame& rhs);
+  friend std::ostream& operator<<(std::ostream& out, const RLLKinFrame& pose);
 
   bool allFinite()
   {
@@ -194,6 +199,8 @@ private:
   Eigen::Matrix3d ori_ = Eigen::Matrix3d::Identity();
   Eigen::Vector3d pos_ = Eigen::Vector3d::Zero();
 };
+
+std::ostream& operator<<(std::ostream& out, const RLLKinFrame& pose);
 
 class RLLKinGlobalConfig
 {
