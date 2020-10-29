@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
 
   <name>rll_moveit_config</name>
   <version>0.3.0</version>
@@ -17,9 +17,13 @@
   <exec_depend>moveit_fake_controller_manager</exec_depend>
   <exec_depend>moveit_kinematics</exec_depend>
   <exec_depend>moveit_planners_ompl</exec_depend>
+  <exec_depend>moveit_ros_benchmarks</exec_depend>
+  <exec_depend>moveit_ros_warehouse</exec_depend>
+  <exec_depend>moveit_setup_assistant</exec_depend>
   <exec_depend>moveit_simple_controller_manager</exec_depend>
   <exec_depend>joint_state_controller</exec_depend>
   <exec_depend>joint_trajectory_controller</exec_depend>
+  <exec_depend>joy</exec_depend>
   <exec_depend>position_controllers</exec_depend>
   <exec_depend>velocity_controllers</exec_depend>
   <exec_depend>effort_controllers</exec_depend>
@@ -33,5 +37,7 @@
   <exec_depend>rll_gazebo</exec_depend>
   <exec_depend>rll_control</exec_depend>
   <exec_depend>rll_moveit_kinematics_plugin</exec_depend>
+  <exec_depend>rviz</exec_depend>
+  <exec_depend condition="$ROS_DISTRO == melodic">warehouse_ros_mongo</exec_depend>
 
 </package>
