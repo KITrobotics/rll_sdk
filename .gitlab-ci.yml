@@ -77,6 +77,7 @@ melodic-build-rostests:
 warningbuild-linting:
   variables:
     ADDITIONAL_DEBS: "python-pip python-typing clang-tidy-7 clang-7"
+    AFTER_SETUP_UPSTREAM_WORKSPACE: "pip install 'readchar<3'"
     CATKIN_LINT: "pedantic"
     CMAKE_ARGS: "-DCMAKE_CXX_FLAGS=-Werror"
     NOT_TEST_BUILD: "true"

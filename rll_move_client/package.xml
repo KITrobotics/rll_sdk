@@ -25,6 +25,8 @@
   <exec_depend>std_msgs</exec_depend>
   <exec_depend condition="$ROS_DISTRO == melodic">python-typing</exec_depend>
   <exec_depend>python-pip</exec_depend>
-  <exec_depend>python-readchar-pip</exec_depend>
+  <!-- Does not work because the latest version is incompatible with Python 2. -->
+  <!-- Needs to be installed manually with pip install 'readchar<3' -->
+  <!-- <exec_depend>python-readchar-pip</exec_depend> -->
 
 </package>
