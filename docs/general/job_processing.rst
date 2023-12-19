@@ -58,7 +58,7 @@ Job metadata
 
 Every job has a unique ID, a job ID. This job ID is used to track the job in the system.
 Different job status and result codes are used to clarify the current state of a job
-in the `jobs list <https://rll.ipr.kit.edu/jobs>`_. They are explained below.
+in the `jobs list <https://rll.ipr.iar.kit.edu/jobs>`_. They are explained below.
 
 When the job has either the status `submitted` or `waiting for real`,
 the position of the job in the job queue is additionally displayed.

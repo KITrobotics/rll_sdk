@@ -32,7 +32,7 @@ with offline times not longer than an hour in between.
 Where can I get help or discuss the lab with staff or other users?
 ------------------------------------------------------------------
 
-The best place to ask for help is the `forum <https://rll-forum.ipr.kit.edu/>`_. You
+The best place to ask for help is the `forum <https://rll-forum.ipr.iar.kit.edu/>`_. You
 can post questions about the lab or specific projects there, e.g. if you have issues
 with the submission process or need some assistance to get started
 with writing your own code for a project.

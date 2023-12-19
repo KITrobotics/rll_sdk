@@ -19,7 +19,7 @@ You can view the documentation by opening `_build/html/index.html` in your brows
 
 ## Deployment
 
-The documentation at https://rll-doc.ipr.kit.edu can be updated with
+The documentation at https://rll-doc.ipr.iar.kit.edu can be updated with
 
 ```bash
 make upload

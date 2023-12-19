@@ -7,7 +7,7 @@ SPHINXBUILD   = python3 -msphinx
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-SSH_HOST=rll-doc.ipr.kit.edu
+SSH_HOST=rll-doc.ipr.iar.kit.edu
 SSH_PORT=22
 SSH_USER=rlldoc
 SSH_TARGET_DIR=/var/www/rlldoc

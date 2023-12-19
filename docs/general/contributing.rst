@@ -10,7 +10,7 @@ Use the lab, report issues and help other users
 
 You are already helping us if you use the lab! We are still in the
 early stages of the project and every feedback is valuable. You can
-ask questions in the `forum <https://rll-forum.ipr.kit.edu/>`_  or
+ask questions in the `forum <https://rll-forum.ipr.iar.kit.edu/>`_  or
 help other users there.
 
 If you notice a bug, you can open an issue on Github on the
@@ -47,7 +47,7 @@ Contributing source code
 ------------------------
 
 Members and students at IAR-IPR contribute directly to the `IPR Gitlab
-repos <https://gitlab.ipr.kit.edu/rll>`_. They also have an IPR
+repos <https://gitlab.ipr.iar.kit.edu/rll>`_. They also have an IPR
 account and can access the non-public repos. Their workflow is to fork
 the needed repos and to make pull requests. And they use the issue
 trackers in the IPR Gitlab.

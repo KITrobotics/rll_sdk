@@ -5,8 +5,8 @@ About
     :align: center
     :figclass: align-center
 
-The `KUKA Robot Learning Lab at KIT <https://rll.ipr.kit.edu/>`_ is a remotely accessible robotics lab
-that is currently developed at `IAR-IPR <https://www.ipr.kit.edu/english/index.php>`_.
+The `KUKA Robot Learning Lab at KIT <https://rll.ipr.iar.kit.edu/>`_ is a remotely accessible robotics lab
+that is currently developed at `IAR-IPR <https://ipr.iar.kit.edu/english/index.php>`_.
 It allows students and researchers to access the robots in the lab
 over the Internet from all over the world and to run their own projects on the robots.
 

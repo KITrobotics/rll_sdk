@@ -59,7 +59,7 @@ its own. For each step, the relevant new lines are highlighted.
 
 .. note::
   The example created below is the `hello world` program from the
-  `Robot Playground Project <https://gitlab.ipr.kit.edu/rll/rll_robot_playground_project/>`_.
+  `Robot Playground Project <https://gitlab.ipr.iar.kit.edu/rll/rll_robot_playground_project/>`_.
 
   It is recommended that you follow along and copy the changes as they are added
   into the file :code:`scripts/playground.py` or :code:`src/playground.cpp`, respectively.

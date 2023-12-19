@@ -30,7 +30,7 @@ Setup the RLL VM Image
 ^^^^^^^^^^^^^^^^^^^^^^
 
 1. Download the RLL Virtual Machine (VM) packaged as an `.ova` file
-   `here <https://rll-dl.ipr.kit.edu/vm/rll-vm-lubuntu-18.04.ova>`_.
+   `here <https://rll-dl.ipr.iar.kit.edu/vm/rll-vm-lubuntu-18.04.ova>`_.
 
 2. Start VirtualBox and import the downloaded `.ova` file by choosing:
    `File->Import Appliance` from the menu.

@@ -34,7 +34,7 @@ the Robot Learning Lab SDK and the Robot Playground project into it:
    mkdir ~/rll_ws
    cd ~/rll_ws
    catkin_init_workspace
-   wstool init src https://gitlab.ipr.kit.edu/rll/rll_robot_playground_project/raw/master/robot_playground_project.rosinstall
+   wstool init src https://gitlab.ipr.iar.kit.edu/rll/rll_robot_playground_project/raw/master/robot_playground_project.rosinstall
    rosdep install --from-paths src --ignore-src -r -y
    catkin build
    source devel/setup.bash

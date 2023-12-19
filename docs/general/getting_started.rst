@@ -7,7 +7,7 @@ To quickly get started with the Robot Learning Lab follow the steps below.
 1. Register yourself
 --------------------
 
-The first step is to register yourself. You can do this `here <https://rll.ipr.kit.edu/login>`_.
+The first step is to register yourself. You can do this `here <https://rll.ipr.iar.kit.edu/login>`_.
 We support regular user registrations using your Email address or you can log
 in with a Google or Github account. If you are a student or employee at KIT,
 you can directly log in with your KIT account.
@@ -16,11 +16,11 @@ you can directly log in with your KIT account.
 ----------------
 
 To get familiar with the submission processing in the lab, you can
-`test some of the demos <https://rll.ipr.kit.edu/demos>`_.
+`test some of the demos <https://rll.ipr.iar.kit.edu/demos>`_.
 These are example implementations for projects that are currently hosted in the
 lab or that will become available at a later point. Once you submitted one or
 several demos, you can follow the processing of your jobs in the
-`jobs list view <https://rll.ipr.kit.edu/jobs>`_. There you can view a live feed
+`jobs list view <https://rll.ipr.iar.kit.edu/jobs>`_. There you can view a live feed
 of the webcam while the job is running and inspect job data, including log
 files once the job has finished.
 
@@ -56,7 +56,7 @@ token, which is used to authenticate your submission. Complete the following
 steps **within** your development environment, i.e. if you are using the RLL VM
 follow these steps in the VM.
 
-1. Download your API access config from the `settings page <https://rll.ipr.kit.edu/settings>`_
+1. Download your API access config from the `settings page <https://rll.ipr.iar.kit.edu/settings>`_
    and save it to the config folder of the ``rll_tools`` package in your
    workspace. This should be the full path to the file:
 
@@ -81,7 +81,7 @@ follow these steps in the VM.
    Playground project and upload it to the Robot Learning Lab API. If you did
    not yet make any changes to the source code, then it will simply upload the
    default hello world program. You can then follow the job in your
-   `jobs view <https://rll.ipr.kit.edu/jobs>`_.
+   `jobs view <https://rll.ipr.iar.kit.edu/jobs>`_.
 
    You can execute this command anytime you want to see your current code
    version running on one of the robots in the lab.

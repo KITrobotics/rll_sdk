@@ -34,7 +34,7 @@ For those who have done a **manual installation**, the rll\_planning\_project ca
 ::
 
     cd ~/rll_ws
-    wstool merge -t srchttps://raw.githubusercontent.com/kitrobotics/rll_path_planning_project/master/planning_project.rosinstall
+    wstool merge -t src https://raw.githubusercontent.com/kitrobotics/rll_path_planning_project/master/planning_project.rosinstall
     catkin build
     source devel/setup.bash
 
