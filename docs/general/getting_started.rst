@@ -51,6 +51,9 @@ Or get an overview of the available movement commands first by reading the
 The :doc:`planning_project` is the more advanced project, which lets you implement a path planning algorithm
 to navigate a maze with the robot.
 
+Our `Youtube Channel <https://www.youtube.com/@kukarobotlearninglabatkit>`_ also features tutorial videos and
+shows how the lab is used.
+
 If you work with the web editor, you can ignore the setup and run commands on the project documentation pages.
 You can directly start with the Python interfaces, paste and modify code in the editor, and simulate or submit
 with the buttons.

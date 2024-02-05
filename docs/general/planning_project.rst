@@ -19,6 +19,7 @@ the cuboid will be placed on the table at the goal position.
 .. figure:: ./_static/rll_planning_project_topview_annotated.png
    :alt: Topview Simulation Interface
 
+A tutorial video is also available on `YouTube <https://www.youtube.com/watch?v=dkElSgGrBb4>`_.
 
 Setup
 -----
