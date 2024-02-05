@@ -27,9 +27,40 @@ files once the job has finished.
 The :doc:`job processing chapter <job_processing>` explains how your submission is handled by the lab system
 and what the different job states mean.
 
+3. Writing your own code
+------------------------
 
-3. Setup your development environment
--------------------------------------
+If you successfully completed the steps above you are ready to write your own
+code for the Robot Learning Lab!
+
+We provide a fully integrated `web editor <https://rll.ipr.iar.kit.edu/editor>`_, where you can run
+simulations in a virtual environment directly in your browser. You can submit your code with one click and
+watch your project being executed in the lab. You only need to enter a project title and select one of the
+available projects you want to work on. You can write code in Python or use a visual block-based editor,
+which is intended for coding education and lets you combine coding blocks from an available list in the editor.
+
+.. image:: ./_static/webeditor_pypp.png
+.. image:: ./_static/webeditor_blpl.png
+
+To get familiar with the development environment and the different ways to
+control the robots in Python and C++, refer to the :doc:`project_robot_playground`, which is the
+starter project that lets you move the robot around using different commands.
+Or get an overview of the available movement commands first by reading the
+:doc:`rll_move_client` documentation.
+
+The :doc:`planning_project` is the more advanced project, which lets you implement a path planning algorithm
+to navigate a maze with the robot.
+
+If you work with the web editor, you can ignore the setup and run commands on the project documentation pages.
+You can directly start with the Python interfaces, paste and modify code in the editor, and simulate or submit
+with the buttons.
+
+If you want to work with your own development environment on your machine or code in C++, please read the next
+sections. This also allows you to build more complex projects using ROS and to get familiar with ROS specifics
+to build, run and submit projects.
+
+4. Setup your own development environment
+-----------------------------------------
 
 Before you can write your own code and submit it, you need to set up your
 development environment. You can either do a
@@ -48,7 +79,7 @@ and it works on Windows and macOS.
 
 .. _configure-api-access:
 
-4. Configure your API access
+5. Configure your API access
 ----------------------------
 
 To be able to submit your code to the RLL you need to retrieve the API access
@@ -86,15 +117,4 @@ follow these steps in the VM.
    You can execute this command anytime you want to see your current code
    version running on one of the robots in the lab.
 
-5. Writing your own code
-------------------------
-
-If you successfully completed the steps above you are ready to write your own
-code for the Robot Learning Lab!
-
-To get started you read up on the :doc:`development_workflow`.
-To get familiar with the development environment and the different ways to
-control the robot refer to the :doc:`project_robot_playground`, which is the
-starter project that lets you move the robot around using different commands.
-Or get an overview of the available movement commands first by reading the
-:doc:`rll_move_client` documentation.
+To get started with coding, read up on the :doc:`development_workflow`.
